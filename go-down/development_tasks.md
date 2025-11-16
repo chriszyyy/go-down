@@ -17,19 +17,19 @@
 ## 🎯 第一阶段 - 核心原型 (Week 1-2)
 
 ### 1.1 项目结构搭建
-- [ ] 创建文件夹结构
-  - [ ] `Assets/Scripts/Core/` - 核心游戏逻辑
-  - [ ] `Assets/Scripts/Managers/` - 管理器类
-  - [ ] `Assets/Scripts/UI/` - UI 相关脚本
-  - [ ] `Assets/Scripts/Utils/` - 工具类
-  - [ ] `Assets/Prefabs/` - 预制体
-  - [ ] `Assets/Materials/` - 材质
-  - [ ] `Assets/Sprites/` - 图片资源
-  - [ ] `Assets/Audio/` - 音频资源
-- [ ] 设置 Physics2D 参数（重力、碰撞矩阵）
-- [ ] 创建主场景 `MainGameScene`
+- [x] 创建文件夹结构
+  - [x] `Assets/Scripts/Core/` - 核心游戏逻辑
+  - [x] `Assets/Scripts/Managers/` - 管理器类
+  - [x] `Assets/Scripts/UI/` - UI 相关脚本
+  - [x] `Assets/Scripts/Utils/` - 工具类
+  - [x] `Assets/Prefabs/` - 预制体
+  - [x] `Assets/Materials/` - 材质
+  - [x] `Assets/Sprites/` - 图片资源
+  - [x] `Assets/Audio/` - 音频资源
+- [x] 设置 Physics2D 参数（重力、碰撞矩阵）
+- [x] 创建主场景 `MainGameScene`
 
-**预计时间：** 0.5天
+**预计时间：** 0.5天 ✅ **已完成**
 
 ---
 
@@ -456,9 +456,16 @@
 ## 📝 开发日志
 
 ### 2025-11-16
-- 创建项目结构
-- 初始化开发任务文档
-- 待开始第一阶段开发
+- ✅ 创建项目结构
+- ✅ 初始化开发任务文档
+- ✅ 创建文件夹结构（Scripts, Prefabs, Materials, Sprites, Audio）
+- ✅ 设置 Physics2D 参数（重力、图层、碰撞矩阵）
+- ✅ 创建主场景 MainGameScene
+- ✅ 配置 Camera（背景色、正交投影）
+- ✅ 创建 Canvas（UI 系统）
+- ✅ 创建边界检测器（Boundaries）
+- ✅ 创建设置指南文档 SETUP_GUIDE.md
+- 下一步：创建核心游戏脚本（Block.cs, HexagonBall.cs, GameManager.cs）
 
 ---
 
@@ -487,13 +494,13 @@
 
 | 阶段 | 进度 | 状态 |
 |------|------|------|
-| 第一阶段：核心原型 | 0% | ⏳ 未开始 |
+| 第一阶段：核心原型 | 8% | 🔄 进行中 |
 | 第二阶段：完善玩法 | 0% | ⏳ 未开始 |
 | 第三阶段：UI和体验 | 0% | ⏳ 未开始 |
 | 第四阶段：变现和数据 | 0% | ⏳ 未开始 |
 | 发布准备 | 0% | ⏳ 未开始 |
 
-**总体进度：** 0%
+**总体进度：** 8%
 
 ---
 
