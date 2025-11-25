@@ -34,18 +34,18 @@
 ---
 
 ### 1.2 方块系统 (Block System)
-- [ ] 创建 `Block.cs` 脚本
-  - [ ] 添加 BoxCollider2D 组件
-  - [ ] 实现点击检测功能
-  - [ ] 实现消除动画（淡出/缩放）
-  - [ ] 消除时触发事件通知
-- [ ] 创建方块预制体 `BlockPrefab`
-  - [ ] 设置碰撞体大小
-  - [ ] 添加 SpriteRenderer
-  - [ ] 配置颜色/材质
-- [ ] 测试单个方块的点击消除
+- [x] 创建 `Block.cs` 脚本
+  - [x] 添加 BoxCollider2D 组件
+  - [x] 实现点击检测功能
+  - [x] 实现消除动画（淡出/缩放）
+  - [x] 消除时触发事件通知
+- [x] 创建 `BlockFactory.cs` 工具类
+  - [x] 运行时创建方块功能
+  - [x] 自动配置组件和颜色
+- [x] 创建 `TestBlockSpawner.cs` 测试工具
+- [x] 测试单个方块的点击消除
 
-**预计时间：** 1天
+**预计时间：** 1天 ✅ **已完成**
 
 **关键代码点：**
 ```csharp
@@ -58,17 +58,22 @@
 ---
 
 ### 1.3 六边形球系统 (Hexagon Ball)
-- [ ] 创建 `HexagonBall.cs` 脚本
-  - [ ] 添加 Rigidbody2D (Dynamic)
-  - [ ] 添加 PolygonCollider2D (6边形)
-  - [ ] 设置物理参数 (Mass, Drag, AngularDrag)
-  - [ ] 实现边界检测逻辑
-- [ ] 创建六边形球预制体 `HexagonBallPrefab`
-  - [ ] 绘制或导入六边形 Sprite
-  - [ ] 配置碰撞体形状
+- [x] 创建 `HexagonBall.cs` 脚本
+  - [x] 添加 Rigidbody2D (Dynamic)
+  - [x] 添加 PolygonCollider2D (6边形)
+  - [x] 设置物理参数 (Mass, Drag, AngularDrag)
+  - [x] 实现边界检测逻辑
+  - [x] 实现倾斜角度检测
+  - [x] 实现稳定性检测
+  - [x] 添加游戏结束判定
+- [x] 创建 `HexagonBallFactory.cs` 工具类
+  - [x] 自动生成六边形 Sprite
+  - [x] 自动配置物理组件
+  - [x] 自动设置六边形碰撞体
 - [ ] 测试球的重力下落和碰撞
+- [ ] 测试球与方块的交互
 
-**预计时间：** 1天
+**预计时间：** 1天 ⏳ **进行中**
 
 **关键参数：**
 - Rigidbody2D: Mass = 1, Linear Drag = 0.5, Angular Drag = 2
@@ -465,7 +470,32 @@
 - ✅ 创建 Canvas（UI 系统）
 - ✅ 创建边界检测器（Boundaries）
 - ✅ 创建设置指南文档 SETUP_GUIDE.md
-- 下一步：创建核心游戏脚本（Block.cs, HexagonBall.cs, GameManager.cs）
+
+### 2025-11-25
+- ✅ 创建 Block.cs 核心脚本
+  - ✅ 点击检测功能 (OnMouseDown)
+  - ✅ 消除动画（缩放+淡出）
+  - ✅ 事件系统（OnBlockDestroyed）
+  - ✅ 动态/静态切换功能
+  - ✅ 稳定性检测
+- ✅ 创建 BlockFactory.cs 工具类
+  - ✅ 运行时创建方块
+  - ✅ 自动生成 Sprite
+  - ✅ 颜色管理系统
+- ✅ 创建 TestBlockSpawner.cs 测试工具
+- ✅ 测试方块点击消除功能 - 正常工作！
+- ✅ 创建 HexagonBall.cs 核心脚本
+  - ✅ 物理参数配置
+  - ✅ 边界检测（X轴越界判定）
+  - ✅ 倾斜角度检测
+  - ✅ 速度检测
+  - ✅ 稳定性判定
+  - ✅ 游戏结束事件系统
+- ✅ 创建 HexagonBallFactory.cs 工具类
+  - ✅ 自动生成六边形 Sprite
+  - ✅ 六边形碰撞体顶点计算
+  - ✅ 物理组件自动配置
+- 下一步：测试六边形球与方块的交互
 
 ---
 
