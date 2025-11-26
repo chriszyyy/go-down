@@ -41,7 +41,12 @@ public static class HexagonBallFactory
 
         // 添加 PolygonCollider2D (六边形)
         PolygonCollider2D collider = ballObj.AddComponent<PolygonCollider2D>();
-        collider.points = GetHexagonPoints(HEXAGON_SIZE);
+        // Sprite 的实际半径计算：
+        // 纹理中半径 = 128 / 2.5 = 51.2 像素
+        // pixelsPerUnit = 128 / 0.8 = 160
+        // 世界坐标半径 = 51.2 / 160 = 0.32
+        float colliderRadius = (128f / 2.5f) / (128f / HEXAGON_SIZE);
+        collider.points = GetHexagonPoints(colliderRadius);
 
         // 添加 HexagonBall 脚本
         HexagonBall hexagonBall = ballObj.AddComponent<HexagonBall>();
