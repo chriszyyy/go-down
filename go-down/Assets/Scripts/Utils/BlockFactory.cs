@@ -37,7 +37,7 @@ public static class BlockFactory
 
         // 添加 SpriteRenderer
         SpriteRenderer spriteRenderer = blockObj.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = CreateSquareSprite();
+        spriteRenderer.sprite = CreateBlockSprite();
         spriteRenderer.color = GetRandomBlockColor();
         spriteRenderer.sortingOrder = 1;
 
@@ -63,7 +63,7 @@ public static class BlockFactory
     /// <summary>
     /// 创建一个正方形 Sprite（临时使用，实际项目中应该用美术资源）
     /// </summary>
-    private static Sprite CreateSquareSprite()
+    public static Sprite CreateBlockSprite()
     {
         // 创建一个简单的正方形纹理
         int size = 64;

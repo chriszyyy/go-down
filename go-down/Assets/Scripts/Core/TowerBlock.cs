@@ -1,0 +1,186 @@
+using UnityEngine;
+using System;
+
+/// <summary>
+/// 塔方块基类 - 所有可消除方块的基类
+/// 用于 Prefab 预制体
+/// </summary>
+[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
+public class TowerBlock : MonoBehaviour
+{
+    [Header("方块配置")]
+    [Tooltip("方块类型名称")]
+    public string blockTypeName = "方块";
+
+    [Tooltip("方块得分")]
+    public int scoreValue = 10;
+
+    [Header("物理状态")]
+    [Tooltip("是否为静态（不受重力影响）")]
+    public bool isStatic = true;
+
+    [Header("动画配置")]
+    [Tooltip("消失动画持续时间")]
+    public float disappearDuration = 0.3f;
+
+    [Tooltip("消失时的缩放目标")]
+    public float disappearScale = 0.1f;
+
+    // 组件引用
+    protected Rigidbody2D rb;
+    protected SpriteRenderer spriteRenderer;
+    protected Collider2D blockCollider;
+
+    // 状态
+    protected bool isDestroying = false;
+    protected float destroyTimer = 0f;
+    protected Vector3 originalScale;
+    protected Color originalColor;
+
+    // 静态事件
+    public static event Action<TowerBlock> OnBlockDestroyed;
+    public static event Action<TowerBlock, int> OnBlockScored; // 方块，得分
+
+    protected virtual void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        blockCollider = GetComponent<Collider2D>();
+
+        originalScale = transform.localScale;
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
+    }
+
+    protected virtual void Start()
+    {
+        // 初始设置为静态
+        if (isStatic)
+        {
+            Freeze();
+        }
+    }
+
+    protected virtual void Update()
+    {
+        if (isDestroying)
+        {
+            UpdateDestroyAnimation();
+        }
+    }
+
+    /// <summary>
+    /// 鼠标点击检测
+    /// </summary>
+    void OnMouseDown()
+    {
+        if (!isDestroying)
+        {
+            DestroyBlock();
+        }
+    }
+
+    /// <summary>
+    /// 消除方块
+    /// </summary>
+    public virtual void DestroyBlock()
+    {
+        if (isDestroying) return;
+
+        isDestroying = true;
+        destroyTimer = 0f;
+
+        // 禁用碰撞器
+        if (blockCollider != null)
+        {
+            blockCollider.enabled = false;
+        }
+
+        // 触发得分事件
+        OnBlockScored?.Invoke(this, scoreValue);
+
+        // 触发消除事件
+        OnBlockDestroyed?.Invoke(this);
+
+        Debug.Log($"方块被消除: {blockTypeName} at {transform.position}, 得分: {scoreValue}");
+    }
+
+    /// <summary>
+    /// 更新消失动画
+    /// </summary>
+    protected virtual void UpdateDestroyAnimation()
+    {
+        destroyTimer += Time.deltaTime;
+        float progress = destroyTimer / disappearDuration;
+
+        if (progress >= 1f)
+        {
+            // 动画结束，销毁对象
+            Destroy(gameObject);
+            return;
+        }
+
+        // 缩小动画
+        float scale = Mathf.Lerp(1f, disappearScale, progress);
+        transform.localScale = originalScale * scale;
+
+        // 淡出动画
+        if (spriteRenderer != null)
+        {
+            Color color = originalColor;
+            color.a = Mathf.Lerp(1f, 0f, progress);
+            spriteRenderer.color = color;
+        }
+    }
+
+    /// <summary>
+    /// 将方块转为动态（受重力影响）
+    /// </summary>
+    public virtual void MakeDynamic()
+    {
+        if (isDestroying) return;
+
+        isStatic = false;
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.WakeUp();
+        }
+    }
+
+    /// <summary>
+    /// 冻结方块（不受重力影响）
+    /// </summary>
+    public virtual void Freeze()
+    {
+        isStatic = true;
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+    }
+
+    /// <summary>
+    /// 检查方块是否稳定（不再移动）
+    /// </summary>
+    public virtual bool IsStable()
+    {
+        if (isStatic) return true;
+        if (rb == null) return false;
+
+        return rb.velocity.magnitude < 0.1f && Mathf.Abs(rb.angularVelocity) < 1f;
+    }
+
+    protected virtual void OnDestroy()
+    {
+        // 清理时解除事件订阅
+    }
+}

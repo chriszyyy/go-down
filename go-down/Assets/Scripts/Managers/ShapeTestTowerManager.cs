@@ -2,32 +2,29 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// 形状塔管理器 - 使用俄罗斯方块形状生成塔
+/// 形状测试管理器 - 测试不同形状的方块组合
 /// </summary>
-public class ShapeTowerManager : MonoBehaviour
+public class ShapeTestTowerManager : MonoBehaviour
 {
     [Header("塔配置")]
     [Tooltip("塔的层数")]
-    public int towerLayers = 10;
+    public int towerLayers = 8;
 
-    [Tooltip("塔的宽度（方块数）")]
-    public int towerWidth = 10;
+    [Tooltip("塔的宽度（格子数）")]
+    public int towerWidth = 8;
 
     [Tooltip("方块大小")]
     public float blockSize = 1f;
 
     [Tooltip("层间距")]
-    public float layerHeight = 1f;
+    public float layerSpacing = 1f;
 
     [Tooltip("起始高度")]
-    public float startHeight = 0f;
+    public float startHeight = -3f;
 
     [Header("形状配置")]
     [Tooltip("使用随机形状")]
     public bool useRandomShapes = true;
-
-    [Tooltip("如果不随机，使用的固定形状")]
-    public TetrisShapeType fixedShapeType = TetrisShapeType.T;
 
     [Header("六边形球配置")]
     [Tooltip("是否自动生成六边形球")]
@@ -36,21 +33,21 @@ public class ShapeTowerManager : MonoBehaviour
     [Tooltip("球相对于顶部的高度偏移")]
     public float ballHeightOffset = 1.5f;
 
-    // 形状存储
+    // 存储所有形状
     private List<GameObject> allShapes = new List<GameObject>();
     private Dictionary<int, List<GameObject>> shapesByLayer = new Dictionary<int, List<GameObject>>();
     private GameObject hexagonBall;
 
-    // 塔的占用情况（用于智能填充）
+    // 塔的占用情况
     private HashSet<Vector2Int> occupiedCells = new HashSet<Vector2Int>();
 
     void Start()
     {
         // 订阅方块消除事件
-        ShapeBlock.OnShapeDestroyed += HandleShapeDestroyed;
+        Block.OnBlockDestroyed += HandleBlockDestroyed;
 
-        // 生成塔
-        GenerateTower();
+        // 生成形状塔
+        GenerateShapeTower();
 
         // 生成六边形球
         if (spawnHexagonBall)
@@ -61,13 +58,13 @@ public class ShapeTowerManager : MonoBehaviour
 
     void OnDestroy()
     {
-        ShapeBlock.OnShapeDestroyed -= HandleShapeDestroyed;
+        Block.OnBlockDestroyed -= HandleBlockDestroyed;
     }
 
     /// <summary>
-    /// 生成形状塔（智能填充算法）
+    /// 生成形状塔
     /// </summary>
-    public void GenerateTower()
+    public void GenerateShapeTower()
     {
         ClearTower();
         occupiedCells.Clear();
@@ -82,21 +79,22 @@ public class ShapeTowerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 填充一层（智能算法）
+    /// 填充一层
     /// </summary>
     void FillLayer(int layerIndex)
     {
-        float layerY = startHeight + layerIndex * layerHeight;
         List<GameObject> layerShapes = new List<GameObject>();
+        float layerY = startHeight + layerIndex * layerSpacing;
 
         // 从左到右扫描这一层，找到空位并填充
-        for (int x = 0; x < towerWidth; x++)
+        for (int x = 0; x < towerWidth;)
         {
             // 检查当前位置是否已被占用
             Vector2Int cellPos = new Vector2Int(x, layerIndex);
             if (occupiedCells.Contains(cellPos))
             {
-                continue; // 已被占用，跳过
+                x++;
+                continue;
             }
 
             // 尝试放置形状
@@ -106,6 +104,22 @@ public class ShapeTowerManager : MonoBehaviour
             {
                 layerShapes.Add(placedShape);
                 allShapes.Add(placedShape);
+
+                // 跳过已占用的格子
+                BlockShapeGroup group = placedShape.GetComponent<BlockShapeGroup>();
+                if (group != null)
+                {
+                    int shapeWidth = BlockShapeManager.GetShapeWidth(group.shapeType);
+                    x += shapeWidth;
+                }
+                else
+                {
+                    x++;
+                }
+            }
+            else
+            {
+                x++;
             }
         }
 
@@ -123,10 +137,10 @@ public class ShapeTowerManager : MonoBehaviour
         // 计算剩余空间
         int remainingWidth = towerWidth - startX;
 
-        // 获取可以尝试的形状列表（按优先级排序）
-        List<TetrisShapeType> shapesToTry = GetShapePriority(remainingWidth);
+        // 获取可以尝试的形状列表
+        List<BlockShapeType> shapesToTry = GetShapePriority(remainingWidth);
 
-        foreach (TetrisShapeType shapeType in shapesToTry)
+        foreach (BlockShapeType shapeType in shapesToTry)
         {
             // 检查形状是否能放入
             if (CanPlaceShape(shapeType, startX, startY))
@@ -136,38 +150,32 @@ public class ShapeTowerManager : MonoBehaviour
             }
         }
 
-        // 无法放置任何形状，返回null
         return null;
     }
 
     /// <summary>
     /// 获取形状放置优先级
     /// </summary>
-    List<TetrisShapeType> GetShapePriority(int remainingWidth)
+    List<BlockShapeType> GetShapePriority(int remainingWidth)
     {
-        List<TetrisShapeType> priority = new List<TetrisShapeType>();
+        List<BlockShapeType> priority = new List<BlockShapeType>();
 
         if (useRandomShapes)
         {
-            // 随机模式：根据剩余宽度随机选择合适的形状
-            var allShapes = new List<TetrisShapeType>();
+            // 根据剩余宽度选择合适的形状
+            var allShapes = new List<BlockShapeType>();
 
-            if (remainingWidth >= 4) allShapes.Add(TetrisShapeType.I);
-            if (remainingWidth >= 3)
-            {
-                allShapes.Add(TetrisShapeType.T);
-                allShapes.Add(TetrisShapeType.L);
-                allShapes.Add(TetrisShapeType.S);
-                allShapes.Add(TetrisShapeType.Z);
-            }
+            if (remainingWidth >= 4) allShapes.Add(BlockShapeType.Line4);
             if (remainingWidth >= 2)
             {
-                allShapes.Add(TetrisShapeType.O);
-                allShapes.Add(TetrisShapeType.J);
+                allShapes.Add(BlockShapeType.Square);
+                allShapes.Add(BlockShapeType.L3);
+                allShapes.Add(BlockShapeType.L4);
+                allShapes.Add(BlockShapeType.L5);
             }
-            allShapes.Add(TetrisShapeType.Single);
+            allShapes.Add(BlockShapeType.Single);
 
-            // 随机打乱顺序
+            // 随机打乱
             for (int i = 0; i < allShapes.Count; i++)
             {
                 int randomIndex = Random.Range(i, allShapes.Count);
@@ -180,33 +188,31 @@ public class ShapeTowerManager : MonoBehaviour
         }
         else
         {
-            // 固定形状模式
-            priority.Add(fixedShapeType);
-            priority.Add(TetrisShapeType.Single); // 备选
+            priority.Add(BlockShapeType.Single);
         }
 
         return priority;
     }
 
     /// <summary>
-    /// 检查形状是否能放置在指定位置
+    /// 检查形状是否能放置
     /// </summary>
-    bool CanPlaceShape(TetrisShapeType shapeType, int startX, int startY)
+    bool CanPlaceShape(BlockShapeType shapeType, int startX, int startY)
     {
-        var shapePositions = TetrisShapeFactory.GetShapePositions(shapeType);
+        var shapeData = BlockShapeManager.GetShapeData(shapeType);
 
-        foreach (Vector2Int relPos in shapePositions)
+        foreach (Vector2Int relPos in shapeData.positions)
         {
             int cellX = startX + relPos.x;
             int cellY = startY + relPos.y;
 
-            // 检查是否超出边界
+            // 检查边界
             if (cellX < 0 || cellX >= towerWidth || cellY < 0 || cellY >= towerLayers)
             {
                 return false;
             }
 
-            // 检查是否已被占用
+            // 检查占用
             if (occupiedCells.Contains(new Vector2Int(cellX, cellY)))
             {
                 return false;
@@ -217,63 +223,21 @@ public class ShapeTowerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 放置形状并标记占用（使用一体化 Sprite）
+    /// 放置形状
     /// </summary>
-    GameObject PlaceShape(TetrisShapeType shapeType, int startX, int startY, float worldY)
+    GameObject PlaceShape(BlockShapeType shapeType, int startX, int startY, float worldY)
     {
-        // 获取形状占用的格子位置
-        var shapePositions = TetrisShapeFactory.GetShapePositions(shapeType);
+        // 计算世界坐标位置（左下角对齐）
+        float worldX = (startX - towerWidth / 2f) * blockSize + blockSize / 2f;
+        Vector2 worldPosition = new Vector2(worldX, worldY);
 
-        // 计算形状的边界框（最小和最大坐标）
-        int minX = int.MaxValue, maxX = int.MinValue;
-        int minY = int.MaxValue, maxY = int.MinValue;
-
-        foreach (Vector2Int pos in shapePositions)
-        {
-            minX = Mathf.Min(minX, pos.x);
-            maxX = Mathf.Max(maxX, pos.x);
-            minY = Mathf.Min(minY, pos.y);
-            maxY = Mathf.Max(maxY, pos.y);
-        }
-
-        // 计算形状的实际宽度和高度（格子数）
-        int shapeWidth = maxX - minX + 1;
-        int shapeHeight = maxY - minY + 1;
-
-        // 计算形状左下角的世界坐标（基于 startX, startY）
-        // startX 是形状最左侧格子的位置
-        float worldX = (startX - towerWidth / 2f + shapeWidth / 2f) * blockSize;
-        float worldYPos = worldY + (shapeHeight / 2f) * blockSize;
-        Vector2 worldPosition = new Vector2(worldX, worldYPos);
-
-        // 创建一体化形状 GameObject
-        GameObject shape = new GameObject($"Shape_L{startY}_{shapeType}_X{startX}");
-        shape.transform.SetParent(transform);
-        shape.transform.position = worldPosition;
-
-        // 添加 SpriteRenderer
-        SpriteRenderer spriteRenderer = shape.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = ShapeSpriteGenerator.GetShapeSprite(shapeType);
-        spriteRenderer.sortingOrder = 0;
-
-        // 添加 Rigidbody2D（初始为运动学）
-        Rigidbody2D rb = shape.AddComponent<Rigidbody2D>();
-        rb.bodyType = RigidbodyType2D.Kinematic;
-        rb.mass = shapePositions.Length; // 质量与方块数相关
-
-        // 添加 BoxCollider2D（基于形状实际大小）
-        BoxCollider2D collider = shape.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(shapeWidth * blockSize, shapeHeight * blockSize);
-
-        // 设置图层
-        shape.layer = LayerMask.NameToLayer("Block");
-
-        // 添加 ShapeBlock 组件（用于点击检测和物理控制）
-        ShapeBlock shapeBlock = shape.AddComponent<ShapeBlock>();
-        shapeBlock.shapeType = shapeType;
+        // 创建形状
+        GameObject shape = BlockShapeFactory.CreateShape(shapeType, worldPosition, blockSize, transform);
+        shape.name = $"Shape_L{startY}_{shapeType}_X{startX}";
 
         // 标记占用的格子
-        foreach (Vector2Int relPos in shapePositions)
+        var shapeData = BlockShapeManager.GetShapeData(shapeType);
+        foreach (Vector2Int relPos in shapeData.positions)
         {
             int cellX = startX + relPos.x;
             int cellY = startY + relPos.y;
@@ -281,9 +245,11 @@ public class ShapeTowerManager : MonoBehaviour
         }
 
         return shape;
-    }    /// <summary>
-         /// 清空塔
-         /// </summary>
+    }
+
+    /// <summary>
+    /// 清空塔
+    /// </summary>
     public void ClearTower()
     {
         foreach (GameObject shape in allShapes)
@@ -303,7 +269,7 @@ public class ShapeTowerManager : MonoBehaviour
     /// </summary>
     void SpawnHexagonBall()
     {
-        float topY = startHeight + towerLayers * layerHeight;
+        float topY = startHeight + towerLayers * layerSpacing;
         Vector2 ballPosition = new Vector2(0, topY + ballHeightOffset);
 
         hexagonBall = HexagonBallFactory.CreateHexagonBall(ballPosition, transform);
@@ -313,17 +279,46 @@ public class ShapeTowerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 处理形状被消除事件
+    /// 重置塔
     /// </summary>
-    void HandleShapeDestroyed(ShapeBlock destroyedShape)
+    public void ResetTower()
     {
-        Debug.Log($"形状被点击: {destroyedShape.shapeType}");
+        ClearTower();
 
-        // 找出被消除形状的层级
-        int destroyedLayer = GetShapeLayer(destroyedShape.gameObject);
+        if (hexagonBall != null)
+        {
+            Destroy(hexagonBall);
+        }
 
-        // 激活上层所有形状的物理
-        ActivateShapesAboveLayer(destroyedLayer);
+        GenerateShapeTower();
+
+        if (spawnHexagonBall)
+        {
+            SpawnHexagonBall();
+        }
+    }
+
+    /// <summary>
+    /// 处理方块被消除事件
+    /// </summary>
+    void HandleBlockDestroyed(Block destroyedBlock)
+    {
+        // 找到被点击方块所属的形状组
+        BlockShapeGroup parentShape = destroyedBlock.GetComponentInParent<BlockShapeGroup>();
+
+        if (parentShape != null)
+        {
+            Debug.Log($"形状被点击: {parentShape.shapeType}");
+
+            // 找出被消除形状的层级
+            int destroyedLayer = GetShapeLayer(parentShape.gameObject);
+
+            // 消除整个形状组
+            parentShape.DestroyShapeGroup();
+
+            // 激活上层所有形状的物理
+            ActivateShapesAboveLayer(destroyedLayer);
+        }
     }
 
     /// <summary>
@@ -354,7 +349,7 @@ public class ShapeTowerManager : MonoBehaviour
                 {
                     if (shapeObj != null)
                     {
-                        ShapeBlock shape = shapeObj.GetComponent<ShapeBlock>();
+                        BlockShapeGroup shape = shapeObj.GetComponent<BlockShapeGroup>();
                         if (shape != null)
                         {
                             shape.MakeDynamic();
@@ -367,26 +362,6 @@ public class ShapeTowerManager : MonoBehaviour
         Debug.Log($"激活 {layerIndex} 层以上的形状物理");
     }
 
-    /// <summary>
-    /// 重置塔
-    /// </summary>
-    public void ResetTower()
-    {
-        ClearTower();
-
-        if (hexagonBall != null)
-        {
-            Destroy(hexagonBall);
-        }
-
-        GenerateTower();
-
-        if (spawnHexagonBall)
-        {
-            SpawnHexagonBall();
-        }
-    }
-
     void OnDrawGizmos()
     {
         // 在编辑器中绘制塔的边界
@@ -395,7 +370,7 @@ public class ShapeTowerManager : MonoBehaviour
             Gizmos.color = Color.yellow;
 
             float width = towerWidth * blockSize;
-            float height = towerLayers * layerHeight;
+            float height = towerLayers * layerSpacing;
             Vector3 center = new Vector3(0, startHeight + height / 2f, 0);
             Gizmos.DrawWireCube(center, new Vector3(width, height, 0.1f));
         }

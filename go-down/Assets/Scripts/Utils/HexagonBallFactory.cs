@@ -5,8 +5,9 @@ using UnityEngine;
 /// </summary>
 public static class HexagonBallFactory
 {
-    // 六边形球的尺寸
-    public const float HEXAGON_SIZE = 0.8f;
+    // 六边形球的尺寸（边长等于一个方块格子的宽度）
+    // 正六边形的外接圆直径 = 2 * 边长，所以 SIZE = 2.0
+    public const float HEXAGON_SIZE = 2.0f;
 
     /// <summary>
     /// 创建六边形球
@@ -42,10 +43,11 @@ public static class HexagonBallFactory
         // 添加 PolygonCollider2D (六边形)
         PolygonCollider2D collider = ballObj.AddComponent<PolygonCollider2D>();
         // Sprite 的实际半径计算：
-        // 纹理中半径 = 128 / 2.5 = 51.2 像素
-        // pixelsPerUnit = 128 / 0.8 = 160
-        // 世界坐标半径 = 51.2 / 160 = 0.32
-        float colliderRadius = (128f / 2.5f) / (128f / HEXAGON_SIZE);
+        // 纹理中半径 = 128 / 2.1 ≈ 60.95 像素
+        // pixelsPerUnit = 128 / 2.0 = 64
+        // 世界坐标半径 = 60.95 / 64 ≈ 0.952
+        // 六边形边长 ≈ 0.952，接近 1.0（方块边长）
+        float colliderRadius = (128f / 2.1f) / (128f / HEXAGON_SIZE);
         collider.points = GetHexagonPoints(colliderRadius);
 
         // 添加 HexagonBall 脚本
@@ -70,7 +72,9 @@ public static class HexagonBallFactory
         }
 
         Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2.5f;
+        // 六边形占据整个纹理的大部分
+        // 让六边形边长 = 半径，使得纹理中六边形尽可能大
+        float radius = size / 2.1f; // 接近最大尺寸
 
         // 获取六边形顶点
         Vector2[] hexPoints = GetHexagonPoints(radius);
