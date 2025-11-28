@@ -21,11 +21,22 @@ public class PrefabGenerator : EditorWindow
         }
 
         GUILayout.Space(10);
+
+        if (GUILayout.Button("生成六边形球Prefab", GUILayout.Height(40)))
+        {
+            CreateHexagonBallPrefab();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            EditorUtility.DisplayDialog("完成", "六边形球Prefab已生成到 Assets/Prefabs/", "确定");
+        }
+
+        GUILayout.Space(10);
         EditorGUILayout.HelpBox(
             "这会自动创建:\n" +
             "• 所有方块的Sprite\n" +
+            "• 六边形球的Sprite\n" +
             "• 配置好的Prefab\n" +
-            "• 保存到 Assets/Prefabs/Blocks/",
+            "• 保存到 Assets/Prefabs/",
             MessageType.Info);
     }
 
@@ -47,11 +58,14 @@ public class PrefabGenerator : EditorWindow
         CreateL5BlockPrefab();
         CreateLineBlockPrefab();
 
+        // 生成六边形球
+        CreateHexagonBallPrefab();
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("✅ 所有方块Prefab生成完成！");
-        EditorUtility.DisplayDialog("完成", "所有方块Prefab已生成到 Assets/Prefabs/Blocks/", "确定");
+        Debug.Log("✅ 所有Prefab生成完成！");
+        EditorUtility.DisplayDialog("完成", "所有Prefab已生成到 Assets/Prefabs/", "确定");
     }
 
     // 1. 单格方块
@@ -456,5 +470,130 @@ public class PrefabGenerator : EditorWindow
     {
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Debug.Log($"✅ 已创建: {path}");
+    }
+
+    // 创建六边形球Prefab
+    private static void CreateHexagonBallPrefab()
+    {
+        GameObject go = new GameObject("HexagonBall");
+
+        // Sprite
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateHexagonSprite();
+        sr.sortingOrder = 1; // 确保在方块上方
+
+        // PolygonCollider2D (六边形)
+        PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
+        collider.points = CreateHexagonColliderPoints();
+
+        // Rigidbody2D - Dynamic (会受物理影响)
+        Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.mass = 1f;
+        rb.gravityScale = 1f;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+        // HexagonBall脚本
+        go.AddComponent<HexagonBall>();
+
+        // 设置Layer
+        go.layer = LayerMask.NameToLayer("HexagonBall");
+
+        SavePrefab(go, "Assets/Prefabs/HexagonBall.prefab");
+        Object.DestroyImmediate(go);
+    }
+
+    // 创建六边形Sprite
+    private static Sprite CreateHexagonSprite()
+    {
+        const float HEXAGON_DIAMETER = 2.0f; // 直径=2个方格
+        int textureSize = 256;
+        float radius = textureSize / 2f * 0.9f; // 略小于纹理一半，留出边缘
+
+        Texture2D texture = new Texture2D(textureSize, textureSize);
+        Color[] pixels = new Color[textureSize * textureSize];
+
+        Vector2 center = new Vector2(textureSize / 2f, textureSize / 2f);
+
+        // 透明背景
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = Color.clear;
+        }
+
+        // 绘制六边形
+        for (int y = 0; y < textureSize; y++)
+        {
+            for (int x = 0; x < textureSize; x++)
+            {
+                Vector2 point = new Vector2(x, y);
+                if (IsInsideHexagon(point, center, radius))
+                {
+                    pixels[y * textureSize + x] = Color.white;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string path = "Assets/Sprites/HexagonBall.png";
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = textureSize / HEXAGON_DIAMETER; // 128 PPU，直径=2个方格
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    // 创建六边形碰撞器的点
+    private static Vector2[] CreateHexagonColliderPoints()
+    {
+        const float HEXAGON_DIAMETER = 2.0f; // 直径=2个方格
+        float radius = HEXAGON_DIAMETER / 2f * 0.95f; // 半径略小于1.0，留出间隙
+
+        Vector2[] points = new Vector2[6];
+        for (int i = 0; i < 6; i++)
+        {
+            float angle = Mathf.PI / 3f * i; // 60度间隔
+            points[i] = new Vector2(
+                radius * Mathf.Cos(angle),
+                radius * Mathf.Sin(angle)
+            );
+        }
+        return points;
+    }
+
+    // 判断点是否在六边形内
+    private static bool IsInsideHexagon(Vector2 point, Vector2 center, float radius)
+    {
+        Vector2 diff = point - center;
+        float distance = diff.magnitude;
+
+        if (distance > radius) return false;
+
+        // 六边形的六个边界
+        for (int i = 0; i < 6; i++)
+        {
+            float angle = Mathf.PI / 3f * i;
+            Vector2 normal = new Vector2(Mathf.Cos(angle + Mathf.PI / 6f), Mathf.Sin(angle + Mathf.PI / 6f));
+            float edgeDistance = radius * Mathf.Cos(Mathf.PI / 6f);
+
+            if (Vector2.Dot(diff, normal) > edgeDistance)
+                return false;
+        }
+
+        return true;
     }
 }
