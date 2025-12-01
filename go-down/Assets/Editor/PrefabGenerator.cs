@@ -79,6 +79,7 @@ public class PrefabGenerator : EditorWindow
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(0.95f, 0.95f);
+        collider.offset = new Vector2(0.5f, 0.5f); // 64x64 图形在 128x128 纹理中的偏移
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
@@ -105,15 +106,16 @@ public class PrefabGenerator : EditorWindow
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(1.9f, 1.9f);
+        collider.offset = new Vector2(1.0f, 1.0f); // 128x128 图形在 256x256 纹理中的偏移
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        TowerBlock block = go.AddComponent<TowerBlock>();
-        block.blockTypeName = "正方形方块";
-        block.scoreValue = 40;
+        SquareBlock block = go.AddComponent<SquareBlock>();
+        block.blockTypeName = "方形方块";
+        block.scoreValue = 30;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -138,9 +140,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 3f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        TowerBlock block = go.AddComponent<TowerBlock>();
+        L3Block block = go.AddComponent<L3Block>();
         block.blockTypeName = "L3方块";
-        block.scoreValue = 30;
+        block.scoreValue = 50;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -165,9 +167,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        TowerBlock block = go.AddComponent<TowerBlock>();
+        L4Block block = go.AddComponent<L4Block>();
         block.blockTypeName = "L4方块";
-        block.scoreValue = 40;
+        block.scoreValue = 70;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -192,9 +194,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 5f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        TowerBlock block = go.AddComponent<TowerBlock>();
+        L5Block block = go.AddComponent<L5Block>();
         block.blockTypeName = "L5方块";
-        block.scoreValue = 50;
+        block.scoreValue = 90;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -213,13 +215,14 @@ public class PrefabGenerator : EditorWindow
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(3.9f, 0.95f); // 4格宽，留间隙
+        collider.offset = new Vector2(2.0f, 0.5f); // 256x64 图形在 512x128 纹理中的偏移
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        TowerBlock block = go.AddComponent<TowerBlock>();
+        LineBlock block = go.AddComponent<LineBlock>();
         block.blockTypeName = "I型方块";
         block.scoreValue = 40;
         block.isStatic = true;
@@ -235,63 +238,79 @@ public class PrefabGenerator : EditorWindow
     // 创建L形碰撞器的点（逆时针）
     private static Vector2[] CreateLShapeColliderPoints(int blocks)
     {
-        float gap = 0.025f;
+        float gap = 0.05f;
 
-        // L形状（2格宽，blocks格高）：
-        // █      ← 顶部
-        // █      
-        // ██     ← 底部
+        // L形状（2格宽，blocks格高）在右上角区域：
+        // 由于图形绘制在右上角，需要计算正确的偏移
+        // 原始尺寸: 2*64 x blocks*64，纹理尺寸: 4*64 x 2*blocks*64
+        // 图形中心偏移: (64, blocks*32) pixels = (1.0f, blocks*0.5f) units
+        float offsetX = 1.0f; // 向右偏移一个单位
+        float offsetY = (float)blocks * 0.5f; // 向上偏移
 
-        // Sprite的pivot在中心，宽度=2，高度=blocks
-        float halfWidth = 1f;
-        float halfHeight = blocks / 2f;
+        float width = 2f;
+        float height = (float)blocks;
 
         return new Vector2[]
         {
-            new Vector2(-halfWidth + gap, -halfHeight + gap),           // ①左下角
-            new Vector2(halfWidth - gap, -halfHeight + gap),            // ②右下角
-            new Vector2(halfWidth - gap, -halfHeight + 1f - gap),       // ③右下方块顶部右角
-            new Vector2(-halfWidth + 1f - gap, -halfHeight + 1f - gap), // ④转折点（内角）
-            new Vector2(-halfWidth + 1f - gap, halfHeight - gap),       // ⑤右上角
-            new Vector2(-halfWidth + gap, halfHeight - gap),            // ⑥左上角
+            new Vector2(-width/2f + gap + offsetX, -height/2f + gap + offsetY),       // ①左下角
+            new Vector2(width/2f - gap + offsetX, -height/2f + gap + offsetY),        // ②右下角
+            new Vector2(width/2f - gap + offsetX, -height/2f + 1f - gap + offsetY),   // ③右下方块顶部
+            new Vector2(-gap + offsetX, -height/2f + 1f - gap + offsetY),             // ④转折点
+            new Vector2(-gap + offsetX, height/2f - gap + offsetY),                   // ⑤左上
+            new Vector2(-width/2f + gap + offsetX, height/2f - gap + offsetY),        // ⑥左上角
         };
     }
 
     // 创建等长L形碰撞器的点（3x3的L形）
     private static Vector2[] CreateEqualLShapeColliderPoints()
     {
-        float gap = 0.025f;
+        float gap = 0.05f;
 
-        // 等长L形（3x3）：
-        // █      
-        // █      
-        // ███    
+        // 等长L形（3x3）在右上角区域：
+        // 由于图形绘制在右上角，需要计算正确的偏移
+        // 原始尺寸: 3*64 x 3*64，纹理尺寴: 6*64 x 6*64
+        // 图形中心偏移: (96, 96) pixels = (1.5f, 1.5f) units
+        float offsetX = 1.5f; // 向右偏移1.5个单位
+        float offsetY = 1.5f; // 向上偏移1.5个单位
 
-        // Sprite的pivot在中心，宽度=3，高度=3
-        float halfSize = 1.5f;
+        float size = 3f;
+        float half = size / 2f;
 
         return new Vector2[]
         {
-            new Vector2(-halfSize + gap, -halfSize + gap),           // ①左下角
-            new Vector2(halfSize - gap, -halfSize + gap),            // ②右下角
-            new Vector2(halfSize - gap, -halfSize + 1f - gap),       // ③右下第一格顶部右角
-            new Vector2(-halfSize + 1f - gap, -halfSize + 1f - gap), // ④转折点（内角）
-            new Vector2(-halfSize + 1f - gap, halfSize - gap),       // ⑤右上角
-            new Vector2(-halfSize + gap, halfSize - gap),            // ⑥左上角
+            new Vector2(-half + gap + offsetX, -half + gap + offsetY),       // ①左下角
+            new Vector2(half - gap + offsetX, -half + gap + offsetY),        // ②右下角
+            new Vector2(half - gap + offsetX, -half + 1f - gap + offsetY),   // ③右下第一格顶部
+            new Vector2(-half + 1f - gap + offsetX, -half + 1f - gap + offsetY), // ④转折点
+            new Vector2(-half + 1f - gap + offsetX, half - gap + offsetY),   // ⑤左上
+            new Vector2(-half + gap + offsetX, half - gap + offsetY),        // ⑥左上角
         };
     }
 
-    // 创建正方形Sprite
+    // 创建正方形Sprite（图形绘制在右上角）
     private static Sprite CreateSquareSprite(int width, int height, Color color)
     {
-        Texture2D texture = new Texture2D(width, height);
-        Color[] pixels = new Color[width * height];
+        // 创建更大的纹理，把图形绘制在右上角
+        int textureWidth = width * 2;  // 纹理宽度加倍
+        int textureHeight = height * 2; // 纹理高度加倍
 
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+
+        // 透明背景
         for (int i = 0; i < pixels.Length; i++)
         {
-            pixels[i] = color;
+            pixels[i] = Color.clear;
         }
 
+        // 在右上角区域绘制方块（从(width,height)到(textureWidth,textureHeight)）
+        for (int y = height; y < textureHeight; y++)
+        {
+            for (int x = width; x < textureWidth; x++)
+            {
+                pixels[y * textureWidth + x] = color;
+            }
+        }
         texture.SetPixels(pixels);
         texture.Apply();
 
@@ -314,15 +333,19 @@ public class PrefabGenerator : EditorWindow
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
-    // 创建L形Sprite
+    // 创建L形Sprite（图形绘制在右上角）
     private static Sprite CreateLShapeSprite(int blocks, Color color)
     {
         int size = 64;
-        int width = 2 * size;
-        int height = blocks * size;
+        int originalWidth = 2 * size;
+        int originalHeight = blocks * size;
 
-        Texture2D texture = new Texture2D(width, height);
-        Color[] pixels = new Color[width * height];
+        // 创建更大的纹理，把L形绘制在右上角
+        int textureWidth = originalWidth * 2;  // 纹理宽度加倍
+        int textureHeight = originalHeight * 2; // 纹理高度加倍
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
 
         // 透明背景
         for (int i = 0; i < pixels.Length; i++)
@@ -330,25 +353,26 @@ public class PrefabGenerator : EditorWindow
             pixels[i] = Color.clear;
         }
 
-        // L形: 左边一列 + 底部右边一格
-        // 左边一列
-        for (int y = 0; y < height; y++)
+        // 在右上角绘制L形：左边一列 + 底部一行
+
+        // 左边一列（所有blocks层） - 从右上角的左侧开始
+        for (int y = originalHeight; y < textureHeight; y++)
         {
-            for (int x = 0; x < size; x++)
+            for (int x = originalWidth; x < originalWidth + size; x++)
             {
-                pixels[y * width + x] = color;
+                pixels[y * textureWidth + x] = color;
             }
         }
 
-        // 底部右边一格
-        for (int y = 0; y < size; y++)
+        // 底部一行（只在最底层） - 从右上角的底部开始
+        int bottomLayerStart = originalHeight;
+        for (int y = bottomLayerStart; y < bottomLayerStart + size; y++)
         {
-            for (int x = size; x < width; x++)
+            for (int x = originalWidth; x < textureWidth; x++)
             {
-                pixels[y * width + x] = color;
+                pixels[y * textureWidth + x] = color;
             }
         }
-
         texture.SetPixels(pixels);
         texture.Apply();
 
@@ -364,6 +388,9 @@ public class PrefabGenerator : EditorWindow
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
+
+
+
             AssetDatabase.WriteImportSettingsIfDirty(path);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
@@ -371,15 +398,19 @@ public class PrefabGenerator : EditorWindow
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
-    // 创建等长L形Sprite (3x3)
+    // 创建等长L形Sprite（图形绘制在右上角）
     private static Sprite CreateEqualLShapeSprite(Color color)
     {
         int size = 64;
-        int width = 3 * size;  // 3格宽
-        int height = 3 * size; // 3格高
+        int originalWidth = 3 * size;  // 3格宽
+        int originalHeight = 3 * size; // 3格高
 
-        Texture2D texture = new Texture2D(width, height);
-        Color[] pixels = new Color[width * height];
+        // 创建更大的纹理，把等长L形绘制在右上角
+        int textureWidth = originalWidth * 2;
+        int textureHeight = originalHeight * 2;
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
 
         // 透明背景
         for (int i = 0; i < pixels.Length; i++)
@@ -387,25 +418,25 @@ public class PrefabGenerator : EditorWindow
             pixels[i] = Color.clear;
         }
 
-        // 等长L形: 左边一列(3格高) + 底部右边两格
-        // 左边一列 (3格高)
-        for (int y = 0; y < height; y++)
+        // 在右上角绘制正确等长L形：左边一列(3格高) + 底部水平一排(3格宽)
+        // 左边一列 (3格高) - 从右上角的左侧开始
+        for (int y = originalHeight; y < textureHeight; y++)
         {
-            for (int x = 0; x < size; x++)
+            for (int x = originalWidth; x < originalWidth + size; x++)
             {
-                pixels[y * width + x] = color;
+                pixels[y * textureWidth + x] = color;
             }
         }
 
-        // 底部右边两格
-        for (int y = 0; y < size; y++)
+        // 底部水平一排(3格宽) - 从右上角的底部开始
+        int bottomLayerStart = originalHeight;
+        for (int y = bottomLayerStart; y < bottomLayerStart + size; y++)
         {
-            for (int x = size; x < width; x++)
+            for (int x = originalWidth; x < textureWidth; x++)
             {
-                pixels[y * width + x] = color;
+                pixels[y * textureWidth + x] = color;
             }
         }
-
         texture.SetPixels(pixels);
         texture.Apply();
 
@@ -421,6 +452,9 @@ public class PrefabGenerator : EditorWindow
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
+
+
+
             AssetDatabase.WriteImportSettingsIfDirty(path);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
@@ -428,21 +462,34 @@ public class PrefabGenerator : EditorWindow
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
-    // 创建横条Sprite
+    // 创建横条Sprite（图形绘制在右上角）
     private static Sprite CreateLineSprite(int blocks, Color color)
     {
         int size = 64;
-        int width = blocks * size;
-        int height = size;
+        int originalWidth = blocks * size;
+        int originalHeight = size;
 
-        Texture2D texture = new Texture2D(width, height);
-        Color[] pixels = new Color[width * height];
+        // 创建更大的纹理，把横条绘制在右上角
+        int textureWidth = originalWidth * 2;
+        int textureHeight = originalHeight * 2;
 
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+
+        // 透明背景
         for (int i = 0; i < pixels.Length; i++)
         {
-            pixels[i] = color;
+            pixels[i] = Color.clear;
         }
 
+        // 在右上角绘制横条
+        for (int y = originalHeight; y < textureHeight; y++)
+        {
+            for (int x = originalWidth; x < textureWidth; x++)
+            {
+                pixels[y * textureWidth + x] = color;
+            }
+        }
         texture.SetPixels(pixels);
         texture.Apply();
 
@@ -458,6 +505,9 @@ public class PrefabGenerator : EditorWindow
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
+
+
+
             AssetDatabase.WriteImportSettingsIfDirty(path);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }

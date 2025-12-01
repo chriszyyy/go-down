@@ -179,6 +179,21 @@ public class TowerBlock : MonoBehaviour
         return rb.velocity.magnitude < 0.1f && Mathf.Abs(rb.angularVelocity) < 1f;
     }
 
+    /// <summary>
+    /// 获取方块实际占用的格子（相对坐标）
+    /// 返回格子坐标列表，例如L3方块: [(0,0), (1,0), (0,1), (0,2)]
+    /// </summary>
+    public virtual System.Collections.Generic.List<(int x, int y)> GetOccupiedCells(float rotationAngle)
+    {
+        var cells = new System.Collections.Generic.List<(int x, int y)>();
+
+        // 根据方块类型和旋转角度返回实际占用格子
+        // 基类默认：单格方块
+        cells.Add((0, 0));
+
+        return cells;
+    }
+
     protected virtual void OnDestroy()
     {
         // 清理时解除事件订阅

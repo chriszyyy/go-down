@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8602326964627335818}
   - component: {fileID: 9089273769103688440}
   - component: {fileID: 8863031259535826455}
-  - component: {fileID: 262182248270959507}
+  - component: {fileID: 440787770292806941}
   m_Layer: 6
   m_Name: L4Block
   m_TagString: Untagged
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2, y: 4}
+  m_Size: {x: 4, y: 8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -123,20 +123,20 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 4}
-    newSize: {x: 2, y: 4}
+    oldSize: {x: 4, y: 8}
+    newSize: {x: 4, y: 8}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -0.975, y: -1.975}
-      - {x: 0.975, y: -1.975}
-      - {x: 0.975, y: -1.025}
-      - {x: -0.025, y: -1.025}
-      - {x: -0.025, y: 1.975}
-      - {x: -0.975, y: 1.975}
+    - - {x: 0.05, y: 0.05}
+      - {x: 1.95, y: 0.05}
+      - {x: 1.95, y: 0.95}
+      - {x: 0.95, y: 0.95}
+      - {x: 0.95, y: 3.95}
+      - {x: 0.05, y: 3.95}
   m_UseDelaunayMesh: 0
 --- !u!50 &8863031259535826455
 Rigidbody2D:
@@ -165,7 +165,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
---- !u!114 &262182248270959507
+--- !u!114 &440787770292806941
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -174,11 +174,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2025943064478699690}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12583fdf85d4d4d41b80a267c2409a86, type: 3}
+  m_Script: {fileID: 11500000, guid: 2ad26542507ac5a46baad5c38ddb6673, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   blockTypeName: "L4\u65B9\u5757"
-  scoreValue: 40
+  scoreValue: 70
   isStatic: 1
   disappearDuration: 0.3
   disappearScale: 0.1

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4975634537480971881}
   - component: {fileID: 5896230544661327533}
   - component: {fileID: 8498653549922118681}
-  - component: {fileID: 8490786615908999329}
+  - component: {fileID: 4681459258682112280}
   m_Layer: 6
   m_Name: L5Block
   m_TagString: Untagged
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 3, y: 3}
+  m_Size: {x: 6, y: 6}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -123,20 +123,20 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 3, y: 3}
-    newSize: {x: 3, y: 3}
+    oldSize: {x: 6, y: 6}
+    newSize: {x: 6, y: 6}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -1.475, y: -1.475}
-      - {x: 1.475, y: -1.475}
-      - {x: 1.475, y: -0.525}
-      - {x: -0.525, y: -0.525}
-      - {x: -0.525, y: 1.475}
-      - {x: -1.475, y: 1.475}
+    - - {x: 0.05, y: 0.05}
+      - {x: 2.95, y: 0.05}
+      - {x: 2.95, y: 0.95}
+      - {x: 0.95, y: 0.95}
+      - {x: 0.95, y: 2.95}
+      - {x: 0.05, y: 2.95}
   m_UseDelaunayMesh: 0
 --- !u!50 &8498653549922118681
 Rigidbody2D:
@@ -165,7 +165,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
---- !u!114 &8490786615908999329
+--- !u!114 &4681459258682112280
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -174,11 +174,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1881958977191369349}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12583fdf85d4d4d41b80a267c2409a86, type: 3}
+  m_Script: {fileID: 11500000, guid: 95c828c76220ebf468897605cf9b51b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   blockTypeName: "L5\u65B9\u5757"
-  scoreValue: 50
+  scoreValue: 90
   isStatic: 1
   disappearDuration: 0.3
   disappearScale: 0.1
