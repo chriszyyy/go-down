@@ -7,6 +7,34 @@ using System.Collections.Generic;
 /// </summary>
 public class L3Block : TowerBlock
 {
+    /// <summary>
+    /// 获取当前旋转角度下的左下角坐标（相对于原点的偏移）
+    /// </summary>
+    public override Vector2Int GetBottomLeftCorner(float rotationAngle)
+    {
+        float normalizedAngle = rotationAngle % 360f;
+        if (normalizedAngle < 0) normalizedAngle += 360f;
+
+        if (Mathf.Approximately(normalizedAngle, 0f))
+        {
+            return new Vector2Int(0, 0);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 90f))
+        {
+            return new Vector2Int(-3, 0);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 180f))
+        {
+            return new Vector2Int(-2, -3);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 270f))
+        {
+            return new Vector2Int(0, -2);
+        }
+
+        return Vector2Int.zero;
+    }
+
     public override List<(int x, int y)> GetOccupiedCells(float rotationAngle)
     {
         var cells = new List<(int x, int y)>();
@@ -16,45 +44,53 @@ public class L3Block : TowerBlock
 
         if (Mathf.Approximately(normalizedAngle, 0f))
         {
-            // 0度: 正确的L形状 (2x3，占4格) - 基础形状
-            // #
-            // #
-            // ##
-            cells.Add((0, 0)); // 左下
-            cells.Add((1, 0)); // 右下 (L的水平部分)
-            cells.Add((0, 1)); // 左中
-            cells.Add((0, 2)); // 左上
+            // 0度: L形状，pivot在底-左(0,0)
+            // #     <- (0,2)
+            // #     <- (0,1)
+            // ##    <- (0,0) + (1,0)
+            cells.Add((0, 0)); // pivot点
+            cells.Add((1, 0));
+            cells.Add((0, 1));
+            cells.Add((0, 2));
         }
         else if (Mathf.Approximately(normalizedAngle, 90f))
         {
-            // 90度: 逆时针旋转90度 (3x2，占4格)
-            //   #
-            // ###
-            cells.Add((0, 0)); // 左下
-            cells.Add((1, 0)); // 中下
-            cells.Add((2, 0)); // 右下
-            cells.Add((2, 1)); // 右上
+            // 90度: 绕(0,0)逆时针旋转90度
+            // (x,y) → (-y-1,x)
+            // cells.Add((-1, 0));
+            // cells.Add((-1, 1));
+            // cells.Add((-2, 0));
+            // cells.Add((-3, 0));
+            cells.Add((0, 0));
+            cells.Add((1, 0));
+            cells.Add((2, 0));
+            cells.Add((2, 1));
         }
         else if (Mathf.Approximately(normalizedAngle, 180f))
         {
-            // 180度: 逆时针旋转180度 (2x3，占4格)
-            // ##
-            //  #
-            //  #
-            cells.Add((0, 2)); // 左上
-            cells.Add((1, 2)); // 右上
-            cells.Add((1, 1)); // 右中
-            cells.Add((1, 0)); // 右下
+            // 180度: 绕(0,0)旋转180度
+            // (x,y) → (-x-1,-y-1)
+            // cells.Add((-1, -1));
+            // cells.Add((-2, -1));
+            // cells.Add((-1, -2));
+            // cells.Add((-1, -3));
+            cells.Add((0, 2));
+            cells.Add((1, 0));
+            cells.Add((1, 1));
+            cells.Add((1, 2));
         }
         else if (Mathf.Approximately(normalizedAngle, 270f))
         {
-            // 270度: 逆时针旋转270度 (3x2，占4格)
-            // ###
-            // #
-            cells.Add((0, 1)); // 左上
-            cells.Add((0, 0)); // 左下
-            cells.Add((1, 0)); // 中下
-            cells.Add((2, 0)); // 右下
+            // 270度: 绕(0,0)逆时针270度 = 顺时针90度
+            // (x,y) → (y,-x-1)
+            // cells.Add((0, -1));
+            // cells.Add((0, -2));
+            // cells.Add((1, -1));
+            // cells.Add((2, -1));
+            cells.Add((0, 0));
+            cells.Add((0, 1));
+            cells.Add((1, 1));
+            cells.Add((2, 1));
         }
 
         return cells;

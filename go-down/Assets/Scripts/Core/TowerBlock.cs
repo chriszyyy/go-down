@@ -185,13 +185,20 @@ public class TowerBlock : MonoBehaviour
     /// </summary>
     public virtual System.Collections.Generic.List<(int x, int y)> GetOccupiedCells(float rotationAngle)
     {
-        var cells = new System.Collections.Generic.List<(int x, int y)>();
-
-        // 根据方块类型和旋转角度返回实际占用格子
-        // 基类默认：单格方块
-        cells.Add((0, 0));
+        var cells = new System.Collections.Generic.List<(int x, int y)>
+        {
+            // 根据方块类型和旋转角度返回实际占用格子
+            // 基类默认：单格方块
+            (0, 0)
+        };
 
         return cells;
+    }
+
+    public virtual Vector2Int GetBottomLeftCorner(float rotationAngle)
+    {
+        // 基类默认：pivot在(0,0)
+        return new Vector2Int(0, 0);
     }
 
     protected virtual void OnDestroy()

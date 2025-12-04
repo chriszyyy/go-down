@@ -645,7 +645,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   towerLayers: 10
-  layerWidth: 8
+  layerWidth: 15
   layerSpacing: 1
   startHeight: -3
   singleBlockPrefab: {fileID: 1186311390117326443, guid: 0482599536ed7594f90ca3cb6cd69f7d, type: 3}
@@ -666,7 +666,7 @@ Transform:
   m_GameObject: {fileID: 1425696443}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.87, y: 1.73, z: 0}
+  m_LocalPosition: {x: 0.03, y: 0.07, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -49,19 +49,12 @@ public class TowerBuilder : MonoBehaviour
 
     // 运行时数据
     private GameObject hexagonBall;
-    private System.Collections.Generic.List<GameObject> allBlocks = new System.Collections.Generic.List<GameObject>();
-    private System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<GameObject>> blocksByLayer =
-        new System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<GameObject>>();
 
     // 网格占用矩阵 [层][列] = 是否被占用
     private bool[,] gridOccupied;
 
     void Start()
     {
-        // 订阅方块消除事件
-        TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
-        TowerBlock.OnBlockScored += HandleBlockScored;
-
         // 构建塔
         BuildTower();
 
@@ -74,8 +67,6 @@ public class TowerBuilder : MonoBehaviour
 
     void OnDestroy()
     {
-        TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
-        TowerBlock.OnBlockScored -= HandleBlockScored;
     }
 
     /// <summary>
@@ -98,7 +89,7 @@ public class TowerBuilder : MonoBehaviour
         //     FillLayerWithGrid(layer);
         // }
 
-        Debug.Log($"调试塔构建完成: 1 层, 共 {allBlocks.Count} 个方块");
+        Debug.Log($"调试塔构建完成: 1 层");
     }
 
     /// <summary>
@@ -106,69 +97,82 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     void FillLayerWithGrid(int layerIndex)
     {
-        var layerBlocks = new System.Collections.Generic.List<GameObject>();
-
         Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
 
-        // DEBUG: 测试所有4个L3旋转，放置在固定位置便于观察
-        Debug.Log("调试模式：放置4个L3方块在固定位置，显示所有旋转");
+        // DEBUG: 只使用L3方块，从左到右随机填充，直到放不下为止
+        Debug.Log("调试模式：使用L3方块随机填充第一层");
 
-        // 在底层放置4个L3方块，每个间隔2格
-        // 位置: 0, 2, 4, 6 (留出足够空间避免重叠)
-        var testConfigs = new[]
+        int currentCol = 0;
+        int attempts = 0;
+        int maxAttempts = 100; // 防止无限循环
+        int blockCount = 0;
+
+        while (currentCol < layerWidth && attempts < maxAttempts)
         {
-            new { col = 0, rotation = 0f, name = "0度" },
-            new { col = 2, rotation = 90f, name = "90度" },
-            new { col = 4, rotation = 180f, name = "180度" },
-            new { col = 6, rotation = 270f, name = "270度" }
-        };
+            attempts++;
 
-        foreach (var config in testConfigs)
-        {
-            if (config.col >= layerWidth) continue;
+            // 尝试在当前列放置L3方块
+            GameObject placedBlock = TryPlaceBlockAt(layerIndex, currentCol);
 
-            if (l3BlockPrefab != null)
+            if (placedBlock != null)
             {
-                // 强制放置，不检查占用（测试用）
-                GameObject placedBlock = PlaceBlock(l3BlockPrefab, config.rotation, layerIndex, config.col, layerBlocks);
-                Debug.Log($"  放置L3方块 at 列{config.col}, 旋转={config.name}");
+                blockCount++;
+                Debug.Log($"  成功放置方块 at 列{currentCol}");
+                // 移动到下一个未占用的列
+                currentCol = FindNextEmptyColumn(layerIndex, currentCol);
+            }
+            else
+            {
+                // 当前列放不下，尝试下一列
+                currentCol++;
+            }
+
+            // 如果找不到空列，结束
+            if (currentCol >= layerWidth)
+            {
+                Debug.Log("  已填满或无法继续放置");
+                break;
             }
         }
 
-        if (layerBlocks.Count > 0)
-        {
-            blocksByLayer[layerIndex] = layerBlocks;
-        }
+        Debug.Log($"=== 第 {layerIndex} 层完成，共 {blockCount} 个方块 ===\n");
+    }
 
-        Debug.Log($"=== 第 {layerIndex} 层完成，共 {layerBlocks.Count} 个方块 ===\n");
+    /// <summary>
+    /// 找到当前列之后的第一个空列
+    /// </summary>
+    int FindNextEmptyColumn(int layer, int startCol)
+    {
+        for (int col = startCol; col < layerWidth; col++)
+        {
+            if (!gridOccupied[layer, col])
+            {
+                return col;
+            }
+        }
+        return layerWidth; // 没有空列
     }
 
     /// <summary>
     /// 尝试在指定位置放置方块
     /// </summary>
-    GameObject TryPlaceBlockAt(int layer, int col, System.Collections.Generic.List<GameObject> layerBlocks)
+    GameObject TryPlaceBlockAt(int layer, int col)
     {
-        var allPrefabs = GetAllAvailablePrefabs();
-        var availablePrefabs = new System.Collections.Generic.List<GameObject>(allPrefabs);
+        // DEBUG: 只使用L3方块
+        if (l3BlockPrefab == null) return null;
 
-        // 打乱Prefab顺序（随机选择）
-        ShuffleList(availablePrefabs);
+        // 尝试所有旋转角度（随机顺序）
+        var rotations = new System.Collections.Generic.List<float> { 0f, 90f, 180f, 270f };
+        ShuffleList(rotations);
 
-        foreach (GameObject prefab in availablePrefabs)
+        foreach (float rotation in rotations)
         {
-            // 尝试所有旋转角度（随机顺序）
-            var rotations = new System.Collections.Generic.List<float> { 0f, 90f, 180f, 270f };
-            ShuffleList(rotations);
-
-            foreach (float rotation in rotations)
+            // 检查是否能放置
+            if (CanPlaceBlock(l3BlockPrefab, rotation, layer, col))
             {
-                // 检查是否能放置
-                if (CanPlaceBlock(prefab, rotation, layer, col))
-                {
-                    // 放置方块
-                    GameObject block = PlaceBlock(prefab, rotation, layer, col, layerBlocks);
-                    return block;
-                }
+                // 放置方块
+                GameObject block = PlaceBlock(l3BlockPrefab, rotation, layer, col);
+                return block;
             }
         }
 
@@ -186,7 +190,7 @@ public class TowerBuilder : MonoBehaviour
             return false;
         }
 
-        // 直接获取实际占用的格子
+        // 获取旋转后占用的格子（相对于pivot点）
         var occupiedCells = block.GetOccupiedCells(rotation);
 
         // 检查所有占用格子是否都在边界内且未被占用
@@ -198,90 +202,57 @@ public class TowerBuilder : MonoBehaviour
             // 检查边界
             if (checkCol < 0 || checkCol >= layerWidth || checkLayer < 0 || checkLayer >= towerLayers)
             {
-                return false; // 超出边界
+                Debug.Log($"    边界检查失败: 格子({checkCol},{checkLayer}) 超出范围 [0-{layerWidth - 1}, 0-{towerLayers - 1}]");
+                return false;
             }
 
             // 检查占用状态
             if (gridOccupied[checkLayer, checkCol])
             {
-                return false; // 已被占用
+                Debug.Log($"    占用检查失败: 格子({checkCol},{checkLayer}) 已被占用");
+                return false;
             }
         }
 
-        return true; // 可以放置
+        Debug.Log($"    可以放置: pivot({col},{layer}), 占用格子: {string.Join(", ", occupiedCells)}");
+        return true;
     }
 
     /// <summary>
-    /// 放置方块并标记网格占用
+    /// 放置方块（pivot点直接使用col,layer坐标，并标记占用）
     /// </summary>
-    GameObject PlaceBlock(GameObject prefab, float rotation, int layer, int col, System.Collections.Generic.List<GameObject> layerBlocks)
+    GameObject PlaceBlock(GameObject prefab, float rotation, int layer, int col)
     {
         TowerBlock blockComponent = prefab.GetComponent<TowerBlock>();
 
-        // 获取实际占用的格子
+        // 取出对应pivot点，放置在网格位置(col, layer)
+        Vector2Int bottomLeftCorner = blockComponent.GetBottomLeftCorner(rotation);
+        float worldX = col - bottomLeftCorner.x;
+        float worldY = layer - bottomLeftCorner.y;
+
+        Vector3 position = new Vector3(worldX, worldY, 0);
+
+        // 获取占用格子
         var occupiedCells = blockComponent.GetOccupiedCells(rotation);
 
-        // 计算占用区域的边界盒（用于位置计算）
-        int minX = int.MaxValue, maxX = int.MinValue;
-        int minY = int.MaxValue, maxY = int.MinValue;
+        // DEBUG: 坐标信息
+        Debug.Log($"  放置 {blockComponent.blockTypeName} at 网格[{col},{layer}]");
+        Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
+        Debug.Log($"    占用格子(相对pivot): {string.Join(", ", occupiedCells)}");
 
-        foreach (var (dx, dy) in occupiedCells)
-        {
-            minX = Mathf.Min(minX, dx);
-            maxX = Mathf.Max(maxX, dx);
-            minY = Mathf.Min(minY, dy);
-            maxY = Mathf.Max(maxY, dy);
-        }
-
-        // 计算边界盒尺寸
-        int boundingWidth = maxX - minX + 1;
-        int boundingHeight = maxY - minY + 1;
-
-        // GRID-BASED COORDINATE SYSTEM (简化版)
-        // 使用底部左侧作为塔的原点，每个格子为1x1单位
-        float towerOriginX = -layerWidth / 2f; // 塔的左边缘
-        float towerOriginY = startHeight; // 塔的底部
-
-        // 计算格子的底-左位置 (格子[0,0]的左下角)
-        float gridX = towerOriginX + col; // 格子的左边缘
-        float gridY = towerOriginY + layer; // 格子的底边缘
-
-        // 由于Unity使用中心pivot，需要计算方块的实际几何中心
-        // 考虑到占用格子可能不从(0,0)开始（如旋转后的形状）
-        float actualCenterX = gridX + (minX + maxX) * 0.5f + 0.5f; // 实际几何中心X
-        float actualCenterY = gridY + (minY + maxY) * 0.5f + 0.5f; // 实际几何中心Y
-
-        Vector3 position = new Vector3(actualCenterX, actualCenterY, 0);
-
-        // DEBUG: 详细坐标信息
-        Debug.Log($"    DEBUG坐标计算:");
-        Debug.Log($"      塔原点: ({towerOriginX:F2}, {towerOriginY:F2})");
-        Debug.Log($"      格子[{layer},{col}]底左: ({gridX:F2}, {gridY:F2})");
-        Debug.Log($"      占用格子: {string.Join(", ", occupiedCells)}");
-        Debug.Log($"      占用格子范围: X[{minX}~{maxX}], Y[{minY}~{maxY}]");
-        Debug.Log($"      方块中心: ({actualCenterX:F2}, {actualCenterY:F2})");
-        Debug.Log($"      旋转角度: {rotation}°");
-
-        // 恢复正常的grid定位
-        GameObject block = Instantiate(prefab, position, Quaternion.Euler(0, 0, rotation), transform);
+        // 创建方块（应用旋转）
+        Quaternion blockRotation = Quaternion.Euler(0, 0, rotation);
+        GameObject block = Instantiate(prefab, position, blockRotation, transform);
         block.name = $"Block_L{layer}_C{col}_{blockComponent.blockTypeName}_R{rotation}";
 
-        TowerBlock towerBlock = block.GetComponent<TowerBlock>();
-        if (towerBlock != null)
-        {
-            towerBlock.Freeze();
-        }
-
-        layerBlocks.Add(block);
-        allBlocks.Add(block);
-
-        // 标记实际占用的格子
+        // 标记网格占用
         foreach (var (dx, dy) in occupiedCells)
         {
-            gridOccupied[layer + dy, col + dx] = true;
+            int occupyCol = col + dx;
+            int occupyLayer = layer + dy;
+            gridOccupied[occupyLayer, occupyCol] = true;
+            Debug.Log($"    标记格子({occupyCol},{occupyLayer})为已占用");
         }
-
-        Debug.Log($"  放置 {blockComponent.blockTypeName} at 格子[L{layer},C{col}], 世界坐标({actualCenterX:F2},{actualCenterY:F2}), 旋转={rotation}°, 占用{occupiedCells.Count}格");
 
         return block;
     }
@@ -330,93 +301,18 @@ public class TowerBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// 处理方块被消除事件
-    /// </summary>
-    void HandleBlockDestroyed(TowerBlock destroyedBlock)
-    {
-        Debug.Log($"方块被消除: {destroyedBlock.blockTypeName}");
-
-        // 找出被消除方块的层级
-        int destroyedLayer = GetBlockLayer(destroyedBlock.gameObject);
-
-        if (destroyedLayer >= 0)
-        {
-            // 从该层移除这个方块
-            if (blocksByLayer.ContainsKey(destroyedLayer))
-            {
-                blocksByLayer[destroyedLayer].Remove(destroyedBlock.gameObject);
-            }
-
-            // 激活上层所有方块的物理
-            ActivateBlocksAboveLayer(destroyedLayer);
-        }
-    }
-
-    /// <summary>
-    /// 处理方块得分事件
-    /// </summary>
-    void HandleBlockScored(TowerBlock block, int score)
-    {
-        Debug.Log($"得分: {score} (方块: {block.blockTypeName})");
-        // TODO: 更新得分系统
-    }
-
-    /// <summary>
-    /// 获取方块所在的层级
-    /// </summary>
-    int GetBlockLayer(GameObject block)
-    {
-        foreach (var kvp in blocksByLayer)
-        {
-            if (kvp.Value.Contains(block))
-            {
-                return kvp.Key;
-            }
-        }
-        return -1;
-    }
-
-    /// <summary>
-    /// 激活指定层级以上所有方块的物理
-    /// </summary>
-    void ActivateBlocksAboveLayer(int layerIndex)
-    {
-        for (int layer = layerIndex + 1; layer < towerLayers; layer++)
-        {
-            if (blocksByLayer.ContainsKey(layer))
-            {
-                foreach (GameObject blockObj in blocksByLayer[layer])
-                {
-                    if (blockObj != null)
-                    {
-                        TowerBlock block = blockObj.GetComponent<TowerBlock>();
-                        if (block != null)
-                        {
-                            block.MakeDynamic();
-                        }
-                    }
-                }
-            }
-        }
-
-        Debug.Log($"激活 {layerIndex} 层以上的方块物理");
-    }
-
-    /// <summary>
     /// 清空塔
     /// </summary>
     public void ClearTower()
     {
-        foreach (GameObject block in allBlocks)
+        // 销毁所有子对象
+        foreach (Transform child in transform)
         {
-            if (block != null)
+            if (child.gameObject != hexagonBall)
             {
-                Destroy(block);
+                Destroy(child.gameObject);
             }
         }
-
-        allBlocks.Clear();
-        blocksByLayer.Clear();
     }
 
     /// <summary>
@@ -441,14 +337,15 @@ public class TowerBuilder : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        // 在编辑器中绘制塔的边界
+        // 在编辑器中绘制塔的边界（从0,0开始向右画）
         if (!Application.isPlaying)
         {
             Gizmos.color = Color.cyan;
 
             float width = layerWidth * 1f;
-            float height = towerLayers * layerSpacing;
-            Vector3 center = new Vector3(0, startHeight + height / 2f, 0);
+            float height = towerLayers * 1f;
+            // 中心点应该在网格的中心：(layerWidth/2, towerLayers/2)
+            Vector3 center = new Vector3(width / 2f, height / 2f, 0);
             Gizmos.DrawWireCube(center, new Vector3(width, height, 0.1f));
         }
     }
