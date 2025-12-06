@@ -645,7 +645,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   towerLayers: 10
-  layerWidth: 15
+  layerWidth: 20
   layerSpacing: 1
   startHeight: -3
   singleBlockPrefab: {fileID: 1186311390117326443, guid: 0482599536ed7594f90ca3cb6cd69f7d, type: 3}

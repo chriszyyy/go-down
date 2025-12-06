@@ -25,7 +25,8 @@ public class L3Block : TowerBlock
         }
         else if (Mathf.Approximately(normalizedAngle, 180f))
         {
-            return new Vector2Int(-2, -3);
+            // 注意锚点x偏移1
+            return new Vector2Int(-1, -3);
         }
         else if (Mathf.Approximately(normalizedAngle, 270f))
         {
@@ -56,11 +57,6 @@ public class L3Block : TowerBlock
         else if (Mathf.Approximately(normalizedAngle, 90f))
         {
             // 90度: 绕(0,0)逆时针旋转90度
-            // (x,y) → (-y-1,x)
-            // cells.Add((-1, 0));
-            // cells.Add((-1, 1));
-            // cells.Add((-2, 0));
-            // cells.Add((-3, 0));
             cells.Add((0, 0));
             cells.Add((1, 0));
             cells.Add((2, 0));
@@ -69,24 +65,15 @@ public class L3Block : TowerBlock
         else if (Mathf.Approximately(normalizedAngle, 180f))
         {
             // 180度: 绕(0,0)旋转180度
-            // (x,y) → (-x-1,-y-1)
-            // cells.Add((-1, -1));
-            // cells.Add((-2, -1));
-            // cells.Add((-1, -2));
-            // cells.Add((-1, -3));
+            // 注意x偏移-1,保证下端贴紧
+            cells.Add((-1, 2));
+            cells.Add((0, 0));
+            cells.Add((0, 1));
             cells.Add((0, 2));
-            cells.Add((1, 0));
-            cells.Add((1, 1));
-            cells.Add((1, 2));
         }
         else if (Mathf.Approximately(normalizedAngle, 270f))
         {
             // 270度: 绕(0,0)逆时针270度 = 顺时针90度
-            // (x,y) → (y,-x-1)
-            // cells.Add((0, -1));
-            // cells.Add((0, -2));
-            // cells.Add((1, -1));
-            // cells.Add((2, -1));
             cells.Add((0, 0));
             cells.Add((0, 1));
             cells.Add((1, 1));
