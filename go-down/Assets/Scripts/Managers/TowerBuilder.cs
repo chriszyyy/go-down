@@ -99,9 +99,6 @@ public class TowerBuilder : MonoBehaviour
     {
         Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
 
-        // DEBUG: 只使用L3方块，从左到右随机填充，直到放不下为止
-        Debug.Log("调试模式：使用L3方块随机填充第一层");
-
         int currentCol = 0;
         int attempts = 0;
         int maxAttempts = 100; // 防止无限循环
@@ -158,21 +155,30 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     GameObject TryPlaceBlockAt(int layer, int col)
     {
-        // DEBUG: 只使用单个方块
-        if (singleBlockPrefab == null) return null;
+        // 获取所有可用的prefab
+        var availablePrefabs = GetAllAvailablePrefabs();
+        if (availablePrefabs.Count == 0) return null;
+
+        // 随机打乱prefab顺序
+        ShuffleList(availablePrefabs);
 
         // 尝试所有旋转角度（随机顺序）
         var rotations = new System.Collections.Generic.List<float> { 0f, 90f, 180f, 270f };
-        ShuffleList(rotations);
 
-        foreach (float rotation in rotations)
+        // 尝试每个prefab
+        foreach (var prefab in availablePrefabs)
         {
-            // 检查是否能放置
-            if (CanPlaceBlock(singleBlockPrefab, rotation, layer, col))
+            ShuffleList(rotations);
+
+            foreach (float rotation in rotations)
             {
-                // 放置方块
-                GameObject block = PlaceBlock(singleBlockPrefab, rotation, layer, col);
-                return block;
+                // 检查是否能放置
+                if (CanPlaceBlock(prefab, rotation, layer, col))
+                {
+                    // 放置方块
+                    GameObject block = PlaceBlock(prefab, rotation, layer, col);
+                    return block;
+                }
             }
         }
 
