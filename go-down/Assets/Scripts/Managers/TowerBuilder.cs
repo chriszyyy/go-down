@@ -53,8 +53,14 @@ public class TowerBuilder : MonoBehaviour
     // 网格占用矩阵 [层][列] = 是否被占用
     private bool[,] gridOccupied;
 
+    // 当前塔的最高层
+    private float currentTowerTopY;
+
     void Start()
     {
+        // 订阅方块消除事件
+        TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
+
         // 构建塔
         BuildTower();
 
@@ -67,6 +73,7 @@ public class TowerBuilder : MonoBehaviour
 
     void OnDestroy()
     {
+        TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
     }
 
     /// <summary>
@@ -88,6 +95,9 @@ public class TowerBuilder : MonoBehaviour
         {
             FillLayerWithGrid(layer);
         }
+
+        // 更新塔尖高度
+        UpdateTowerTopY();
 
         Debug.Log($"调试塔构建完成: 1 层");
     }
@@ -293,17 +303,60 @@ public class TowerBuilder : MonoBehaviour
     }
 
     /// <summary>
+    /// 获取塔尖的Y坐标
+    /// </summary>
+    public float GetTowerTopY()
+    {
+        return currentTowerTopY;
+    }
+
+    /// <summary>
+    /// 处理方块消除事件
+    /// </summary>
+    void HandleBlockDestroyed(TowerBlock block)
+    {
+        // 重新计算塔尖高度
+        UpdateTowerTopY();
+    }
+
+    /// <summary>
+    /// 更新塔尖高度
+    /// </summary>
+    void UpdateTowerTopY()
+    {
+        float maxY = 0f;
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject == hexagonBall) continue;
+
+            TowerBlock block = child.GetComponent<TowerBlock>();
+            if (block != null)
+            {
+                float blockTopY = child.position.y + 1f; // 假设方块高度至少1单位
+                if (blockTopY > maxY)
+                {
+                    maxY = blockTopY;
+                }
+            }
+        }
+        currentTowerTopY = maxY;
+    }
+
+    /// <summary>
     /// 生成六边形球
     /// </summary>
     void SpawnHexagonBall()
     {
-        float topY = startHeight + towerLayers * layerSpacing;
-        Vector3 ballPosition = new Vector3(0, topY + ballHeightOffset, 0);
+        UpdateTowerTopY();
+
+        // 生成在塔尖上方中间
+        float centerX = layerWidth / 2f;
+        Vector3 ballPosition = new Vector3(centerX, currentTowerTopY + ballHeightOffset, 0);
 
         hexagonBall = Instantiate(hexagonBallPrefab, ballPosition, Quaternion.identity, transform);
         hexagonBall.name = "HexagonBall";
 
-        Debug.Log($"生成六边形球 at Y: {ballPosition.y}");
+        Debug.Log($"生成六边形球 at: ({ballPosition.x:F2}, {ballPosition.y:F2})");
     }
 
     /// <summary>
