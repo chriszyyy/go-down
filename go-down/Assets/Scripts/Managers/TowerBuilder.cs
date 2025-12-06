@@ -81,13 +81,13 @@ public class TowerBuilder : MonoBehaviour
 
         // DEBUG: 只生成第一层（底层）进行测试
         Debug.Log("=== 调试模式：只生成第一层 ===");
-        FillLayerWithGrid(0);
+        // FillLayerWithGrid(0);
 
         // TODO: 恢复完整塔生成
-        // for (int layer = 0; layer < towerLayers; layer++)
-        // {
-        //     FillLayerWithGrid(layer);
-        // }
+        for (int layer = 0; layer < towerLayers; layer++)
+        {
+            FillLayerWithGrid(layer);
+        }
 
         Debug.Log($"调试塔构建完成: 1 层");
     }
@@ -158,8 +158,8 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     GameObject TryPlaceBlockAt(int layer, int col)
     {
-        // DEBUG: 只使用L3方块
-        if (l3BlockPrefab == null) return null;
+        // DEBUG: 只使用单个方块
+        if (singleBlockPrefab == null) return null;
 
         // 尝试所有旋转角度（随机顺序）
         var rotations = new System.Collections.Generic.List<float> { 0f, 90f, 180f, 270f };
@@ -168,10 +168,10 @@ public class TowerBuilder : MonoBehaviour
         foreach (float rotation in rotations)
         {
             // 检查是否能放置
-            if (CanPlaceBlock(l3BlockPrefab, rotation, layer, col))
+            if (CanPlaceBlock(singleBlockPrefab, rotation, layer, col))
             {
                 // 放置方块
-                GameObject block = PlaceBlock(l3BlockPrefab, rotation, layer, col);
+                GameObject block = PlaceBlock(singleBlockPrefab, rotation, layer, col);
                 return block;
             }
         }

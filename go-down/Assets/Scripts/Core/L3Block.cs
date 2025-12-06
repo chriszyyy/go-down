@@ -56,7 +56,7 @@ public class L3Block : TowerBlock
         }
         else if (Mathf.Approximately(normalizedAngle, 90f))
         {
-            // 90度: 绕(0,0)逆时针旋转90度
+            // 90度: 绕(0,0)逆时针旋转90度，然后把所有点移动到正坐标系区间
             cells.Add((0, 0));
             cells.Add((1, 0));
             cells.Add((2, 0));
@@ -64,8 +64,8 @@ public class L3Block : TowerBlock
         }
         else if (Mathf.Approximately(normalizedAngle, 180f))
         {
-            // 180度: 绕(0,0)旋转180度
-            // 注意x偏移-1,保证下端贴紧
+            // 180度: 绕(0,0)旋转180度，然后把所有点移动到正坐标系区间
+            // 注意x偏移-1,保证下端贴紧y轴，所以突出部分在负x方向
             cells.Add((-1, 2));
             cells.Add((0, 0));
             cells.Add((0, 1));
@@ -73,7 +73,7 @@ public class L3Block : TowerBlock
         }
         else if (Mathf.Approximately(normalizedAngle, 270f))
         {
-            // 270度: 绕(0,0)逆时针270度 = 顺时针90度
+            // 270度: 绕(0,0)逆时针270度 = 顺时针90度，然后把所有点移动到正坐标系区间
             cells.Add((0, 0));
             cells.Add((0, 1));
             cells.Add((1, 1));

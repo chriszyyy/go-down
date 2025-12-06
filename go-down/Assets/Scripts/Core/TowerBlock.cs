@@ -197,8 +197,27 @@ public class TowerBlock : MonoBehaviour
 
     public virtual Vector2Int GetBottomLeftCorner(float rotationAngle)
     {
-        // 基类默认：pivot在(0,0)
-        return new Vector2Int(0, 0);
+        float normalizedAngle = rotationAngle % 360f;
+        if (normalizedAngle < 0) normalizedAngle += 360f;
+
+        if (Mathf.Approximately(normalizedAngle, 0f))
+        {
+            return new Vector2Int(0, 0);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 90f))
+        {
+            return new Vector2Int(-1, 0);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 180f))
+        {
+            return new Vector2Int(-1, -1);
+        }
+        else if (Mathf.Approximately(normalizedAngle, 270f))
+        {
+            return new Vector2Int(0, -1);
+        }
+
+        return Vector2Int.zero;
     }
 
     protected virtual void OnDestroy()
