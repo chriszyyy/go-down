@@ -47,6 +47,13 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("球相对于顶部的高度偏移")]
     public float ballHeightOffset = 1.5f;
 
+    [Header("分层激活配置")]
+    [Tooltip("摄像机下方多少单位内的方块会被激活")]
+    public float activationDistanceBelow = 5f;
+
+    [Tooltip("激活检测频率（秒）")]
+    public float activationCheckInterval = 0.5f;
+
     // 运行时数据
     private GameObject hexagonBall;
 
@@ -56,18 +63,48 @@ public class TowerBuilder : MonoBehaviour
     // 当前塔的最高层
     private float currentTowerTopY;
 
+    // 分层激活
+    private float lastActivationCheckTime;
+    private Camera mainCamera;
+
     void Start()
     {
         // 订阅方块消除事件
         TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
 
+        // 获取主摄像机
+        mainCamera = Camera.main;
+
         // 构建塔
         BuildTower();
+
+        // 更新塔尖高度
+        UpdateTowerTopY();
+
+        // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
+        if (mainCamera != null)
+        {
+            float centerX = layerWidth / 2f;
+            mainCamera.transform.position = new Vector3(centerX, currentTowerTopY - 3f, mainCamera.transform.position.z);
+        }
+
+        // 现在激活可见区域的方块
+        ActivateBlocksInRange();
 
         // 生成六边形球
         if (spawnHexagonBall && hexagonBallPrefab != null)
         {
             SpawnHexagonBall();
+        }
+    }
+
+    void Update()
+    {
+        // 定期检查并激活进入范围的方块
+        if (Time.time - lastActivationCheckTime >= activationCheckInterval)
+        {
+            lastActivationCheckTime = Time.time;
+            ActivateBlocksInRange();
         }
     }
 
@@ -86,11 +123,6 @@ public class TowerBuilder : MonoBehaviour
         // 初始化网格占用矩阵
         gridOccupied = new bool[towerLayers, layerWidth];
 
-        // DEBUG: 只生成第一层（底层）进行测试
-        Debug.Log("=== 调试模式：只生成第一层 ===");
-        // FillLayerWithGrid(0);
-
-        // TODO: 恢复完整塔生成
         for (int layer = 0; layer < towerLayers; layer++)
         {
             FillLayerWithGrid(layer);
@@ -98,8 +130,6 @@ public class TowerBuilder : MonoBehaviour
 
         // 更新塔尖高度
         UpdateTowerTopY();
-
-        Debug.Log($"调试塔构建完成: 1 层");
     }
 
     /// <summary>
@@ -107,7 +137,7 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     void FillLayerWithGrid(int layerIndex)
     {
-        Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
+        // Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
 
         int currentCol = 0;
         int attempts = 0;
@@ -124,7 +154,7 @@ public class TowerBuilder : MonoBehaviour
             if (placedBlock != null)
             {
                 blockCount++;
-                Debug.Log($"  成功放置方块 at 列{currentCol}");
+                // Debug.Log($"  成功放置方块 at 列{currentCol}");
                 // 移动到下一个未占用的列
                 currentCol = FindNextEmptyColumn(layerIndex, currentCol);
             }
@@ -137,12 +167,12 @@ public class TowerBuilder : MonoBehaviour
             // 如果找不到空列，结束
             if (currentCol >= layerWidth)
             {
-                Debug.Log("  已填满或无法继续放置");
+                // Debug.Log("  已填满或无法继续放置");
                 break;
             }
         }
 
-        Debug.Log($"=== 第 {layerIndex} 层完成，共 {blockCount} 个方块 ===\n");
+        // Debug.Log($"=== 第 {layerIndex} 层完成，共 {blockCount} 个方块 ===\n");
     }
 
     /// <summary>
@@ -218,19 +248,19 @@ public class TowerBuilder : MonoBehaviour
             // 检查边界
             if (checkCol < 0 || checkCol >= layerWidth || checkLayer < 0 || checkLayer >= towerLayers)
             {
-                Debug.Log($"    边界检查失败: 格子({checkCol},{checkLayer}) 超出范围 [0-{layerWidth - 1}, 0-{towerLayers - 1}]");
+                // Debug.Log($"    边界检查失败: 格子({checkCol},{checkLayer}) 超出范围 [0-{layerWidth - 1}, 0-{towerLayers - 1}]");
                 return false;
             }
 
             // 检查占用状态
             if (gridOccupied[checkLayer, checkCol])
             {
-                Debug.Log($"    占用检查失败: 格子({checkCol},{checkLayer}) 已被占用");
+                // Debug.Log($"    占用检查失败: 格子({checkCol},{checkLayer}) 已被占用");
                 return false;
             }
         }
 
-        Debug.Log($"    可以放置: pivot({col},{layer}), 占用格子: {string.Join(", ", occupiedCells)}");
+        // Debug.Log($"    可以放置: pivot({col},{layer}), 占用格子: {string.Join(", ", occupiedCells)}");
         return true;
     }
 
@@ -252,9 +282,9 @@ public class TowerBuilder : MonoBehaviour
         var occupiedCells = blockComponent.GetOccupiedCells(rotation);
 
         // DEBUG: 坐标信息
-        Debug.Log($"  放置 {blockComponent.blockTypeName} at 网格[{col},{layer}]");
-        Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
-        Debug.Log($"    占用格子(相对pivot): {string.Join(", ", occupiedCells)}");
+        // Debug.Log($"  放置 {blockComponent.blockTypeName} at 网格[{col},{layer}]");
+        // Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
+        // Debug.Log($"    占用格子(相对pivot): {string.Join(", ", occupiedCells)}");
 
         // 创建方块（应用旋转）
         Quaternion blockRotation = Quaternion.Euler(0, 0, rotation);
@@ -267,7 +297,7 @@ public class TowerBuilder : MonoBehaviour
             int occupyCol = col + dx;
             int occupyLayer = layer + dy;
             gridOccupied[occupyLayer, occupyCol] = true;
-            Debug.Log($"    标记格子({occupyCol},{occupyLayer})为已占用");
+            // Debug.Log($"    标记格子({occupyCol},{occupyLayer})为已占用");
         }
 
         return block;
@@ -340,6 +370,57 @@ public class TowerBuilder : MonoBehaviour
             }
         }
         currentTowerTopY = maxY;
+    }
+
+    /// <summary>
+    /// 激活摄像机可视范围内及向下延伸区域的方块
+    /// </summary>
+    void ActivateBlocksInRange()
+    {
+        if (mainCamera == null) return;
+
+        // 获取摄像机位置
+        float cameraY = mainCamera.transform.position.y;
+
+        // 计算激活范围：摄像机上方和下方各延伸一段距离
+        float activationTop = cameraY + activationDistanceBelow;      // 摄像机上方
+        float activationBottom = cameraY - activationDistanceBelow;   // 摄像机下方
+
+        // 遍历所有方块
+        TowerBlock[] allBlocks = GetComponentsInChildren<TowerBlock>();
+
+        int activatedCount = 0;
+        int staticCount = 0;
+        int dynamicCount = 0;
+
+        foreach (TowerBlock block in allBlocks)
+        {
+            if (block == null) continue;
+
+            float blockY = block.transform.position.y;
+
+            if (block.isStatic)
+            {
+                staticCount++;
+
+                // 只激活摄像机可视范围内的方块（上下各延伸activationDistanceBelow）
+                if (blockY >= activationBottom && blockY <= activationTop)
+                {
+                    block.MakeDynamic();
+                    activatedCount++;
+                }
+            }
+            else
+            {
+                dynamicCount++;
+            }
+        }
+
+        if (activatedCount > 0)
+        {
+            Debug.Log($"激活检查 - 摄像机Y={cameraY:F2}, 激活范围=[{activationBottom:F2}, {activationTop:F2}]");
+            Debug.Log($"方块状态 - 静态:{staticCount}, 动态:{dynamicCount}, 本次激活:{activatedCount}");
+        }
     }
 
     /// <summary>

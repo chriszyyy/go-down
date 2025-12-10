@@ -49,6 +49,13 @@ public class TowerBlock : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         blockCollider = GetComponent<Collider2D>();
 
+        // 默认设置为Kinematic（静态，不受重力影响）
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+        isStatic = true;
+
         originalScale = transform.localScale;
         if (spriteRenderer != null)
         {
@@ -58,11 +65,6 @@ public class TowerBlock : MonoBehaviour
 
     protected virtual void Start()
     {
-        // 初始设置为静态
-        if (isStatic)
-        {
-            Freeze();
-        }
     }
 
     protected virtual void Update()

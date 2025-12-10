@@ -674,6 +674,8 @@ MonoBehaviour:
   hexagonBallPrefab: {fileID: 5149992263456304526, guid: 0c9f9e0c1028a7740b511984ea843433, type: 3}
   spawnHexagonBall: 1
   ballHeightOffset: 1.5
+  activationDistanceBelow: 5
+  activationCheckInterval: 0.5
 --- !u!4 &1425696445
 Transform:
   m_ObjectHideFlags: 0
