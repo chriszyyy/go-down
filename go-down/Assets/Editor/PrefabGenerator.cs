@@ -4,6 +4,10 @@ using System.IO;
 
 public class PrefabGenerator : EditorWindow
 {
+    private const string BLOCK_PHYSICS_MATERIAL_PATH = "Assets/PhysicsMaterials/BlockPhysicsMaterial.physicsMaterial2D";
+    private const float DEFAULT_BLOCK_FRICTION = 0.8f;
+    private const float DEFAULT_BLOCK_BOUNCINESS = 0f;
+
     [MenuItem("Tools/Generate Block Prefabs")]
     public static void ShowWindow()
     {
@@ -49,14 +53,18 @@ public class PrefabGenerator : EditorWindow
             AssetDatabase.CreateFolder("Assets/Prefabs", "Blocks");
         if (!AssetDatabase.IsValidFolder("Assets/Sprites"))
             AssetDatabase.CreateFolder("Assets", "Sprites");
+        if (!AssetDatabase.IsValidFolder("Assets/PhysicsMaterials"))
+            AssetDatabase.CreateFolder("Assets", "PhysicsMaterials");
+
+        PhysicsMaterial2D blockPhysicsMaterial = GetOrCreateBlockPhysicsMaterial();
 
         // 生成各种方块
-        CreateSingleBlockPrefab();
-        CreateSquareBlockPrefab();
-        CreateL3BlockPrefab();
-        CreateL4BlockPrefab();
-        CreateL5BlockPrefab();
-        CreateLineBlockPrefab();
+        CreateSingleBlockPrefab(blockPhysicsMaterial);
+        CreateSquareBlockPrefab(blockPhysicsMaterial);
+        CreateL3BlockPrefab(blockPhysicsMaterial);
+        CreateL4BlockPrefab(blockPhysicsMaterial);
+        CreateL5BlockPrefab(blockPhysicsMaterial);
+        CreateLineBlockPrefab(blockPhysicsMaterial);
 
         // 生成六边形球
         CreateHexagonBallPrefab();
@@ -69,7 +77,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 1. 单格方块
-    private static void CreateSingleBlockPrefab()
+    private static void CreateSingleBlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("SingleBlock");
 
@@ -78,12 +86,14 @@ public class PrefabGenerator : EditorWindow
         sr.sortingOrder = 0;
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(0.95f, 0.95f);
-        collider.offset = new Vector2(0.5f, 0.5f); // 64x64 图形在 128x128 纹理中的偏移
+        collider.size = new Vector2(1.0f, 1.0f);
+        collider.offset = new Vector2(0.5f, 0.5f); // 64x64 图形在128x128纹理中的偏移
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         TowerBlock block = go.AddComponent<TowerBlock>();
         block.blockTypeName = "单格方块";
@@ -97,7 +107,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 2. 正方形方块 (2x2)
-    private static void CreateSquareBlockPrefab()
+    private static void CreateSquareBlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("SquareBlock");
 
@@ -105,13 +115,15 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateSquareSprite(128, 128, Color.yellow);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(1.9f, 1.9f);
+        collider.size = new Vector2(2.0f, 2.0f);
         collider.offset = new Vector2(1.0f, 1.0f); // 128x128 图形在 256x256 纹理中的偏移
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 4f;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         SquareBlock block = go.AddComponent<SquareBlock>();
         block.blockTypeName = "方形方块";
@@ -125,7 +137,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 3. L3型方块
-    private static void CreateL3BlockPrefab()
+    private static void CreateL3BlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("L3Block");
 
@@ -134,11 +146,13 @@ public class PrefabGenerator : EditorWindow
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateLShapeColliderPoints(3);
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 3f;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         L3Block block = go.AddComponent<L3Block>();
         block.blockTypeName = "L3方块";
@@ -152,7 +166,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 4. L4型方块
-    private static void CreateL4BlockPrefab()
+    private static void CreateL4BlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("L4Block");
 
@@ -161,11 +175,13 @@ public class PrefabGenerator : EditorWindow
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateLShapeColliderPoints(4);
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 4f;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         L4Block block = go.AddComponent<L4Block>();
         block.blockTypeName = "L4方块";
@@ -179,7 +195,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 5. L5型方块 (等长L形 3x3)
-    private static void CreateL5BlockPrefab()
+    private static void CreateL5BlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("L5Block");
 
@@ -188,11 +204,13 @@ public class PrefabGenerator : EditorWindow
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateEqualLShapeColliderPoints();
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 5f;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         L5Block block = go.AddComponent<L5Block>();
         block.blockTypeName = "L5方块";
@@ -206,7 +224,7 @@ public class PrefabGenerator : EditorWindow
     }
 
     // 6. I型方块 (4格横条)
-    private static void CreateLineBlockPrefab()
+    private static void CreateLineBlockPrefab(PhysicsMaterial2D physicsMaterial)
     {
         GameObject go = new GameObject("LineBlock");
 
@@ -214,13 +232,15 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateLineSprite(4, Color.red);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(3.9f, 0.95f); // 4格宽，留间隙
+        collider.size = new Vector2(4.0f, 1.0f);
         collider.offset = new Vector2(2.0f, 0.5f); // 256x64 图形在 512x128 纹理中的偏移
+        collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.mass = 4f;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
 
         LineBlock block = go.AddComponent<LineBlock>();
         block.blockTypeName = "I型方块";
@@ -238,7 +258,7 @@ public class PrefabGenerator : EditorWindow
     // 创建L形碰撞器的点（逆时针）
     private static Vector2[] CreateLShapeColliderPoints(int blocks)
     {
-        float gap = 0.05f;
+        float gap = 0f;
 
         // L形状（2格宽，blocks格高）在右上角区域：
         // 由于图形绘制在右上角，需要计算正确的偏移
@@ -264,7 +284,7 @@ public class PrefabGenerator : EditorWindow
     // 创建等长L形碰撞器的点（3x3的L形）
     private static Vector2[] CreateEqualLShapeColliderPoints()
     {
-        float gap = 0.05f;
+        float gap = 0f;
 
         // 等长L形（3x3）在右上角区域：
         // 由于图形绘制在右上角，需要计算正确的偏移
@@ -522,6 +542,28 @@ public class PrefabGenerator : EditorWindow
         Debug.Log($"✅ 已创建: {path}");
     }
 
+    private static PhysicsMaterial2D GetOrCreateBlockPhysicsMaterial()
+    {
+        PhysicsMaterial2D material = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(BLOCK_PHYSICS_MATERIAL_PATH);
+        if (material != null)
+        {
+            material.friction = DEFAULT_BLOCK_FRICTION;
+            material.bounciness = DEFAULT_BLOCK_BOUNCINESS;
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        material = new PhysicsMaterial2D("BlockPhysicsMaterial")
+        {
+            friction = DEFAULT_BLOCK_FRICTION,
+            bounciness = DEFAULT_BLOCK_BOUNCINESS
+        };
+
+        AssetDatabase.CreateAsset(material, BLOCK_PHYSICS_MATERIAL_PATH);
+        AssetDatabase.ImportAsset(BLOCK_PHYSICS_MATERIAL_PATH);
+        return material;
+    }
+
     // 创建六边形球Prefab
     private static void CreateHexagonBallPrefab()
     {
@@ -611,7 +653,8 @@ public class PrefabGenerator : EditorWindow
     private static Vector2[] CreateHexagonColliderPoints()
     {
         const float HEXAGON_DIAMETER = 2.0f; // 直径=2个方格
-        float radius = HEXAGON_DIAMETER / 2f * 0.95f; // 半径略小于1.0，留出间隙
+        const float COLLIDER_RADIUS_SCALE = 0.90f; // 碰撞器略小于渲染，避免“碰撞偏大”的感觉
+        float radius = (HEXAGON_DIAMETER / 2f) * COLLIDER_RADIUS_SCALE;
 
         Vector2[] points = new Vector2[6];
         for (int i = 0; i < 6; i++)
