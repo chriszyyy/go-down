@@ -18,6 +18,26 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("起始高度")]
     public float startHeight = -3f;
 
+    [Header("无尽塔配置")]
+    [Tooltip("每次向下续接生成的段高度（单位：层，1层=1单位）")]
+    public int segmentHeightLayers = 40;
+
+    [Tooltip("当摄像机距离当前已生成底部小于该值时，提前生成下一段（单位：层/单位）")]
+    public int generateAheadLayers = 20;
+
+    [Tooltip("底部永远保持Kinematic的地基层厚度（单位：层/单位）")]
+    public int foundationThicknessLayers = 5;
+
+    [Tooltip("当方块高于摄像机太多时销毁（单位：层/单位），用于控制对象数量")]
+    public int destroyAboveCameraLayers = 80;
+
+    [Header("新段稳定化")]
+    [Tooltip("生成新段后，先冻结一小段时间以让接缝稳定，再按相机窗口激活")]
+    public bool stabilizeNewSegment = true;
+
+    [Tooltip("新段稳定化时长（秒）")]
+    public float stabilizeDuration = 0.25f;
+
     [Header("方块预制体")]
     [Tooltip("单格方块预制体")]
     public GameObject singleBlockPrefab;
@@ -48,23 +68,43 @@ public class TowerBuilder : MonoBehaviour
     public float ballHeightOffset = 1.5f;
 
     [Header("分层激活配置")]
-    [Tooltip("摄像机下方多少单位内的方块会被激活")]
-    public float activationDistanceBelow = 5f;
+    [Tooltip("额外向下激活的缓冲距离（单位）")]
+    public float activationExtraBelow = 2f;
+
+    [Tooltip("额外向上激活的缓冲距离（单位）")]
+    public float activationExtraAbove = 1f;
 
     [Tooltip("激活检测频率（秒）")]
     public float activationCheckInterval = 0.5f;
 
+    [Header("塔尖更新")]
+    [Tooltip("塔尖高度定时更新频率（秒）")]
+    public float topYUpdateInterval = 0.6f;
+
     // 运行时数据
     private GameObject hexagonBall;
 
-    // 网格占用矩阵 [层][列] = 是否被占用
+    // 网格占用矩阵（仅用于初始段的放置计算）[层][列] = 是否被占用
     private bool[,] gridOccupied;
 
     // 当前塔的最高层
     private float currentTowerTopY;
 
+    // 运行时：当前已生成的底部Y（更小=更靠下）
+    private float currentGeneratedMinY;
+
+    // 运行时：地基分界线（<=该高度永远冻结为Kinematic）
+    private float foundationY;
+
+    // 运行时：避免重复触发生成
+    private float lastGeneratedMinY;
+    private float lastSegmentCheckLogTime;
+
+    private float stabilizeUntilTime;
+
     // 分层激活
     private float lastActivationCheckTime;
+    private float lastTopYUpdateTime;
     private Camera mainCamera;
 
     void Start()
@@ -75,11 +115,13 @@ public class TowerBuilder : MonoBehaviour
         // 获取主摄像机
         mainCamera = Camera.main;
 
-        // 构建塔
+        // 构建初始塔
         BuildTower();
 
-        // 更新塔尖高度
+        // 更新边界
         UpdateTowerTopY();
+        UpdateGeneratedMinY();
+        UpdateFoundationY();
 
         // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
         if (mainCamera != null)
@@ -88,7 +130,7 @@ public class TowerBuilder : MonoBehaviour
             mainCamera.transform.position = new Vector3(centerX, currentTowerTopY - 3f, mainCamera.transform.position.z);
         }
 
-        // 现在激活可见区域的方块
+        // 现在按“地基冻结层 + 相机窗口”激活方块
         ActivateBlocksInRange();
 
         // 生成六边形球
@@ -100,12 +142,36 @@ public class TowerBuilder : MonoBehaviour
 
     void Update()
     {
+        // 接近底部时续接生成下一段
+        TryGenerateNextSegment();
+
+        // 清理远离相机的上方方块（性能）
+        CleanupBlocksAboveCamera();
+
+        // 定时更新塔尖高度，确保相机跟随在物理下落时也能刷新
+        if (topYUpdateInterval > 0f && Time.time - lastTopYUpdateTime >= topYUpdateInterval)
+        {
+            lastTopYUpdateTime = Time.time;
+            UpdateTowerTopY();
+        }
+
         // 定期检查并激活进入范围的方块
+        if (Time.time < stabilizeUntilTime)
+        {
+            // 稳定化期间保持冻结，避免接缝瞬间爆炸
+            return;
+        }
+
         if (Time.time - lastActivationCheckTime >= activationCheckInterval)
         {
             lastActivationCheckTime = Time.time;
             ActivateBlocksInRange();
         }
+    }
+
+    public float GetCurrentGeneratedMinY()
+    {
+        return currentGeneratedMinY;
     }
 
     void OnDestroy()
@@ -120,13 +186,17 @@ public class TowerBuilder : MonoBehaviour
     {
         ClearTower();
 
-        // 初始化网格占用矩阵
+        // 初始化网格占用矩阵（仅用于初始段的放置计算）
         gridOccupied = new bool[towerLayers, layerWidth];
 
+        // 生成初始段：从 startHeight 开始向上 towerLayers 层
         for (int layer = 0; layer < towerLayers; layer++)
         {
-            FillLayerWithGrid(layer);
+            FillLayerWithGrid(layer, startHeight, gridOccupied, towerLayers);
         }
+
+        currentGeneratedMinY = startHeight;
+        lastGeneratedMinY = currentGeneratedMinY;
 
         // 更新塔尖高度
         UpdateTowerTopY();
@@ -135,7 +205,7 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 基于网格填充一层（随机放置算法）
     /// </summary>
-    void FillLayerWithGrid(int layerIndex)
+    void FillLayerWithGrid(int layerIndex, float baseY, bool[,] occupied, int layerLimit)
     {
         // Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
 
@@ -148,15 +218,15 @@ public class TowerBuilder : MonoBehaviour
         {
             attempts++;
 
-            // 尝试在当前列放置L3方块
-            GameObject placedBlock = TryPlaceBlockAt(layerIndex, currentCol);
+            // 尝试在当前列放置方块
+            GameObject placedBlock = TryPlaceBlockAt(layerIndex, currentCol, baseY, occupied, layerLimit);
 
             if (placedBlock != null)
             {
                 blockCount++;
                 // Debug.Log($"  成功放置方块 at 列{currentCol}");
                 // 移动到下一个未占用的列
-                currentCol = FindNextEmptyColumn(layerIndex, currentCol);
+                currentCol = FindNextEmptyColumn(layerIndex, currentCol, occupied);
             }
             else
             {
@@ -178,11 +248,11 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 找到当前列之后的第一个空列
     /// </summary>
-    int FindNextEmptyColumn(int layer, int startCol)
+    int FindNextEmptyColumn(int layer, int startCol, bool[,] occupied)
     {
         for (int col = startCol; col < layerWidth; col++)
         {
-            if (!gridOccupied[layer, col])
+            if (occupied == null || !occupied[layer, col])
             {
                 return col;
             }
@@ -193,7 +263,7 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 尝试在指定位置放置方块
     /// </summary>
-    GameObject TryPlaceBlockAt(int layer, int col)
+    GameObject TryPlaceBlockAt(int layer, int col, float baseY, bool[,] occupied, int layerLimit)
     {
         // 获取所有可用的prefab
         var availablePrefabs = GetAllAvailablePrefabs();
@@ -213,10 +283,10 @@ public class TowerBuilder : MonoBehaviour
             foreach (float rotation in rotations)
             {
                 // 检查是否能放置
-                if (CanPlaceBlock(prefab, rotation, layer, col))
+                if (CanPlaceBlock(prefab, rotation, layer, col, occupied, layerLimit))
                 {
                     // 放置方块
-                    GameObject block = PlaceBlock(prefab, rotation, layer, col);
+                    GameObject block = PlaceBlock(prefab, rotation, layer, col, baseY, occupied, layerLimit);
                     return block;
                 }
             }
@@ -228,7 +298,7 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 检查方块是否可以放置在指定位置
     /// </summary>
-    bool CanPlaceBlock(GameObject prefab, float rotation, int layer, int col)
+    bool CanPlaceBlock(GameObject prefab, float rotation, int layer, int col, bool[,] occupied, int layerLimit)
     {
         TowerBlock block = prefab.GetComponent<TowerBlock>();
         if (block == null)
@@ -246,14 +316,14 @@ public class TowerBuilder : MonoBehaviour
             int checkLayer = layer + dy;
 
             // 检查边界
-            if (checkCol < 0 || checkCol >= layerWidth || checkLayer < 0 || checkLayer >= towerLayers)
+            if (checkCol < 0 || checkCol >= layerWidth || checkLayer < 0 || checkLayer >= layerLimit)
             {
                 // Debug.Log($"    边界检查失败: 格子({checkCol},{checkLayer}) 超出范围 [0-{layerWidth - 1}, 0-{towerLayers - 1}]");
                 return false;
             }
 
-            // 检查占用状态
-            if (gridOccupied[checkLayer, checkCol])
+            // 检查占用状态（段内占用）
+            if (occupied != null && occupied[checkLayer, checkCol])
             {
                 // Debug.Log($"    占用检查失败: 格子({checkCol},{checkLayer}) 已被占用");
                 return false;
@@ -267,14 +337,14 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 放置方块（pivot点直接使用col,layer坐标，并标记占用）
     /// </summary>
-    GameObject PlaceBlock(GameObject prefab, float rotation, int layer, int col)
+    GameObject PlaceBlock(GameObject prefab, float rotation, int layer, int col, float baseY, bool[,] occupied, int layerLimit)
     {
         TowerBlock blockComponent = prefab.GetComponent<TowerBlock>();
 
         // 取出对应pivot点，放置在网格位置(col, layer)
         Vector2Int bottomLeftCorner = blockComponent.GetBottomLeftCorner(rotation);
         float worldX = col - bottomLeftCorner.x;
-        float worldY = layer - bottomLeftCorner.y;
+        float worldY = baseY + layer - bottomLeftCorner.y;
 
         Vector3 position = new Vector3(worldX, worldY, 0);
 
@@ -291,16 +361,198 @@ public class TowerBuilder : MonoBehaviour
         GameObject block = Instantiate(prefab, position, blockRotation, transform);
         block.name = $"Block_L{layer}_C{col}_{blockComponent.blockTypeName}_R{rotation}";
 
-        // 标记网格占用
-        foreach (var (dx, dy) in occupiedCells)
+        // 标记段内占用
+        if (occupied != null)
         {
-            int occupyCol = col + dx;
-            int occupyLayer = layer + dy;
-            gridOccupied[occupyLayer, occupyCol] = true;
-            // Debug.Log($"    标记格子({occupyCol},{occupyLayer})为已占用");
+            foreach (var (dx, dy) in occupiedCells)
+            {
+                int occupyCol = col + dx;
+                int occupyLayer = layer + dy;
+                if (occupyLayer >= 0 && occupyLayer < layerLimit && occupyCol >= 0 && occupyCol < layerWidth)
+                    occupied[occupyLayer, occupyCol] = true;
+            }
         }
 
         return block;
+    }
+
+    // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束
+    bool[,] BuildSeamConstraintForNewSegment(float newSegmentStartY, int seamLayers, int newSegmentHeightLayers)
+    {
+        // seam约束矩阵尺寸与新段一致：true=该格子禁止放置（已被上一段的最底部占用）
+        bool[,] seamOccupied = new bool[newSegmentHeightLayers, layerWidth];
+        if (seamLayers <= 0) return seamOccupied;
+
+        // 新段的“顶部 seam 区域”在 newSegment 内对应的层区间： [newH - seamLayers, newH)
+        int seamStartLayerInNew = Mathf.Max(0, newSegmentHeightLayers - seamLayers);
+
+        foreach (Transform child in transform)
+        {
+            if (child == null) continue;
+            if (child.gameObject == hexagonBall) continue;
+
+            TowerBlock block = child.GetComponent<TowerBlock>();
+            if (block == null) continue;
+
+            // 只采样“当前已生成内容最底部附近”的方块，避免把很远的上方也计入
+            // 这里用 worldY 与 newSegmentStartY 的关系做过滤：只关心即将接合的那一带
+            float worldY = child.position.y;
+            if (worldY < newSegmentStartY + newSegmentHeightLayers - seamLayers - 2f) continue;
+            if (worldY > newSegmentStartY + newSegmentHeightLayers + 2f) continue;
+
+            // 将方块pivot对齐到格子：col = round(x), layer = round(y - newSegmentStartY)
+            int approxCol = Mathf.RoundToInt(child.position.x);
+            int approxLayer = Mathf.RoundToInt(child.position.y - newSegmentStartY);
+
+            // 用方块自身占用格子来标记 seam（近似：使用transform当前旋转）
+            float rotZ = child.eulerAngles.z;
+            var occupiedCells = block.GetOccupiedCells(rotZ);
+            var bottomLeft = block.GetBottomLeftCorner(rotZ);
+
+            // 我们的 PlaceBlock 使用 col - bottomLeftCorner.x 作为 worldX
+            // 反推 pivot col：col = round(worldX) + bottomLeftCorner.x
+            int pivotCol = Mathf.RoundToInt(child.position.x) + bottomLeft.x;
+            int pivotLayer = Mathf.RoundToInt(child.position.y - newSegmentStartY) + bottomLeft.y;
+
+            foreach (var (dx, dy) in occupiedCells)
+            {
+                int c = pivotCol + dx;
+                int l = pivotLayer + dy;
+
+                if (c < 0 || c >= layerWidth) continue;
+                if (l < seamStartLayerInNew || l >= newSegmentHeightLayers) continue;
+
+                seamOccupied[l, c] = true;
+            }
+        }
+
+        return seamOccupied;
+    }
+
+    void TryGenerateNextSegment()
+    {
+        if (mainCamera == null) return;
+
+        float cameraY = mainCamera.transform.position.y;
+        float triggerY = currentGeneratedMinY + generateAheadLayers;
+
+        // 低频日志：仅在接近触发阈值时输出，避免刷屏
+        if (Time.time - lastSegmentCheckLogTime >= 1.0f)
+        {
+            float distanceToTrigger = cameraY - triggerY;
+            if (distanceToTrigger <= Mathf.Max(2f, segmentHeightLayers * 0.25f))
+            {
+                lastSegmentCheckLogTime = Time.time;
+                Debug.Log($"段检查: cameraY={cameraY:F2}, currentGeneratedMinY={currentGeneratedMinY:F2}, triggerY={triggerY:F2}");
+            }
+        }
+
+        // 摄像机接近当前已生成底部时，在更下面续接生成一段
+        if (cameraY <= triggerY)
+        {
+            // 防止重复触发：只有当 currentGeneratedMinY 发生变化后才能再次生成
+            if (!Mathf.Approximately(lastGeneratedMinY, currentGeneratedMinY))
+                return;
+
+            float newSegmentStartY = currentGeneratedMinY - segmentHeightLayers;
+            Debug.Log($"准备生成新段: fromMinY={currentGeneratedMinY:F2} -> newStartY={newSegmentStartY:F2}, cameraY={cameraY:F2}, triggerY={triggerY:F2}");
+            BuildTowerSegment(newSegmentStartY, segmentHeightLayers);
+            currentGeneratedMinY = newSegmentStartY;
+            lastGeneratedMinY = currentGeneratedMinY;
+            UpdateFoundationY();
+
+            if (stabilizeNewSegment)
+            {
+                FreezeBlocksInYRange(newSegmentStartY - 1f, newSegmentStartY + segmentHeightLayers + 2f);
+                stabilizeUntilTime = Time.time + Mathf.Max(0.01f, stabilizeDuration);
+            }
+
+            Debug.Log($"生成新段完成: currentGeneratedMinY={currentGeneratedMinY:F2}, foundationY={foundationY:F2}");
+        }
+    }
+
+    void FreezeBlocksInYRange(float minY, float maxY)
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            float y = child.position.y;
+            if (y < minY || y > maxY) continue;
+
+            TowerBlock block = child.GetComponent<TowerBlock>();
+            if (block != null) block.Freeze();
+        }
+    }
+
+    void BuildTowerSegment(float segmentStartY, int heightLayers)
+    {
+        // 续接段：独立 occupancy + 顶部 seam 约束，保证与上一段无缝贴合
+        // seamLayers 选 2 层通常足够覆盖复杂形状的接触边界
+        int seamLayers = 2;
+        bool[,] segmentOccupied = new bool[heightLayers, layerWidth];
+
+        // 用上一段最底部的占用，预占新段顶部的 seam 区域，避免交界重叠
+        bool[,] seamOccupied = BuildSeamConstraintForNewSegment(segmentStartY, seamLayers, heightLayers);
+        for (int r = heightLayers - seamLayers; r < heightLayers; r++)
+        {
+            if (r < 0) continue;
+            for (int c = 0; c < layerWidth; c++)
+                segmentOccupied[r, c] = seamOccupied[r, c];
+        }
+
+        int placedBlocks = 0;
+
+        for (int layer = 0; layer < heightLayers; layer++)
+        {
+            int before = transform.childCount;
+            FillLayerWithGrid(layer, segmentStartY, segmentOccupied, heightLayers);
+            int after = transform.childCount;
+            if (after > before) placedBlocks += (after - before);
+        }
+
+        Debug.Log($"段生成统计: startY={segmentStartY:F2}, layers={heightLayers}, placedApprox={placedBlocks}, seamLayers={seamLayers}");
+
+        UpdateTowerTopY();
+    }
+
+    void UpdateGeneratedMinY()
+    {
+        float minY = float.PositiveInfinity;
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject == hexagonBall) continue;
+            if (child.position.y < minY) minY = child.position.y;
+        }
+        if (float.IsPositiveInfinity(minY))
+        {
+            currentGeneratedMinY = startHeight;
+            return;
+        }
+
+        // 由于方块 pivot 可能在形状内部，这里用 position.y 作为近似下界
+        currentGeneratedMinY = Mathf.Min(currentGeneratedMinY, minY);
+    }
+
+    void UpdateFoundationY()
+    {
+        foundationY = currentGeneratedMinY + foundationThicknessLayers;
+    }
+
+    void CleanupBlocksAboveCamera()
+    {
+        if (mainCamera == null) return;
+        float cameraY = mainCamera.transform.position.y;
+        float destroyAboveY = cameraY + destroyAboveCameraLayers;
+
+        foreach (Transform child in transform)
+        {
+            if (child == null) continue;
+            if (child.gameObject == hexagonBall) continue;
+            if (child.position.y > destroyAboveY)
+            {
+                Destroy(child.gameObject);
+            }
+        }
     }
 
     /// <summary>
@@ -354,7 +606,7 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     void UpdateTowerTopY()
     {
-        float maxY = 0f;
+        float maxY = float.NegativeInfinity;
         foreach (Transform child in transform)
         {
             if (child.gameObject == hexagonBall) continue;
@@ -369,7 +621,16 @@ public class TowerBuilder : MonoBehaviour
                 }
             }
         }
-        currentTowerTopY = maxY;
+
+        if (float.IsNegativeInfinity(maxY))
+        {
+            // 没有方块时回退到起始高度，避免相机/逻辑被 NaN 或极值影响
+            currentTowerTopY = startHeight;
+        }
+        else
+        {
+            currentTowerTopY = maxY;
+        }
     }
 
     /// <summary>
@@ -379,12 +640,15 @@ public class TowerBuilder : MonoBehaviour
     {
         if (mainCamera == null) return;
 
-        // 获取摄像机位置
-        float cameraY = mainCamera.transform.position.y;
+        // 使用摄像机真实可视范围（正交相机）
+        float camY = mainCamera.transform.position.y;
+        float halfHeight = mainCamera.orthographicSize;
+        float halfWidth = halfHeight * mainCamera.aspect;
+        Vector3 topWorld = mainCamera.transform.TransformPoint(new Vector3(0f, halfHeight, 0f));
+        Vector3 bottomWorld = mainCamera.transform.TransformPoint(new Vector3(0f, -halfHeight, 0f));
 
-        // 计算激活范围：摄像机上方和下方各延伸一段距离
-        float activationTop = cameraY + activationDistanceBelow;      // 摄像机上方
-        float activationBottom = cameraY - activationDistanceBelow;   // 摄像机下方
+        float activationTop = topWorld.y + activationExtraAbove;
+        float activationBottom = bottomWorld.y - activationExtraBelow;
 
         // 遍历所有方块
         TowerBlock[] allBlocks = GetComponentsInChildren<TowerBlock>();
@@ -398,6 +662,16 @@ public class TowerBuilder : MonoBehaviour
             if (block == null) continue;
 
             float blockY = block.transform.position.y;
+
+            // 地基层：永远冻结，不允许变成 Dynamic（防止底部抖动/挤出）
+            if (blockY <= foundationY)
+            {
+                if (!block.isStatic)
+                {
+                    block.Freeze();
+                }
+                continue;
+            }
 
             if (block.isStatic)
             {
@@ -413,12 +687,16 @@ public class TowerBuilder : MonoBehaviour
             else
             {
                 dynamicCount++;
+
+                // 动态方块离开可视范围很远时，冻结回Kinematic减少抖动与求解成本
+                if (blockY < activationBottom - 10f || blockY > activationTop + 10f)
+                    block.Freeze();
             }
         }
 
         if (activatedCount > 0)
         {
-            Debug.Log($"激活检查 - 摄像机Y={cameraY:F2}, 激活范围=[{activationBottom:F2}, {activationTop:F2}]");
+            Debug.Log($"激活检查 - 摄像机Y={camY:F2}, 激活范围=[{activationBottom:F2}, {activationTop:F2}]");
             Debug.Log($"方块状态 - 静态:{staticCount}, 动态:{dynamicCount}, 本次激活:{activatedCount}");
         }
     }

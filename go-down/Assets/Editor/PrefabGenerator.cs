@@ -7,6 +7,8 @@ public class PrefabGenerator : EditorWindow
     private const string BLOCK_PHYSICS_MATERIAL_PATH = "Assets/PhysicsMaterials/BlockPhysicsMaterial.physicsMaterial2D";
     private const float DEFAULT_BLOCK_FRICTION = 0.8f;
     private const float DEFAULT_BLOCK_BOUNCINESS = 0f;
+    private const float DEFAULT_BLOCK_DRAG = 0.05f;
+    private const float DEFAULT_BLOCK_ANGULAR_DRAG = 1.0f;
 
     [MenuItem("Tools/Generate Block Prefabs")]
     public static void ShowWindow()
@@ -94,6 +96,9 @@ public class PrefabGenerator : EditorWindow
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         TowerBlock block = go.AddComponent<TowerBlock>();
         block.blockTypeName = "单格方块";
@@ -124,6 +129,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         SquareBlock block = go.AddComponent<SquareBlock>();
         block.blockTypeName = "方形方块";
@@ -153,6 +161,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 3f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L3Block block = go.AddComponent<L3Block>();
         block.blockTypeName = "L3方块";
@@ -182,6 +193,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L4Block block = go.AddComponent<L4Block>();
         block.blockTypeName = "L4方块";
@@ -211,6 +225,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 5f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L5Block block = go.AddComponent<L5Block>();
         block.blockTypeName = "L5方块";
@@ -241,6 +258,9 @@ public class PrefabGenerator : EditorWindow
         rb.mass = 4f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         LineBlock block = go.AddComponent<LineBlock>();
         block.blockTypeName = "I型方块";

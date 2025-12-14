@@ -15,9 +15,6 @@ public class CameraFollower : MonoBehaviour
     [Tooltip("跟随平滑速度")]
     public float smoothSpeed = 5f;
 
-    [Tooltip("最小Y坐标")]
-    public float minY = 0f;
-
     private float targetY;
 
     void Start()
@@ -44,7 +41,7 @@ public class CameraFollower : MonoBehaviour
 
         Vector3 desiredPosition = new Vector3(
             towerCenterX + offset.x,
-            Mathf.Max(targetY + offset.y, minY),
+            targetY + offset.y,
             offset.z
         );
 

@@ -219,11 +219,11 @@ public class HexagonBall : MonoBehaviour
         transform.rotation = Quaternion.identity;
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        // 碰撞到方块或其他物体时的处理
-        Debug.Log($"球碰撞到: {collision.gameObject.name}");
-    }
+    // void OnCollisionEnter2D(Collision2D collision)
+    // {
+    //     // 碰撞到方块或其他物体时的处理
+    //     Debug.Log($"球碰撞到: {collision.gameObject.name}");
+    // }
 
     void OnDrawGizmos()
     {
