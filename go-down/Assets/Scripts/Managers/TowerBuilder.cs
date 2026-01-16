@@ -42,6 +42,12 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("开局延迟激活（秒），避免生成后立即解冻导致爆炸")]
     public float initialActivationDelay = 0.1f;
 
+    [Tooltip("初始分批激活总时长（秒）。>0 时会在该时长内逐步激活完，而不是一帧内激活")]
+    public float initialActivationTotalDuration = 0f;
+
+    [Tooltip("初始分批激活的批间隔（秒）。为 0 时会自动用 totalDuration/steps 计算")]
+    public float initialActivationStepInterval = 0f;
+
     [Tooltip("每次激活最多解冻多少个方块（分批解冻，降低约束爆炸风险）")]
     public int activationBatchSize = 24;
 
@@ -116,6 +122,11 @@ public class TowerBuilder : MonoBehaviour
 
     private bool initialActivationPending;
 
+    private bool initialActivationInProgress;
+    private float initialActivationNextStepTime;
+    private int initialActivationStepsRemaining;
+    private float initialActivationResolvedStepInterval;
+
     void Start()
     {
         // 订阅方块消除事件
@@ -132,9 +143,19 @@ public class TowerBuilder : MonoBehaviour
         UpdateGeneratedMinY();
         UpdateFoundationY();
 
-        // 开局先不立即激活，让刚生成的碰撞体/Transform 同步到物理世界
+        // 初始段也做一次稳定化：先冻结、延迟激活，避免开局瞬间爆炸
+        if (stabilizeNewSegment)
+        {
+            FreezeBlocksInYRange(startHeight - 1f, startHeight + towerLayers + 2f);
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, Mathf.Max(initialActivationDelay, stabilizeDuration));
+        }
+        else
+        {
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
+        }
+
         initialActivationPending = true;
-        stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
+        initialActivationInProgress = false;
 
         // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
         if (mainCamera != null)
@@ -177,14 +198,66 @@ public class TowerBuilder : MonoBehaviour
         if (initialActivationPending)
         {
             initialActivationPending = false;
-            Physics2D.SyncTransforms();
-            ActivateBlocksInRange();
+            BeginInitialActivation();
+        }
+
+        if (initialActivationInProgress)
+        {
+            TickInitialActivation();
+            return;
         }
 
         if (Time.time - lastActivationCheckTime >= activationCheckInterval)
         {
             lastActivationCheckTime = Time.time;
             ActivateBlocksInRange();
+        }
+    }
+
+    void BeginInitialActivation()
+    {
+        Physics2D.SyncTransforms();
+
+        // 计算初始分批激活参数
+        float total = initialActivationTotalDuration;
+        if (total <= 0f)
+        {
+            // 兼容旧行为：立刻触发一次激活（仍受 activationBatchSize 约束）
+            ActivateBlocksInRange();
+            return;
+        }
+
+        // 估算需要多少步才能把可激活的对象逐步释放完
+        int blocksCount = GetComponentsInChildren<TowerBlock>().Length;
+        int batch = activationBatchSize <= 0 ? blocksCount : activationBatchSize;
+        int estimatedSteps = Mathf.Max(1, Mathf.CeilToInt(blocksCount / (float)Mathf.Max(1, batch)));
+
+        initialActivationStepsRemaining = estimatedSteps;
+        initialActivationResolvedStepInterval = initialActivationStepInterval > 0f
+            ? initialActivationStepInterval
+            : (total / estimatedSteps);
+
+        // 避免 0 导致同一帧跑完
+        initialActivationResolvedStepInterval = Mathf.Max(0.01f, initialActivationResolvedStepInterval);
+
+        initialActivationNextStepTime = Time.time;
+        initialActivationInProgress = true;
+    }
+
+    void TickInitialActivation()
+    {
+        if (Time.time < initialActivationNextStepTime) return;
+
+        ActivateBlocksInRange();
+        initialActivationStepsRemaining--;
+        initialActivationNextStepTime = Time.time + initialActivationResolvedStepInterval;
+
+        // 安全兜底：如果已经没有可激活的方块了，提前结束
+        if (initialActivationStepsRemaining <= 0)
+        {
+            initialActivationInProgress = false;
+            lastActivationCheckTime = Time.time;
+            return;
         }
     }
 
@@ -370,10 +443,8 @@ public class TowerBuilder : MonoBehaviour
         // 获取占用格子
         var occupiedCells = blockComponent.GetOccupiedCells(rotation);
 
-        // DEBUG: 坐标信息
-        // Debug.Log($"  放置 {blockComponent.blockTypeName} at 网格[{col},{layer}]");
-        Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
-        // Debug.Log($"    占用格子(相对pivot): {string.Join(", ", occupiedCells)}");
+        // DEBUG: 坐标信息（需要时再打开，避免刷屏影响性能/时序）
+        // Debug.Log($"  放置 {blockComponent.blockTypeName} pivotWorld=({worldX:F2},{worldY:F2}) rot={rotation}°");
 
         // 创建方块（应用旋转）
         Quaternion blockRotation = Quaternion.Euler(0, 0, rotation);
@@ -669,8 +740,15 @@ public class TowerBuilder : MonoBehaviour
         float activationTop = topWorld.y + activationExtraAbove;
         float activationBottom = bottomWorld.y - activationExtraBelow;
 
-        // 遍历所有方块
+        // 遍历所有方块（按高度从高到低排序，先激活上方，减少链式顶推）
         TowerBlock[] allBlocks = GetComponentsInChildren<TowerBlock>();
+        System.Array.Sort(allBlocks, (a, b) =>
+        {
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            return b.transform.position.y.CompareTo(a.transform.position.y);
+        });
 
         int activatedCount = 0;
         int staticCount = 0;
