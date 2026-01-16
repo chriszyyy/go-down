@@ -10,8 +10,17 @@ public class PrefabGenerator : EditorWindow
     private const float DEFAULT_BLOCK_DRAG = 0.05f;
     private const float DEFAULT_BLOCK_ANGULAR_DRAG = 1.0f;
 
-    // 物理容差：让碰撞体略小于视觉格子，降低长期堆叠时的挤爆/发散概率（肉眼几乎不可见）
-    private const float COLLIDER_TOLERANCE = 0.01f;
+    // 物理容差：让碰撞体略小于逻辑格子，降低初始生成/长期堆叠时的挤爆与抖动
+    // 注意：这里的单位是“世界单位(=1格)”。该值越大，缝隙越明显；越小越容易挤爆。
+    private const float COLLIDER_TOLERANCE = 0.1f;
+
+    // 统一的格子单位：生成逻辑里默认 1 格 = 1 世界单位
+    private const float GRID_UNIT = 1f;
+
+    private static Vector2 GridCellCenterOffset(float widthInCells, float heightInCells)
+    {
+        return new Vector2(widthInCells * GRID_UNIT * 0.5f, heightInCells * GRID_UNIT * 0.5f);
+    }
 
     [MenuItem("Tools/Generate Block Prefabs")]
     public static void ShowWindow()
@@ -91,8 +100,8 @@ public class PrefabGenerator : EditorWindow
         sr.sortingOrder = 0;
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(1.0f - COLLIDER_TOLERANCE, 1.0f - COLLIDER_TOLERANCE);
-        collider.offset = new Vector2(0.5f, 0.5f); // 64x64 图形在128x128纹理中的偏移
+        collider.size = new Vector2(GRID_UNIT - COLLIDER_TOLERANCE, GRID_UNIT - COLLIDER_TOLERANCE);
+        collider.offset = GridCellCenterOffset(1f, 1f);
         collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
@@ -123,8 +132,8 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateSquareSprite(128, 128, Color.yellow);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(2.0f - COLLIDER_TOLERANCE, 2.0f - COLLIDER_TOLERANCE);
-        collider.offset = new Vector2(1.0f, 1.0f); // 128x128 图形在 256x256 纹理中的偏移
+        collider.size = new Vector2(2f * GRID_UNIT - COLLIDER_TOLERANCE, 2f * GRID_UNIT - COLLIDER_TOLERANCE);
+        collider.offset = GridCellCenterOffset(2f, 2f);
         collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
@@ -252,8 +261,8 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateLineSprite(4, Color.red);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(4.0f - COLLIDER_TOLERANCE, 1.0f - COLLIDER_TOLERANCE);
-        collider.offset = new Vector2(2.0f, 0.5f); // 256x64 图形在 512x128 纹理中的偏移
+        collider.size = new Vector2(4f * GRID_UNIT - COLLIDER_TOLERANCE, GRID_UNIT - COLLIDER_TOLERANCE);
+        collider.offset = GridCellCenterOffset(4f, 1f);
         collider.sharedMaterial = physicsMaterial;
 
         Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
@@ -287,20 +296,20 @@ public class PrefabGenerator : EditorWindow
         // 由于图形绘制在右上角，需要计算正确的偏移
         // 原始尺寸: 2*64 x blocks*64，纹理尺寸: 4*64 x 2*blocks*64
         // 图形中心偏移: (64, blocks*32) pixels = (1.0f, blocks*0.5f) units
-        float offsetX = 1.0f; // 向右偏移一个单位
-        float offsetY = (float)blocks * 0.5f; // 向上偏移
+        float offsetX = 1.0f * GRID_UNIT;
+        float offsetY = (float)blocks * 0.5f * GRID_UNIT;
 
-        float width = 2f;
-        float height = (float)blocks;
+        float width = 2f * GRID_UNIT;
+        float height = (float)blocks * GRID_UNIT;
 
         return new Vector2[]
         {
-            new Vector2(-width/2f + gap + offsetX, -height/2f + gap + offsetY),       // ①左下角
-            new Vector2(width/2f - gap + offsetX, -height/2f + gap + offsetY),        // ②右下角
-            new Vector2(width/2f - gap + offsetX, -height/2f + 1f - gap + offsetY),   // ③右下方块顶部
-            new Vector2(-gap + offsetX, -height/2f + 1f - gap + offsetY),             // ④转折点
-            new Vector2(-gap + offsetX, height/2f - gap + offsetY),                   // ⑤左上
-            new Vector2(-width/2f + gap + offsetX, height/2f - gap + offsetY),        // ⑥左上角
+            new Vector2(-width/2f + gap + offsetX, -height/2f + gap + offsetY),                         // ①左下角
+            new Vector2(width/2f - gap + offsetX, -height/2f + gap + offsetY),                          // ②右下角
+            new Vector2(width/2f - gap + offsetX, -height/2f + GRID_UNIT - gap + offsetY),              // ③右下方块顶部
+            new Vector2(-gap + offsetX, -height/2f + GRID_UNIT - gap + offsetY),                        // ④转折点
+            new Vector2(-gap + offsetX, height/2f - gap + offsetY),                                     // ⑤左上
+            new Vector2(-width/2f + gap + offsetX, height/2f - gap + offsetY),                          // ⑥左上角
         };
     }
 
@@ -313,20 +322,20 @@ public class PrefabGenerator : EditorWindow
         // 由于图形绘制在右上角，需要计算正确的偏移
         // 原始尺寸: 3*64 x 3*64，纹理尺寴: 6*64 x 6*64
         // 图形中心偏移: (96, 96) pixels = (1.5f, 1.5f) units
-        float offsetX = 1.5f; // 向右偏移1.5个单位
-        float offsetY = 1.5f; // 向上偏移1.5个单位
+        float offsetX = 1.5f * GRID_UNIT;
+        float offsetY = 1.5f * GRID_UNIT;
 
-        float size = 3f;
+        float size = 3f * GRID_UNIT;
         float half = size / 2f;
 
         return new Vector2[]
         {
-            new Vector2(-half + gap + offsetX, -half + gap + offsetY),       // ①左下角
-            new Vector2(half - gap + offsetX, -half + gap + offsetY),        // ②右下角
-            new Vector2(half - gap + offsetX, -half + 1f - gap + offsetY),   // ③右下第一格顶部
-            new Vector2(-half + 1f - gap + offsetX, -half + 1f - gap + offsetY), // ④转折点
-            new Vector2(-half + 1f - gap + offsetX, half - gap + offsetY),   // ⑤左上
-            new Vector2(-half + gap + offsetX, half - gap + offsetY),        // ⑥左上角
+            new Vector2(-half + gap + offsetX, -half + gap + offsetY),                         // ①左下角
+            new Vector2(half - gap + offsetX, -half + gap + offsetY),                          // ②右下角
+            new Vector2(half - gap + offsetX, -half + GRID_UNIT - gap + offsetY),              // ③右下第一格顶部
+            new Vector2(-half + GRID_UNIT - gap + offsetX, -half + GRID_UNIT - gap + offsetY), // ④转折点
+            new Vector2(-half + GRID_UNIT - gap + offsetX, half - gap + offsetY),              // ⑤左上
+            new Vector2(-half + gap + offsetX, half - gap + offsetY),                           // ⑥左上角
         };
     }
 

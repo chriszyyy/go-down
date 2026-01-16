@@ -36,6 +36,9 @@ public class TowerBuilder : MonoBehaviour
     public float stabilizeDuration = 0.25f;
 
     [Header("初始激活")]
+    [Tooltip("是否需要点击按钮后才开始激活/解冻逻辑")]
+    public bool requireManualStartActivation = false;
+
     [Tooltip("开局延迟激活（秒），避免生成后立即解冻导致爆炸")]
     public float initialActivationDelay = 0.1f;
 
@@ -113,6 +116,8 @@ public class TowerBuilder : MonoBehaviour
 
     private bool initialActivationPending;
 
+    private bool activationEnabled;
+
     void Start()
     {
         // 订阅方块消除事件
@@ -140,7 +145,8 @@ public class TowerBuilder : MonoBehaviour
             stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
         }
 
-        initialActivationPending = true;
+        activationEnabled = !requireManualStartActivation;
+        initialActivationPending = activationEnabled;
 
         // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
         if (mainCamera != null)
@@ -160,6 +166,11 @@ public class TowerBuilder : MonoBehaviour
 
     void Update()
     {
+        if (!activationEnabled)
+        {
+            return;
+        }
+
         // 接近底部时续接生成下一段
         TryGenerateNextSegment();
 
@@ -195,20 +206,33 @@ public class TowerBuilder : MonoBehaviour
 
     void BeginInitialActivation()
     {
-        // 初始激活前先对齐到整数格点，避免因微小重叠/浮点误差导致的“统一抽动/挤出”
-        // 目前塔使用 1单位 = 1格 的整数网格，这里直接 Round 到整数
+        // 初始激活前：把“方块最低占用格的左下角”对齐到整数格。
+        // 关键点：一些形状的 transform.position 并不是形状左下角，直接 Round(position) 会造成整体偏移与挤压。
         TowerBlock[] snapBlocks = GetComponentsInChildren<TowerBlock>();
         for (int i = 0; i < snapBlocks.Length; i++)
         {
             TowerBlock b = snapBlocks[i];
             if (b == null) continue;
 
+            float rotZ = b.transform.eulerAngles.z;
+            Vector2Int bottomLeft = b.GetBottomLeftCorner(rotZ);
+
             Vector3 p = b.transform.position;
-            float sx = Mathf.Round(p.x);
-            float sy = Mathf.Round(p.y);
-            if (!Mathf.Approximately(p.x, sx) || !Mathf.Approximately(p.y, sy))
+
+            // PlaceBlock 规则：worldX = pivotCol - bottomLeft.x
+            // 反推 pivotCol = worldX + bottomLeft.x，并保证 pivotCol 落在整数格
+            float pivotX = p.x + bottomLeft.x;
+            float pivotY = p.y + bottomLeft.y;
+
+            float snappedPivotX = Mathf.Round(pivotX);
+            float snappedPivotY = Mathf.Round(pivotY);
+
+            float snappedWorldX = snappedPivotX - bottomLeft.x;
+            float snappedWorldY = snappedPivotY - bottomLeft.y;
+
+            if (!Mathf.Approximately(p.x, snappedWorldX) || !Mathf.Approximately(p.y, snappedWorldY))
             {
-                b.transform.position = new Vector3(sx, sy, p.z);
+                b.transform.position = new Vector3(snappedWorldX, snappedWorldY, p.z);
             }
         }
 
@@ -216,6 +240,21 @@ public class TowerBuilder : MonoBehaviour
         // 立刻触发一次激活（仍受 activationBatchSize 约束）
         ActivateBlocksInRange();
         lastActivationCheckTime = Time.time;
+    }
+
+    public void StartActivation()
+    {
+        activationEnabled = true;
+        initialActivationPending = true;
+
+        if (stabilizeNewSegment)
+        {
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, Mathf.Max(initialActivationDelay, stabilizeDuration));
+        }
+        else
+        {
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
+        }
     }
 
     public float GetCurrentGeneratedMinY()
@@ -794,6 +833,10 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     public void ResetTower()
     {
+        // 复原激活状态：如果需要手动开始，则重置后保持不激活，等按钮点击
+        activationEnabled = !requireManualStartActivation;
+        initialActivationPending = activationEnabled;
+
         ClearTower();
 
         if (hexagonBall != null)
@@ -806,6 +849,17 @@ public class TowerBuilder : MonoBehaviour
         if (spawnHexagonBall && hexagonBallPrefab != null)
         {
             SpawnHexagonBall();
+        }
+
+        // 刚重建完塔，重新设置稳定化窗口（与 Start() 保持一致）
+        if (stabilizeNewSegment)
+        {
+            FreezeBlocksInYRange(startHeight - 1f, startHeight + towerLayers + 2f);
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, Mathf.Max(initialActivationDelay, stabilizeDuration));
+        }
+        else
+        {
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
         }
     }
 
