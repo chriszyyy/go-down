@@ -5,10 +5,13 @@ using System.IO;
 public class PrefabGenerator : EditorWindow
 {
     private const string BLOCK_PHYSICS_MATERIAL_PATH = "Assets/PhysicsMaterials/BlockPhysicsMaterial.physicsMaterial2D";
-    private const float DEFAULT_BLOCK_FRICTION = 0.8f;
+    private const float DEFAULT_BLOCK_FRICTION = 0.35f;
     private const float DEFAULT_BLOCK_BOUNCINESS = 0f;
     private const float DEFAULT_BLOCK_DRAG = 0.05f;
     private const float DEFAULT_BLOCK_ANGULAR_DRAG = 1.0f;
+
+    // 物理容差：让碰撞体略小于视觉格子，降低长期堆叠时的挤爆/发散概率（肉眼几乎不可见）
+    private const float COLLIDER_TOLERANCE = 0.01f;
 
     [MenuItem("Tools/Generate Block Prefabs")]
     public static void ShowWindow()
@@ -88,7 +91,7 @@ public class PrefabGenerator : EditorWindow
         sr.sortingOrder = 0;
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(1.0f, 1.0f);
+        collider.size = new Vector2(1.0f - COLLIDER_TOLERANCE, 1.0f - COLLIDER_TOLERANCE);
         collider.offset = new Vector2(0.5f, 0.5f); // 64x64 图形在128x128纹理中的偏移
         collider.sharedMaterial = physicsMaterial;
 
@@ -120,7 +123,7 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateSquareSprite(128, 128, Color.yellow);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(2.0f, 2.0f);
+        collider.size = new Vector2(2.0f - COLLIDER_TOLERANCE, 2.0f - COLLIDER_TOLERANCE);
         collider.offset = new Vector2(1.0f, 1.0f); // 128x128 图形在 256x256 纹理中的偏移
         collider.sharedMaterial = physicsMaterial;
 
@@ -249,7 +252,7 @@ public class PrefabGenerator : EditorWindow
         sr.sprite = CreateLineSprite(4, Color.red);
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(4.0f, 1.0f);
+        collider.size = new Vector2(4.0f - COLLIDER_TOLERANCE, 1.0f - COLLIDER_TOLERANCE);
         collider.offset = new Vector2(2.0f, 0.5f); // 256x64 图形在 512x128 纹理中的偏移
         collider.sharedMaterial = physicsMaterial;
 
@@ -278,7 +281,7 @@ public class PrefabGenerator : EditorWindow
     // 创建L形碰撞器的点（逆时针）
     private static Vector2[] CreateLShapeColliderPoints(int blocks)
     {
-        float gap = 0f;
+        float gap = COLLIDER_TOLERANCE * 0.5f;
 
         // L形状（2格宽，blocks格高）在右上角区域：
         // 由于图形绘制在右上角，需要计算正确的偏移
@@ -304,7 +307,7 @@ public class PrefabGenerator : EditorWindow
     // 创建等长L形碰撞器的点（3x3的L形）
     private static Vector2[] CreateEqualLShapeColliderPoints()
     {
-        float gap = 0f;
+        float gap = COLLIDER_TOLERANCE * 0.5f;
 
         // 等长L形（3x3）在右上角区域：
         // 由于图形绘制在右上角，需要计算正确的偏移

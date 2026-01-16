@@ -631,7 +631,6 @@ MonoBehaviour:
   towerBuilder: {fileID: 1425696444}
   offset: {x: 0, y: -3, z: -10}
   smoothSpeed: 5
-  minY: 0
 --- !u!1 &1425696443
 GameObject:
   m_ObjectHideFlags: 0
@@ -661,10 +660,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05acc9d24ee99fe488c94b32ed2cd2af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  towerLayers: 50
-  layerWidth: 8
+  towerLayers: 20
+  layerWidth: 5
   layerSpacing: 1
   startHeight: -3
+  segmentHeightLayers: 20
+  generateAheadLayers: 10
+  foundationThicknessLayers: 5
+  destroyAboveCameraLayers: 80
+  stabilizeNewSegment: 1
+  stabilizeDuration: 0.25
+  initialActivationDelay: 0.1
+  activationBatchSize: 24
   singleBlockPrefab: {fileID: 1186311390117326443, guid: 0482599536ed7594f90ca3cb6cd69f7d, type: 3}
   squareBlockPrefab: {fileID: 6035088342137356228, guid: a379559e08f9ac748b124c34c344d8fe, type: 3}
   l3BlockPrefab: {fileID: 1624398556181723736, guid: 6ad31452487acff488ec95b2cabb66de, type: 3}
@@ -674,8 +681,10 @@ MonoBehaviour:
   hexagonBallPrefab: {fileID: 5149992263456304526, guid: 0c9f9e0c1028a7740b511984ea843433, type: 3}
   spawnHexagonBall: 1
   ballHeightOffset: 1.5
-  activationDistanceBelow: 5
+  activationExtraBelow: 2
+  activationExtraAbove: 1
   activationCheckInterval: 0.5
+  topYUpdateInterval: 0.6
 --- !u!4 &1425696445
 Transform:
   m_ObjectHideFlags: 0

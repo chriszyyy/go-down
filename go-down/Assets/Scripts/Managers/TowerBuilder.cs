@@ -38,6 +38,13 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("新段稳定化时长（秒）")]
     public float stabilizeDuration = 0.25f;
 
+    [Header("初始激活")]
+    [Tooltip("开局延迟激活（秒），避免生成后立即解冻导致爆炸")]
+    public float initialActivationDelay = 0.1f;
+
+    [Tooltip("每次激活最多解冻多少个方块（分批解冻，降低约束爆炸风险）")]
+    public int activationBatchSize = 24;
+
     [Header("方块预制体")]
     [Tooltip("单格方块预制体")]
     public GameObject singleBlockPrefab;
@@ -107,6 +114,8 @@ public class TowerBuilder : MonoBehaviour
     private float lastTopYUpdateTime;
     private Camera mainCamera;
 
+    private bool initialActivationPending;
+
     void Start()
     {
         // 订阅方块消除事件
@@ -123,6 +132,10 @@ public class TowerBuilder : MonoBehaviour
         UpdateGeneratedMinY();
         UpdateFoundationY();
 
+        // 开局先不立即激活，让刚生成的碰撞体/Transform 同步到物理世界
+        initialActivationPending = true;
+        stabilizeUntilTime = Time.time + Mathf.Max(0.01f, initialActivationDelay);
+
         // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
         if (mainCamera != null)
         {
@@ -130,8 +143,7 @@ public class TowerBuilder : MonoBehaviour
             mainCamera.transform.position = new Vector3(centerX, currentTowerTopY - 3f, mainCamera.transform.position.z);
         }
 
-        // 现在按“地基冻结层 + 相机窗口”激活方块
-        ActivateBlocksInRange();
+        // 注意：激活会在 Update 中延迟进行（initialActivationDelay）
 
         // 生成六边形球
         if (spawnHexagonBall && hexagonBallPrefab != null)
@@ -160,6 +172,13 @@ public class TowerBuilder : MonoBehaviour
         {
             // 稳定化期间保持冻结，避免接缝瞬间爆炸
             return;
+        }
+
+        if (initialActivationPending)
+        {
+            initialActivationPending = false;
+            Physics2D.SyncTransforms();
+            ActivateBlocksInRange();
         }
 
         if (Time.time - lastActivationCheckTime >= activationCheckInterval)
@@ -353,7 +372,7 @@ public class TowerBuilder : MonoBehaviour
 
         // DEBUG: 坐标信息
         // Debug.Log($"  放置 {blockComponent.blockTypeName} at 网格[{col},{layer}]");
-        // Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
+        Debug.Log($"    Pivot点世界坐标: ({worldX:F2},{worldY:F2}), 旋转={rotation}°");
         // Debug.Log($"    占用格子(相对pivot): {string.Join(", ", occupiedCells)}");
 
         // 创建方块（应用旋转）
@@ -657,6 +676,8 @@ public class TowerBuilder : MonoBehaviour
         int staticCount = 0;
         int dynamicCount = 0;
 
+        int batchRemaining = activationBatchSize <= 0 ? int.MaxValue : activationBatchSize;
+
         foreach (TowerBlock block in allBlocks)
         {
             if (block == null) continue;
@@ -680,8 +701,12 @@ public class TowerBuilder : MonoBehaviour
                 // 只激活摄像机可视范围内的方块（上下各延伸activationDistanceBelow）
                 if (blockY >= activationBottom && blockY <= activationTop)
                 {
-                    block.MakeDynamic();
-                    activatedCount++;
+                    if (batchRemaining > 0)
+                    {
+                        block.MakeDynamic();
+                        activatedCount++;
+                        batchRemaining--;
+                    }
                 }
             }
             else
