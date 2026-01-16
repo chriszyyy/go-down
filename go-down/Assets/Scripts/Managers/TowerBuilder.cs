@@ -12,9 +12,6 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("每层的宽度（单位：方块）")]
     public int layerWidth = 8;
 
-    [Tooltip("层间距")]
-    public float layerSpacing = 1f;
-
     [Tooltip("起始高度")]
     public float startHeight = -3f;
 
@@ -41,12 +38,6 @@ public class TowerBuilder : MonoBehaviour
     [Header("初始激活")]
     [Tooltip("开局延迟激活（秒），避免生成后立即解冻导致爆炸")]
     public float initialActivationDelay = 0.1f;
-
-    [Tooltip("初始分批激活总时长（秒）。>0 时会在该时长内逐步激活完，而不是一帧内激活")]
-    public float initialActivationTotalDuration = 0f;
-
-    [Tooltip("初始分批激活的批间隔（秒）。为 0 时会自动用 totalDuration/steps 计算")]
-    public float initialActivationStepInterval = 0f;
 
     [Tooltip("每次激活最多解冻多少个方块（分批解冻，降低约束爆炸风险）")]
     public int activationBatchSize = 24;
@@ -122,11 +113,6 @@ public class TowerBuilder : MonoBehaviour
 
     private bool initialActivationPending;
 
-    private bool initialActivationInProgress;
-    private float initialActivationNextStepTime;
-    private int initialActivationStepsRemaining;
-    private float initialActivationResolvedStepInterval;
-
     void Start()
     {
         // 订阅方块消除事件
@@ -155,7 +141,6 @@ public class TowerBuilder : MonoBehaviour
         }
 
         initialActivationPending = true;
-        initialActivationInProgress = false;
 
         // 立即将摄像机移动到塔顶位置，避免初始激活错误的方块
         if (mainCamera != null)
@@ -201,12 +186,6 @@ public class TowerBuilder : MonoBehaviour
             BeginInitialActivation();
         }
 
-        if (initialActivationInProgress)
-        {
-            TickInitialActivation();
-            return;
-        }
-
         if (Time.time - lastActivationCheckTime >= activationCheckInterval)
         {
             lastActivationCheckTime = Time.time;
@@ -216,49 +195,27 @@ public class TowerBuilder : MonoBehaviour
 
     void BeginInitialActivation()
     {
+        // 初始激活前先对齐到整数格点，避免因微小重叠/浮点误差导致的“统一抽动/挤出”
+        // 目前塔使用 1单位 = 1格 的整数网格，这里直接 Round 到整数
+        TowerBlock[] snapBlocks = GetComponentsInChildren<TowerBlock>();
+        for (int i = 0; i < snapBlocks.Length; i++)
+        {
+            TowerBlock b = snapBlocks[i];
+            if (b == null) continue;
+
+            Vector3 p = b.transform.position;
+            float sx = Mathf.Round(p.x);
+            float sy = Mathf.Round(p.y);
+            if (!Mathf.Approximately(p.x, sx) || !Mathf.Approximately(p.y, sy))
+            {
+                b.transform.position = new Vector3(sx, sy, p.z);
+            }
+        }
+
         Physics2D.SyncTransforms();
-
-        // 计算初始分批激活参数
-        float total = initialActivationTotalDuration;
-        if (total <= 0f)
-        {
-            // 兼容旧行为：立刻触发一次激活（仍受 activationBatchSize 约束）
-            ActivateBlocksInRange();
-            return;
-        }
-
-        // 估算需要多少步才能把可激活的对象逐步释放完
-        int blocksCount = GetComponentsInChildren<TowerBlock>().Length;
-        int batch = activationBatchSize <= 0 ? blocksCount : activationBatchSize;
-        int estimatedSteps = Mathf.Max(1, Mathf.CeilToInt(blocksCount / (float)Mathf.Max(1, batch)));
-
-        initialActivationStepsRemaining = estimatedSteps;
-        initialActivationResolvedStepInterval = initialActivationStepInterval > 0f
-            ? initialActivationStepInterval
-            : (total / estimatedSteps);
-
-        // 避免 0 导致同一帧跑完
-        initialActivationResolvedStepInterval = Mathf.Max(0.01f, initialActivationResolvedStepInterval);
-
-        initialActivationNextStepTime = Time.time;
-        initialActivationInProgress = true;
-    }
-
-    void TickInitialActivation()
-    {
-        if (Time.time < initialActivationNextStepTime) return;
-
+        // 立刻触发一次激活（仍受 activationBatchSize 约束）
         ActivateBlocksInRange();
-        initialActivationStepsRemaining--;
-        initialActivationNextStepTime = Time.time + initialActivationResolvedStepInterval;
-
-        // 安全兜底：如果已经没有可激活的方块了，提前结束
-        if (initialActivationStepsRemaining <= 0)
-        {
-            initialActivationInProgress = false;
-            lastActivationCheckTime = Time.time;
-            return;
-        }
+        lastActivationCheckTime = Time.time;
     }
 
     public float GetCurrentGeneratedMinY()
@@ -733,12 +690,8 @@ public class TowerBuilder : MonoBehaviour
         // 使用摄像机真实可视范围（正交相机）
         float camY = mainCamera.transform.position.y;
         float halfHeight = mainCamera.orthographicSize;
-        float halfWidth = halfHeight * mainCamera.aspect;
-        Vector3 topWorld = mainCamera.transform.TransformPoint(new Vector3(0f, halfHeight, 0f));
-        Vector3 bottomWorld = mainCamera.transform.TransformPoint(new Vector3(0f, -halfHeight, 0f));
-
-        float activationTop = topWorld.y + activationExtraAbove;
-        float activationBottom = bottomWorld.y - activationExtraBelow;
+        float activationTop = camY + halfHeight + activationExtraAbove;
+        float activationBottom = camY - halfHeight - activationExtraBelow;
 
         // 遍历所有方块（按高度从高到低排序，先激活上方，减少链式顶推）
         TowerBlock[] allBlocks = GetComponentsInChildren<TowerBlock>();
