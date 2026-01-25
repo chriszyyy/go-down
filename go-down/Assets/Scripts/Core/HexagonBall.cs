@@ -23,14 +23,8 @@ public class HexagonBall : MonoBehaviour
     public float gravityScale = 1f;
 
     [Header("边界检测")]
-    [Tooltip("安全区域 X 轴范围（超出此范围判定失败）")]
+    [Tooltip("安全区域 X 轴范围（仅用于 Gizmos 可视化；胜负请用左右边界触发器判定）")]
     public float safeZoneX = 6f;
-
-    [Tooltip("危险倾斜角度（度数）")]
-    public float dangerAngle = 45f;
-
-    [Tooltip("危险速度阈值")]
-    public float dangerVelocity = 10f;
 
     [Header("视觉设置")]
     [Tooltip("六边形颜色")]
@@ -43,12 +37,6 @@ public class HexagonBall : MonoBehaviour
 
     // 状态
     private bool isGameOver = false;
-    private float currentAngle = 0f;
-
-    // 事件
-    public static event Action OnBallFell;  // 球掉落事件
-    public static event Action<float> OnBallTilted;  // 球倾斜事件（传递角度）
-    public static event Action OnBallStable;  // 球稳定事件
 
     void Awake()
     {
@@ -76,12 +64,6 @@ public class HexagonBall : MonoBehaviour
     void Update()
     {
         if (isGameOver) return;
-
-        // 检测失败条件
-        CheckGameOverConditions();
-
-        // 更新倾斜角度
-        UpdateTiltAngle();
     }
 
     /// <summary>
@@ -97,87 +79,7 @@ public class HexagonBall : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
     }
 
-    /// <summary>
-    /// 检测游戏结束条件
-    /// </summary>
-    void CheckGameOverConditions()
-    {
-        // 条件 1: 球的 X 坐标超出安全区域
-        if (Mathf.Abs(transform.position.x) > safeZoneX)
-        {
-            TriggerGameOver("球掉出边界");
-            return;
-        }
-
-        // 条件 2: 球倾斜角度过大
-        if (Mathf.Abs(currentAngle) > dangerAngle)
-        {
-            TriggerGameOver($"球倾斜角度过大: {currentAngle:F1}°");
-            return;
-        }
-
-        // 条件 3: 球速度过快且位置危险
-        if (rb.velocity.magnitude > dangerVelocity && Mathf.Abs(transform.position.x) > safeZoneX * 0.7f)
-        {
-            TriggerGameOver($"球飞出速度过快: {rb.velocity.magnitude:F1}");
-            return;
-        }
-    }
-
-    /// <summary>
-    /// 更新倾斜角度
-    /// </summary>
-    void UpdateTiltAngle()
-    {
-        // 获取当前旋转角度（归一化到 -180 到 180）
-        currentAngle = transform.eulerAngles.z;
-        if (currentAngle > 180f) currentAngle -= 360f;
-
-        // 触发倾斜事件
-        OnBallTilted?.Invoke(currentAngle);
-
-        // 检查是否稳定
-        if (IsStable())
-        {
-            OnBallStable?.Invoke();
-        }
-    }
-
-    /// <summary>
-    /// 触发游戏结束
-    /// </summary>
-    void TriggerGameOver(string reason)
-    {
-        if (isGameOver) return;
-
-        isGameOver = true;
-        Debug.Log($"游戏结束: {reason}");
-
-        OnBallFell?.Invoke();
-    }
-
-    /// <summary>
-    /// 检查球是否稳定
-    /// </summary>
-    public bool IsStable()
-    {
-        if (rb == null) return false;
-
-        // 速度很小且角度接近水平
-        bool velocityStable = rb.velocity.magnitude < 0.1f;
-        bool angularStable = Mathf.Abs(rb.angularVelocity) < 1f;
-        bool angleStable = Mathf.Abs(currentAngle) < 5f;
-
-        return velocityStable && angularStable && angleStable;
-    }
-
-    /// <summary>
-    /// 获取当前倾斜角度
-    /// </summary>
-    public float GetTiltAngle()
-    {
-        return currentAngle;
-    }
+    // 游戏结束现在由左右边界触发器负责（GameOverBoundary），球本身不再做失败判定。
 
     /// <summary>
     /// 获取当前高度（Y坐标）

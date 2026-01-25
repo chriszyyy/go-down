@@ -59,6 +59,11 @@ public class RestartGameButton : MonoBehaviour
             return;
         }
 
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.ResetGameState();
+        }
+
         // 重建塔（内部会清空旧方块、重建、并按配置重生球）
         towerBuilder.ResetTower();
 

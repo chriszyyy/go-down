@@ -64,6 +64,22 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("I型（4格）预制体")]
     public GameObject lineBlockPrefab;
 
+    [Header("失败边界预制体")]
+    [Tooltip("左边界触发器预制体（可选）。用于球碰到左右边界判定失败")]
+    public GameObject leftBoundaryPrefab;
+
+    [Tooltip("右边界触发器预制体（可选）。用于球碰到左右边界判定失败")]
+    public GameObject rightBoundaryPrefab;
+
+    [Tooltip("左右边界各自向外额外留出的格子数（单位=格/世界单位）。总宽度 = layerWidth + 2*extra")]
+    public float boundaryExtraCellsEachSide = 2f;
+
+    [Tooltip("边界是否跟随主摄像机的Y位置（避免球从边界下方绕开）")]
+    public bool boundaryFollowCameraY = true;
+
+    [Tooltip("边界跟随摄像机时的Y偏移")]
+    public float boundaryFollowYOffset = 0f;
+
     [Header("六边形球配置")]
     [Tooltip("六边形球预制体")]
     public GameObject hexagonBallPrefab;
@@ -90,6 +106,8 @@ public class TowerBuilder : MonoBehaviour
 
     // 运行时数据
     private GameObject hexagonBall;
+    private GameObject leftBoundary;
+    private GameObject rightBoundary;
 
     // 网格占用矩阵（仅用于初始段的放置计算）[层][列] = 是否被占用
     private bool[,] gridOccupied;
@@ -166,6 +184,9 @@ public class TowerBuilder : MonoBehaviour
 
     void Update()
     {
+        // 边界应始终跟随相机（即使尚未开始激活逻辑），避免从下方绕过。
+        UpdateBoundariesFollow();
+
         if (!activationEnabled)
         {
             return;
@@ -273,6 +294,8 @@ public class TowerBuilder : MonoBehaviour
     public void BuildTower()
     {
         ClearTower();
+
+        EnsureBoundaries();
 
         // 初始化网格占用矩阵（仅用于初始段的放置计算）
         gridOccupied = new bool[towerLayers, layerWidth];
@@ -825,6 +848,55 @@ public class TowerBuilder : MonoBehaviour
             {
                 Destroy(child.gameObject);
             }
+        }
+
+        if (leftBoundary != null) Destroy(leftBoundary);
+        if (rightBoundary != null) Destroy(rightBoundary);
+    }
+
+    private void EnsureBoundaries()
+    {
+        // 先清理旧边界
+        if (leftBoundary != null) Destroy(leftBoundary);
+        if (rightBoundary != null) Destroy(rightBoundary);
+
+        float xMin = -boundaryExtraCellsEachSide;
+        float xMax = layerWidth + boundaryExtraCellsEachSide;
+
+        if (leftBoundaryPrefab != null)
+        {
+            leftBoundary = Instantiate(leftBoundaryPrefab, new Vector3(xMin, 0f, 0f), Quaternion.identity);
+            leftBoundary.name = "LeftBoundary";
+        }
+
+        if (rightBoundaryPrefab != null)
+        {
+            rightBoundary = Instantiate(rightBoundaryPrefab, new Vector3(xMax, 0f, 0f), Quaternion.identity);
+            rightBoundary.name = "RightBoundary";
+        }
+
+        UpdateBoundariesFollow(force: true);
+    }
+
+    private void UpdateBoundariesFollow(bool force = false)
+    {
+        if (!boundaryFollowCameraY) return;
+        if (mainCamera == null) return;
+
+        float targetY = mainCamera.transform.position.y + boundaryFollowYOffset;
+
+        if (leftBoundary != null)
+        {
+            Vector3 p = leftBoundary.transform.position;
+            if (force || !Mathf.Approximately(p.y, targetY))
+                leftBoundary.transform.position = new Vector3(p.x, targetY, p.z);
+        }
+
+        if (rightBoundary != null)
+        {
+            Vector3 p = rightBoundary.transform.position;
+            if (force || !Mathf.Approximately(p.y, targetY))
+                rightBoundary.transform.position = new Vector3(p.x, targetY, p.z);
         }
     }
 

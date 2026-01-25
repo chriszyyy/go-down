@@ -10,9 +10,12 @@ public class PrefabGenerator : EditorWindow
     private const float DEFAULT_BLOCK_DRAG = 0.05f;
     private const float DEFAULT_BLOCK_ANGULAR_DRAG = 1.0f;
 
+    private const string MAIN_PREFAB_PATH = "Assets/Prefabs";
+    private const string BLOCKS_PREFAB_PATH = "Assets/Prefabs/Blocks";
+
     // 物理容差：让碰撞体略小于逻辑格子，降低初始生成/长期堆叠时的挤爆与抖动
     // 注意：这里的单位是“世界单位(=1格)”。该值越大，缝隙越明显；越小越容易挤爆。
-    private const float COLLIDER_TOLERANCE = 0.1f;
+    private const float COLLIDER_TOLERANCE = 0.015f;
 
     // 统一的格子单位：生成逻辑里默认 1 格 = 1 世界单位
     private const float GRID_UNIT = 1f;
@@ -61,10 +64,10 @@ public class PrefabGenerator : EditorWindow
     private static void GenerateAllPrefabs()
     {
         // 创建必要的文件夹
-        if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
+        if (!AssetDatabase.IsValidFolder(MAIN_PREFAB_PATH))
             AssetDatabase.CreateFolder("Assets", "Prefabs");
-        if (!AssetDatabase.IsValidFolder("Assets/Prefabs/Blocks"))
-            AssetDatabase.CreateFolder("Assets/Prefabs", "Blocks");
+        if (!AssetDatabase.IsValidFolder(BLOCKS_PREFAB_PATH))
+            AssetDatabase.CreateFolder(MAIN_PREFAB_PATH, "Blocks");
         if (!AssetDatabase.IsValidFolder("Assets/Sprites"))
             AssetDatabase.CreateFolder("Assets", "Sprites");
         if (!AssetDatabase.IsValidFolder("Assets/PhysicsMaterials"))
@@ -83,11 +86,40 @@ public class PrefabGenerator : EditorWindow
         // 生成六边形球
         CreateHexagonBallPrefab();
 
+        // 生成左右边界（用于碰撞触发 GameOver）
+        CreateGameOverBoundariesPrefabs();
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
         Debug.Log("✅ 所有Prefab生成完成！");
         EditorUtility.DisplayDialog("完成", "所有Prefab已生成到 Assets/Prefabs/", "确定");
+    }
+
+    private static void CreateGameOverBoundariesPrefabs()
+    {
+        CreateGameOverBoundaryPrefab("LeftBoundary", -1f, "Left Boundary Hit");
+        CreateGameOverBoundaryPrefab("RightBoundary", 1f, "Right Boundary Hit");
+    }
+
+    // sideSign: -1 = left, +1 = right
+    private static void CreateGameOverBoundaryPrefab(string name, float sideSign, string reason)
+    {
+        GameObject go = new GameObject(name);
+
+        // A trigger collider; height is tall enough to catch the ball in most scenes.
+        BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
+        collider.isTrigger = true;
+        collider.size = new Vector2(1f, 200f);
+
+        GameOverBoundary boundary = go.AddComponent<GameOverBoundary>();
+        boundary.requiredTag = "HexagonBall";
+        boundary.reason = reason;
+
+        // Store side info on X via localPosition when you instantiate.
+        // Prefab itself stays at origin.
+        SavePrefab(go, $"{MAIN_PREFAB_PATH}/{name}.prefab");
+        Object.DestroyImmediate(go);
     }
 
     // 1. 单格方块
@@ -600,6 +632,10 @@ public class PrefabGenerator : EditorWindow
     private static void CreateHexagonBallPrefab()
     {
         GameObject go = new GameObject("HexagonBall");
+
+        // 设置Tag（用于左右边界触发GameOver）
+        // 注意：Unity 的 Tag 必须在项目里预先创建，否则这里会抛异常。
+        go.tag = "HexagonBall";
 
         // Sprite
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
