@@ -179,7 +179,7 @@ public class PrefabGenerator : EditorWindow
 
         SquareBlock block = go.AddComponent<SquareBlock>();
         block.blockTypeName = "方形方块";
-        block.scoreValue = 30;
+        block.scoreValue = 40;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -211,7 +211,7 @@ public class PrefabGenerator : EditorWindow
 
         L3Block block = go.AddComponent<L3Block>();
         block.blockTypeName = "L3方块";
-        block.scoreValue = 50;
+        block.scoreValue = 30;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -243,7 +243,7 @@ public class PrefabGenerator : EditorWindow
 
         L4Block block = go.AddComponent<L4Block>();
         block.blockTypeName = "L4方块";
-        block.scoreValue = 70;
+        block.scoreValue = 40;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");
@@ -275,7 +275,7 @@ public class PrefabGenerator : EditorWindow
 
         L5Block block = go.AddComponent<L5Block>();
         block.blockTypeName = "L5方块";
-        block.scoreValue = 90;
+        block.scoreValue = 50;
         block.isStatic = true;
 
         go.layer = LayerMask.NameToLayer("Block");

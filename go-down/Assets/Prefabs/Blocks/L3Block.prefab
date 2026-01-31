@@ -178,7 +178,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockTypeName: "L3\u65B9\u5757"
-  scoreValue: 50
+  scoreValue: 30
   isStatic: 1
   disappearDuration: 0.3
   disappearScale: 0.1
