@@ -75,7 +75,16 @@ public class RestartGameButton : MonoBehaviour
             // 将相机直接对齐到“目标位置”，避免一开始慢慢滑过去
             float towerCenterX = towerBuilder.layerWidth / 2f;
             Vector3 offset = cameraFollower.offset;
-            float targetY = towerBuilder.GetTowerTopY();
+            float targetY = 0f;
+            if (cameraFollower.target != null)
+            {
+                targetY = cameraFollower.target.position.y;
+            }
+            else
+            {
+                // Fallback to tower top if target not ready
+                targetY = towerBuilder.GetTowerTopY();
+            }
 
             float z = cameraZ != 0f ? cameraZ : cameraFollower.transform.position.z;
             cameraFollower.transform.position = new Vector3(towerCenterX + offset.x, targetY + offset.y, z);
