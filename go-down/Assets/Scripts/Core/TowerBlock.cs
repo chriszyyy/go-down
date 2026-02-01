@@ -108,7 +108,7 @@ public class TowerBlock : MonoBehaviour
         // 触发消除事件
         OnBlockDestroyed?.Invoke(this);
 
-        Debug.Log($"方块被消除: {blockTypeName} at {transform.position}, 得分: {scoreValue}");
+        // Debug.Log($"方块被消除: {blockTypeName} at {transform.position}, 得分: {scoreValue}");
     }
 
     /// <summary>
