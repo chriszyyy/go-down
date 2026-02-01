@@ -13,6 +13,10 @@ public class GameOverModalUI : MonoBehaviour
     [Tooltip("重新游戏按钮（可选，不填则自动在子物体里找 Button）")]
     public Button restartButton;
 
+    [Header("Copy")]
+    [Tooltip("用于显示最终得分的模板，{0} 会替换成分数")]
+    public string gameOverScoreFormat = "游戏结束，你的得分是{0}";
+
     [Header("Behaviour")]
     [Tooltip("游戏开始时是否隐藏")]
     public bool hideOnStart = true;
@@ -65,7 +69,8 @@ public class GameOverModalUI : MonoBehaviour
 
         if (reasonText != null)
         {
-            reasonText.text = string.IsNullOrEmpty(reason) ? "Game Over" : reason;
+            int score = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
+            reasonText.text = string.Format(gameOverScoreFormat, score);
         }
     }
 
