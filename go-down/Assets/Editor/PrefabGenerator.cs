@@ -20,6 +20,11 @@ public class PrefabGenerator : EditorWindow
     // 统一的格子单位：生成逻辑里默认 1 格 = 1 世界单位
     private const float GRID_UNIT = 1f;
 
+    // Block visual style (base + inset highlight)
+    private const int BLOCK_SPRITE_PPU = 64;
+    private const int BLOCK_HIGHLIGHT_INSET_PX = 6; // inset border thickness, purely visual
+    private static readonly Color BLOCK_BASE_WHITE = Color.white;
+
     private static Vector2 GridCellCenterOffset(float widthInCells, float heightInCells)
     {
         return new Vector2(widthInCells * GRID_UNIT * 0.5f, heightInCells * GRID_UNIT * 0.5f);
@@ -128,8 +133,10 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("SingleBlock");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateSquareSprite(64, 64, Color.cyan);
+        sr.sprite = CreateSquareSprite(64, 64, BLOCK_BASE_WHITE);
         sr.sortingOrder = 0;
+
+        CreateHighlightChild(go, sr, CreateSquareHighlightSprite(64, 64, BLOCK_BASE_WHITE));
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(GRID_UNIT - COLLIDER_TOLERANCE, GRID_UNIT - COLLIDER_TOLERANCE);
@@ -149,6 +156,8 @@ public class PrefabGenerator : EditorWindow
         block.scoreValue = 10;
         block.isStatic = true;
 
+        go.AddComponent<BlockVisualStyle>();
+
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/SingleBlock.prefab");
@@ -161,7 +170,9 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("SquareBlock");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateSquareSprite(128, 128, Color.yellow);
+        sr.sprite = CreateSquareSprite(128, 128, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateSquareHighlightSprite(128, 128, BLOCK_BASE_WHITE));
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(2f * GRID_UNIT - COLLIDER_TOLERANCE, 2f * GRID_UNIT - COLLIDER_TOLERANCE);
@@ -182,6 +193,8 @@ public class PrefabGenerator : EditorWindow
         block.scoreValue = 40;
         block.isStatic = true;
 
+        go.AddComponent<BlockVisualStyle>();
+
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/SquareBlock.prefab");
@@ -194,7 +207,9 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("L3Block");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateLShapeSprite(3, Color.green);
+        sr.sprite = CreateLShapeSprite(3, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateLShapeHighlightSprite(3, BLOCK_BASE_WHITE));
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateLShapeColliderPoints(3);
@@ -214,6 +229,8 @@ public class PrefabGenerator : EditorWindow
         block.scoreValue = 30;
         block.isStatic = true;
 
+        go.AddComponent<BlockVisualStyle>();
+
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/L3Block.prefab");
@@ -226,7 +243,9 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("L4Block");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateLShapeSprite(4, Color.magenta);
+        sr.sprite = CreateLShapeSprite(4, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateLShapeHighlightSprite(4, BLOCK_BASE_WHITE));
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateLShapeColliderPoints(4);
@@ -246,6 +265,8 @@ public class PrefabGenerator : EditorWindow
         block.scoreValue = 40;
         block.isStatic = true;
 
+        go.AddComponent<BlockVisualStyle>();
+
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/L4Block.prefab");
@@ -258,7 +279,9 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("L5Block");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateEqualLShapeSprite(new Color(1f, 0.5f, 0f)); // 橙色
+        sr.sprite = CreateEqualLShapeSprite(BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateEqualLShapeHighlightSprite(BLOCK_BASE_WHITE));
 
         PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
         collider.points = CreateEqualLShapeColliderPoints();
@@ -278,6 +301,8 @@ public class PrefabGenerator : EditorWindow
         block.scoreValue = 50;
         block.isStatic = true;
 
+        go.AddComponent<BlockVisualStyle>();
+
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/L5Block.prefab");
@@ -290,7 +315,9 @@ public class PrefabGenerator : EditorWindow
         GameObject go = new GameObject("LineBlock");
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateLineSprite(4, Color.red);
+        sr.sprite = CreateLineSprite(4, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateLineHighlightSprite(4, BLOCK_BASE_WHITE));
 
         BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
         collider.size = new Vector2(4f * GRID_UNIT - COLLIDER_TOLERANCE, GRID_UNIT - COLLIDER_TOLERANCE);
@@ -310,6 +337,8 @@ public class PrefabGenerator : EditorWindow
         block.blockTypeName = "I型方块";
         block.scoreValue = 40;
         block.isStatic = true;
+
+        go.AddComponent<BlockVisualStyle>();
 
         go.layer = LayerMask.NameToLayer("Block");
 
@@ -406,7 +435,7 @@ public class PrefabGenerator : EditorWindow
         TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
         if (importer != null)
         {
-            importer.spritePixelsPerUnit = 64f;
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
@@ -468,7 +497,7 @@ public class PrefabGenerator : EditorWindow
         TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
         if (importer != null)
         {
-            importer.spritePixelsPerUnit = 64f;
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
@@ -532,7 +561,7 @@ public class PrefabGenerator : EditorWindow
         TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
         if (importer != null)
         {
-            importer.spritePixelsPerUnit = 64f;
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
@@ -585,7 +614,7 @@ public class PrefabGenerator : EditorWindow
         TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
         if (importer != null)
         {
-            importer.spritePixelsPerUnit = 64f;
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
             importer.textureType = TextureImporterType.Sprite;
             importer.filterMode = FilterMode.Point;
             importer.spriteImportMode = SpriteImportMode.Single;
@@ -604,6 +633,279 @@ public class PrefabGenerator : EditorWindow
     {
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Debug.Log($"✅ 已创建: {path}");
+    }
+
+    private static void CreateHighlightChild(GameObject parent, SpriteRenderer baseRenderer, Sprite highlightSprite)
+    {
+        if (parent == null || baseRenderer == null || highlightSprite == null) return;
+
+        GameObject child = new GameObject("Highlight");
+        child.transform.SetParent(parent.transform, false);
+
+        SpriteRenderer sr = child.AddComponent<SpriteRenderer>();
+        sr.sprite = highlightSprite;
+        sr.sortingLayerID = baseRenderer.sortingLayerID;
+        sr.sortingOrder = baseRenderer.sortingOrder + 1;
+        sr.color = BLOCK_BASE_WHITE;
+
+        // Keep highlight purely visual.
+        child.layer = parent.layer;
+    }
+
+    private static bool IsInsideRect(int x, int y, int minX, int minY, int maxXExclusive, int maxYExclusive)
+    {
+        return x >= minX && x < maxXExclusive && y >= minY && y < maxYExclusive;
+    }
+
+    private static bool IsBorderPixel(int x, int y, int minX, int minY, int maxXExclusive, int maxYExclusive, int inset)
+    {
+        if (!IsInsideRect(x, y, minX, minY, maxXExclusive, maxYExclusive)) return false;
+
+        bool inner = IsInsideRect(
+            x,
+            y,
+            minX + inset,
+            minY + inset,
+            maxXExclusive - inset,
+            maxYExclusive - inset);
+
+        return !inner;
+    }
+
+    private static Sprite CreateSquareHighlightSprite(int width, int height, Color color)
+    {
+        int textureWidth = width * 2;
+        int textureHeight = height * 2;
+
+        int minX = width;
+        int minY = height;
+        int maxX = textureWidth;
+        int maxY = textureHeight;
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+        for (int y = minY; y < maxY; y++)
+        {
+            for (int x = minX; x < maxX; x++)
+            {
+                if (IsBorderPixel(x, y, minX, minY, maxX, maxY, BLOCK_HIGHLIGHT_INSET_PX))
+                {
+                    pixels[y * textureWidth + x] = color;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string path = $"Assets/Sprites/SquareHighlight_{width}x{height}.png";
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Point;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    private static Sprite CreateLShapeHighlightSprite(int blocks, Color color)
+    {
+        int size = 64;
+        int originalWidth = 2 * size;
+        int originalHeight = blocks * size;
+
+        int textureWidth = originalWidth * 2;
+        int textureHeight = originalHeight * 2;
+
+        int inset = BLOCK_HIGHLIGHT_INSET_PX;
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+        // Two rectangles forming the L (in the top-right quadrant)
+        // 1) Vertical bar: [originalWidth, originalWidth+size) x [originalHeight, textureHeight)
+        int vMinX = originalWidth;
+        int vMaxX = originalWidth + size;
+        int vMinY = originalHeight;
+        int vMaxY = textureHeight;
+
+        // 2) Bottom bar: [originalWidth, textureWidth) x [originalHeight, originalHeight+size)
+        int hMinX = originalWidth;
+        int hMaxX = textureWidth;
+        int hMinY = originalHeight;
+        int hMaxY = originalHeight + size;
+
+        for (int y = originalHeight; y < textureHeight; y++)
+        {
+            for (int x = originalWidth; x < textureWidth; x++)
+            {
+                bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
+                bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+                if (!inV && !inH) continue;
+
+                bool isBorder = false;
+                if (inV && IsBorderPixel(x, y, vMinX, vMinY, vMaxX, vMaxY, inset)) isBorder = true;
+                if (inH && IsBorderPixel(x, y, hMinX, hMinY, hMaxX, hMaxY, inset)) isBorder = true;
+
+                if (isBorder)
+                {
+                    pixels[y * textureWidth + x] = color;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string path = $"Assets/Sprites/L{blocks}Shape_Highlight.png";
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Point;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    private static Sprite CreateEqualLShapeHighlightSprite(Color color)
+    {
+        int size = 64;
+        int originalWidth = 3 * size;
+        int originalHeight = 3 * size;
+
+        int textureWidth = originalWidth * 2;
+        int textureHeight = originalHeight * 2;
+
+        int inset = BLOCK_HIGHLIGHT_INSET_PX;
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+        // Vertical bar: [originalWidth, originalWidth+size) x [originalHeight, textureHeight)
+        int vMinX = originalWidth;
+        int vMaxX = originalWidth + size;
+        int vMinY = originalHeight;
+        int vMaxY = textureHeight;
+
+        // Bottom bar: [originalWidth, textureWidth) x [originalHeight, originalHeight+size)
+        int hMinX = originalWidth;
+        int hMaxX = textureWidth;
+        int hMinY = originalHeight;
+        int hMaxY = originalHeight + size;
+
+        for (int y = originalHeight; y < textureHeight; y++)
+        {
+            for (int x = originalWidth; x < textureWidth; x++)
+            {
+                bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
+                bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+                if (!inV && !inH) continue;
+
+                bool isBorder = false;
+                if (inV && IsBorderPixel(x, y, vMinX, vMinY, vMaxX, vMaxY, inset)) isBorder = true;
+                if (inH && IsBorderPixel(x, y, hMinX, hMinY, hMaxX, hMaxY, inset)) isBorder = true;
+
+                if (isBorder)
+                {
+                    pixels[y * textureWidth + x] = color;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string path = "Assets/Sprites/L5Shape_Equal_Highlight.png";
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Point;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    private static Sprite CreateLineHighlightSprite(int blocks, Color color)
+    {
+        int size = 64;
+        int originalWidth = blocks * size;
+        int originalHeight = size;
+
+        int textureWidth = originalWidth * 2;
+        int textureHeight = originalHeight * 2;
+
+        int minX = originalWidth;
+        int minY = originalHeight;
+        int maxX = textureWidth;
+        int maxY = textureHeight;
+
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+        for (int y = minY; y < maxY; y++)
+        {
+            for (int x = minX; x < maxX; x++)
+            {
+                if (IsBorderPixel(x, y, minX, minY, maxX, maxY, BLOCK_HIGHLIGHT_INSET_PX))
+                {
+                    pixels[y * textureWidth + x] = color;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        string path = $"Assets/Sprites/Line{blocks}_Highlight.png";
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Point;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
     private static PhysicsMaterial2D GetOrCreateBlockPhysicsMaterial()
