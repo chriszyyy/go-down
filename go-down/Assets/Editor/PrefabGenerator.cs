@@ -672,6 +672,97 @@ public class PrefabGenerator : EditorWindow
         return !inner;
     }
 
+    private static bool IsOutlinePixel(System.Func<int, int, bool> isFilled, int x, int y)
+    {
+        if (!isFilled(x, y)) return false;
+
+        // 4-neighborhood outline (avoids diagonal seams)
+        return !isFilled(x - 1, y)
+            || !isFilled(x + 1, y)
+            || !isFilled(x, y - 1)
+            || !isFilled(x, y + 1);
+    }
+
+    private static Sprite CreateMaskInsetOutlineSprite(
+        int textureWidth,
+        int textureHeight,
+        System.Func<int, int, bool> isFilled,
+        int insetPx,
+        Color color,
+        string path)
+    {
+        Texture2D texture = new Texture2D(textureWidth, textureHeight);
+        Color[] pixels = new Color[textureWidth * textureHeight];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+        // Precompute outline positions.
+        bool[] outline = new bool[textureWidth * textureHeight];
+        for (int y = 0; y < textureHeight; y++)
+        {
+            for (int x = 0; x < textureWidth; x++)
+            {
+                outline[y * textureWidth + x] = IsOutlinePixel(isFilled, x, y);
+            }
+        }
+
+        int insetSq = insetPx * insetPx;
+        for (int y = 0; y < textureHeight; y++)
+        {
+            for (int x = 0; x < textureWidth; x++)
+            {
+                if (!isFilled(x, y)) continue;
+
+                // Find the nearest outline pixel within inset range.
+                bool inBand = false;
+                int minY = Mathf.Max(0, y - insetPx);
+                int maxY = Mathf.Min(textureHeight - 1, y + insetPx);
+                int minX = Mathf.Max(0, x - insetPx);
+                int maxX = Mathf.Min(textureWidth - 1, x + insetPx);
+
+                for (int yy = minY; yy <= maxY && !inBand; yy++)
+                {
+                    int dy = yy - y;
+                    int dySq = dy * dy;
+                    for (int xx = minX; xx <= maxX; xx++)
+                    {
+                        if (!outline[yy * textureWidth + xx]) continue;
+                        int dx = xx - x;
+                        if (dx * dx + dySq <= insetSq)
+                        {
+                            inBand = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (inBand)
+                {
+                    pixels[y * textureWidth + x] = color;
+                }
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        byte[] pngData = texture.EncodeToPNG();
+        File.WriteAllBytes(path, pngData);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.filterMode = FilterMode.Point;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
     private static Sprite CreateSquareHighlightSprite(int width, int height, Color color)
     {
         int textureWidth = width * 2;
@@ -729,12 +820,6 @@ public class PrefabGenerator : EditorWindow
         int textureWidth = originalWidth * 2;
         int textureHeight = originalHeight * 2;
 
-        int inset = BLOCK_HIGHLIGHT_INSET_PX;
-
-        Texture2D texture = new Texture2D(textureWidth, textureHeight);
-        Color[] pixels = new Color[textureWidth * textureHeight];
-        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
-
         // Two rectangles forming the L (in the top-right quadrant)
         // 1) Vertical bar: [originalWidth, originalWidth+size) x [originalHeight, textureHeight)
         int vMinX = originalWidth;
@@ -748,45 +833,15 @@ public class PrefabGenerator : EditorWindow
         int hMinY = originalHeight;
         int hMaxY = originalHeight + size;
 
-        for (int y = originalHeight; y < textureHeight; y++)
+        System.Func<int, int, bool> isFilled = (x, y) =>
         {
-            for (int x = originalWidth; x < textureWidth; x++)
-            {
-                bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
-                bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
-                if (!inV && !inH) continue;
-
-                bool isBorder = false;
-                if (inV && IsBorderPixel(x, y, vMinX, vMinY, vMaxX, vMaxY, inset)) isBorder = true;
-                if (inH && IsBorderPixel(x, y, hMinX, hMinY, hMaxX, hMaxY, inset)) isBorder = true;
-
-                if (isBorder)
-                {
-                    pixels[y * textureWidth + x] = color;
-                }
-            }
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply();
+            bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
+            bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+            return inV || inH;
+        };
 
         string path = $"Assets/Sprites/L{blocks}Shape_Highlight.png";
-        byte[] pngData = texture.EncodeToPNG();
-        File.WriteAllBytes(path, pngData);
-        AssetDatabase.ImportAsset(path);
-
-        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-        if (importer != null)
-        {
-            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
-            importer.textureType = TextureImporterType.Sprite;
-            importer.filterMode = FilterMode.Point;
-            importer.spriteImportMode = SpriteImportMode.Single;
-            AssetDatabase.WriteImportSettingsIfDirty(path);
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-        }
-
-        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        return CreateMaskInsetOutlineSprite(textureWidth, textureHeight, isFilled, BLOCK_HIGHLIGHT_INSET_PX, color, path);
     }
 
     private static Sprite CreateEqualLShapeHighlightSprite(Color color)
@@ -797,12 +852,6 @@ public class PrefabGenerator : EditorWindow
 
         int textureWidth = originalWidth * 2;
         int textureHeight = originalHeight * 2;
-
-        int inset = BLOCK_HIGHLIGHT_INSET_PX;
-
-        Texture2D texture = new Texture2D(textureWidth, textureHeight);
-        Color[] pixels = new Color[textureWidth * textureHeight];
-        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
 
         // Vertical bar: [originalWidth, originalWidth+size) x [originalHeight, textureHeight)
         int vMinX = originalWidth;
@@ -816,45 +865,15 @@ public class PrefabGenerator : EditorWindow
         int hMinY = originalHeight;
         int hMaxY = originalHeight + size;
 
-        for (int y = originalHeight; y < textureHeight; y++)
+        System.Func<int, int, bool> isFilled = (x, y) =>
         {
-            for (int x = originalWidth; x < textureWidth; x++)
-            {
-                bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
-                bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
-                if (!inV && !inH) continue;
-
-                bool isBorder = false;
-                if (inV && IsBorderPixel(x, y, vMinX, vMinY, vMaxX, vMaxY, inset)) isBorder = true;
-                if (inH && IsBorderPixel(x, y, hMinX, hMinY, hMaxX, hMaxY, inset)) isBorder = true;
-
-                if (isBorder)
-                {
-                    pixels[y * textureWidth + x] = color;
-                }
-            }
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply();
+            bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
+            bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+            return inV || inH;
+        };
 
         string path = "Assets/Sprites/L5Shape_Equal_Highlight.png";
-        byte[] pngData = texture.EncodeToPNG();
-        File.WriteAllBytes(path, pngData);
-        AssetDatabase.ImportAsset(path);
-
-        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-        if (importer != null)
-        {
-            importer.spritePixelsPerUnit = BLOCK_SPRITE_PPU;
-            importer.textureType = TextureImporterType.Sprite;
-            importer.filterMode = FilterMode.Point;
-            importer.spriteImportMode = SpriteImportMode.Single;
-            AssetDatabase.WriteImportSettingsIfDirty(path);
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-        }
-
-        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        return CreateMaskInsetOutlineSprite(textureWidth, textureHeight, isFilled, BLOCK_HIGHLIGHT_INSET_PX, color, path);
     }
 
     private static Sprite CreateLineHighlightSprite(int blocks, Color color)
