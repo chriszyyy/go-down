@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// 塔方块基类 - 所有可消除方块的基类
@@ -80,10 +81,30 @@ public class TowerBlock : MonoBehaviour
     /// </summary>
     void OnMouseDown()
     {
-        if (!isDestroying)
+        if (isDestroying) return;
+
+        // If a UI panel (e.g., GameOver modal) is on top, don't let physics clicks through.
+        if (IsPointerOverUI()) return;
+
+        // During GameOver we pause timeScale; block clicking so score won't keep increasing.
+        if (Time.timeScale == 0f) return;
+
+        DestroyBlock();
+    }
+
+    private static bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null) return false;
+
+        // Touch
+        if (Input.touchCount > 0)
         {
-            DestroyBlock();
+            Touch t = Input.GetTouch(0);
+            return EventSystem.current.IsPointerOverGameObject(t.fingerId);
         }
+
+        // Mouse
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     /// <summary>
