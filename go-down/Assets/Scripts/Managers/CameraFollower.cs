@@ -36,6 +36,19 @@ public class CameraFollower : MonoBehaviour
     private float lastTargetY;
     private float currentYVelocity;
 
+    private Vector3 initialCameraPosition;
+    private bool initialCameraPositionCaptured;
+
+    private void OnEnable()
+    {
+        GameStateManager.OnGameReset += HandleGameReset;
+    }
+
+    private void OnDisable()
+    {
+        GameStateManager.OnGameReset -= HandleGameReset;
+    }
+
     void Start()
     {
         if (towerBuilder == null)
@@ -51,6 +64,19 @@ public class CameraFollower : MonoBehaviour
 
         UpdateTargetPosition();
         lastTargetY = targetY;
+
+        // Capture the camera's "default" position in the scene as the reset anchor.
+        // On restart, we teleport here first so subsequent smoothing only travels a short distance.
+        if (!initialCameraPositionCaptured)
+        {
+            initialCameraPosition = transform.position;
+            initialCameraPositionCaptured = true;
+        }
+    }
+
+    private void HandleGameReset()
+    {
+        ResetToInitialPosition();
     }
 
     void LateUpdate()
@@ -113,6 +139,23 @@ public class CameraFollower : MonoBehaviour
 
         // 兜底：如果球没找到，保持原逻辑（避免相机卡死）。
         targetY = towerBuilder.GetTowerTopY();
+    }
+
+    public void ResetToInitialPosition()
+    {
+        if (!initialCameraPositionCaptured)
+        {
+            initialCameraPosition = transform.position;
+            initialCameraPositionCaptured = true;
+        }
+
+        transform.position = initialCameraPosition;
+
+        // Clear smoothing state and align internal target tracking to current camera position
+        // so the next LateUpdate won't think the target "teleported" a huge distance.
+        currentYVelocity = 0f;
+        targetY = transform.position.y - offset.y;
+        lastTargetY = targetY;
     }
 
     public void SetTargetY(float y)
