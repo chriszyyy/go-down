@@ -6,8 +6,12 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance { get; private set; }
 
     public event Action<int> OnScoreChanged;
+    public event Action<int> OnHighScoreChanged;
 
     public int CurrentScore { get; private set; }
+    public int HighScore { get; private set; }
+
+    private const string HIGH_SCORE_KEY = "HighScore";
 
     [Header("计分规则")]
     [Tooltip("消除一个单格小方块的基础分")]
@@ -23,8 +27,11 @@ public class ScoreManager : MonoBehaviour
 
         Instance = this;
 
+        HighScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY, 0);
+
         // Ensure UI shows 0 even before first score event.
         OnScoreChanged?.Invoke(CurrentScore);
+        OnHighScoreChanged?.Invoke(HighScore);
     }
 
     private void OnEnable()
@@ -35,12 +42,16 @@ public class ScoreManager : MonoBehaviour
             return;
         }
 
+        // Reload in case PlayerPrefs changed between disables/enables (e.g., domain reload).
+        HighScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY, HighScore);
+
         TowerBlock.OnBlockScored += HandleBlockScored;
 
         GameStateManager.OnGameReset += HandleGameReset;
 
         // Push current score to any UI that just enabled.
         OnScoreChanged?.Invoke(CurrentScore);
+        OnHighScoreChanged?.Invoke(HighScore);
     }
 
     private void OnDisable()
@@ -85,11 +96,34 @@ public class ScoreManager : MonoBehaviour
         if (delta == 0) return;
         CurrentScore += delta;
         OnScoreChanged?.Invoke(CurrentScore);
+
+        // Always notify current high score so UI stays in sync,
+        // even when the high score isn't broken this time.
+        if (TrySetHighScore(CurrentScore))
+        {
+            // event already fired in TrySetHighScore
+        }
+        else
+        {
+            OnHighScoreChanged?.Invoke(HighScore);
+        }
     }
 
     public void ResetScore()
     {
         CurrentScore = 0;
         OnScoreChanged?.Invoke(CurrentScore);
+    }
+
+    private bool TrySetHighScore(int score)
+    {
+        if (score <= HighScore) return false;
+
+        HighScore = score;
+        PlayerPrefs.SetInt(HIGH_SCORE_KEY, HighScore);
+        PlayerPrefs.Save();
+        OnHighScoreChanged?.Invoke(HighScore);
+
+        return true;
     }
 }

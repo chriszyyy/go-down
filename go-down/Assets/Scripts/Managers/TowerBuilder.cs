@@ -552,7 +552,7 @@ public class TowerBuilder : MonoBehaviour
             if (distanceToTrigger <= Mathf.Max(2f, segmentHeightLayers * 0.25f))
             {
                 lastSegmentCheckLogTime = Time.time;
-                Debug.Log($"段检查: cameraY={cameraY:F2}, currentGeneratedMinY={currentGeneratedMinY:F2}, triggerY={triggerY:F2}");
+                // Debug.Log($"段检查: cameraY={cameraY:F2}, currentGeneratedMinY={currentGeneratedMinY:F2}, triggerY={triggerY:F2}");
             }
         }
 
@@ -564,7 +564,7 @@ public class TowerBuilder : MonoBehaviour
                 return;
 
             float newSegmentStartY = currentGeneratedMinY - segmentHeightLayers;
-            Debug.Log($"准备生成新段: fromMinY={currentGeneratedMinY:F2} -> newStartY={newSegmentStartY:F2}, cameraY={cameraY:F2}, triggerY={triggerY:F2}");
+            // Debug.Log($"准备生成新段: fromMinY={currentGeneratedMinY:F2} -> newStartY={newSegmentStartY:F2}, cameraY={cameraY:F2}, triggerY={triggerY:F2}");
             BuildTowerSegment(newSegmentStartY, segmentHeightLayers);
             currentGeneratedMinY = newSegmentStartY;
             lastGeneratedMinY = currentGeneratedMinY;
@@ -576,7 +576,7 @@ public class TowerBuilder : MonoBehaviour
                 stabilizeUntilTime = Time.time + Mathf.Max(0.01f, stabilizeDuration);
             }
 
-            Debug.Log($"生成新段完成: currentGeneratedMinY={currentGeneratedMinY:F2}, foundationY={foundationY:F2}");
+            // Debug.Log($"生成新段完成: currentGeneratedMinY={currentGeneratedMinY:F2}, foundationY={foundationY:F2}");
         }
     }
 
@@ -619,7 +619,7 @@ public class TowerBuilder : MonoBehaviour
             if (after > before) placedBlocks += (after - before);
         }
 
-        Debug.Log($"段生成统计: startY={segmentStartY:F2}, layers={heightLayers}, placedApprox={placedBlocks}, seamLayers={seamLayers}");
+        // Debug.Log($"段生成统计: startY={segmentStartY:F2}, layers={heightLayers}, placedApprox={placedBlocks}, seamLayers={seamLayers}");
 
         UpdateTowerTopY();
     }
@@ -812,11 +812,11 @@ public class TowerBuilder : MonoBehaviour
             }
         }
 
-        if (activatedCount > 0)
-        {
-            Debug.Log($"激活检查 - 摄像机Y={camY:F2}, 激活范围=[{activationBottom:F2}, {activationTop:F2}]");
-            Debug.Log($"方块状态 - 静态:{staticCount}, 动态:{dynamicCount}, 本次激活:{activatedCount}");
-        }
+        // if (activatedCount > 0)
+        // {
+        //     Debug.Log($"激活检查 - 摄像机Y={camY:F2}, 激活范围=[{activationBottom:F2}, {activationTop:F2}]");
+        //     Debug.Log($"方块状态 - 静态:{staticCount}, 动态:{dynamicCount}, 本次激活:{activatedCount}");
+        // }
     }
 
     /// <summary>
@@ -833,7 +833,7 @@ public class TowerBuilder : MonoBehaviour
         hexagonBall = Instantiate(hexagonBallPrefab, ballPosition, Quaternion.identity, transform);
         hexagonBall.name = "HexagonBall";
 
-        Debug.Log($"生成六边形球 at: ({ballPosition.x:F2}, {ballPosition.y:F2})");
+        // Debug.Log($"生成六边形球 at: ({ballPosition.x:F2}, {ballPosition.y:F2})");
     }
 
     /// <summary>
