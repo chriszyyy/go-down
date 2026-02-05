@@ -493,7 +493,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &639401534
 RectTransform:
   m_ObjectHideFlags: 0
@@ -763,8 +763,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   towerBuilder: {fileID: 1425696444}
+  target: {fileID: 0}
   offset: {x: 0, y: -3, z: -10}
-  smoothSpeed: 5
+  slowSmoothTime: 0.35
+  fastSmoothTime: 0.08
+  fastSpeedThreshold: 6
+  deadZone: 0.05
+  maxCameraSpeed: 50
 --- !u!1 &786778925
 GameObject:
   m_ObjectHideFlags: 0
@@ -1244,7 +1249,7 @@ MonoBehaviour:
   destroyAboveCameraLayers: 80
   stabilizeNewSegment: 1
   stabilizeDuration: 0.25
-  requireManualStartActivation: 1
+  requireManualStartActivation: 0
   initialActivationDelay: 0.1
   activationBatchSize: 24
   singleBlockPrefab: {fileID: 1186311390117326443, guid: 0482599536ed7594f90ca3cb6cd69f7d, type: 3}
@@ -1491,7 +1496,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1576379703
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1726,6 +1731,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9325d2fc50a4084f9bfaa4de73154a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pauseTimeOnGameOver: 1
+  resumeTimeScale: 1
 --- !u!4 &2054651152
 Transform:
   m_ObjectHideFlags: 0

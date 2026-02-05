@@ -40,7 +40,7 @@ public class TowerBuilder : MonoBehaviour
     public bool requireManualStartActivation = false;
 
     [Tooltip("开局延迟激活（秒），避免生成后立即解冻导致爆炸")]
-    public float initialActivationDelay = 0.1f;
+    public float initialActivationDelay = 0.2f;
 
     [Tooltip("每次激活最多解冻多少个方块（分批解冻，降低约束爆炸风险）")]
     public int activationBatchSize = 24;
