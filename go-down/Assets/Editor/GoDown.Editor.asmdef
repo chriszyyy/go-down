@@ -1,0 +1,20 @@
+{
+  "name": "GoDown.Editor",
+  "references": [
+    "GoDown.Core",
+    "GoDown.Managers",
+    "GoDown.Gameplay",
+    "GoDown.Visuals"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
