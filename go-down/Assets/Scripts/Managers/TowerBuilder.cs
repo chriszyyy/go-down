@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public class TowerBuilder : MonoBehaviour
 {
-    private const float SpecialBlockChance = 0.01f;
+    private const float SpecialBlockChance = 0.018f;
     [Header("塔配置")]
     [Tooltip("塔的层数")]
     public int towerLayers = 8;
