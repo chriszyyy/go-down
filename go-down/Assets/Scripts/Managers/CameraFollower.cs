@@ -162,4 +162,35 @@ public class CameraFollower : MonoBehaviour
     {
         targetY = y;
     }
+
+    public bool IsNearDesiredPosition(float toleranceY = 0.15f)
+    {
+        if (towerBuilder == null) return true;
+
+        // Refresh target if needed.
+        if (target == null)
+        {
+            GameObject ball = GameObject.Find("HexagonBall");
+            if (ball != null) target = ball.transform;
+        }
+
+        float desiredTargetY;
+        if (target != null)
+        {
+            desiredTargetY = target.position.y;
+        }
+        else
+        {
+            desiredTargetY = towerBuilder.GetTowerTopY();
+        }
+
+        float towerCenterX = towerBuilder.layerWidth / 2f;
+        float desiredY = desiredTargetY + offset.y;
+        float desiredX = towerCenterX + offset.x;
+
+        float dy = Mathf.Abs(transform.position.y - desiredY);
+        float dx = Mathf.Abs(transform.position.x - desiredX);
+
+        return dy <= Mathf.Max(0.01f, toleranceY) && dx <= 0.25f;
+    }
 }

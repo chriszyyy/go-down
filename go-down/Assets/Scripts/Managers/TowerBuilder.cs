@@ -905,9 +905,11 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     public void ResetTower()
     {
-        // 复原激活状态：如果需要手动开始，则重置后保持不激活，等按钮点击
-        activationEnabled = !requireManualStartActivation;
-        initialActivationPending = activationEnabled;
+        // Reset activation state.
+        // On restart we always defer activation until external code calls StartActivation()
+        // (e.g., after the camera is back to the tower top).
+        activationEnabled = false;
+        initialActivationPending = false;
 
         ClearTower();
 

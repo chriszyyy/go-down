@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 /// <summary>
 /// UI 按钮：重新开始游戏。
@@ -53,10 +54,28 @@ public class RestartGameButton : MonoBehaviour
 
     public void RestartGame()
     {
+        // This button panel may be deactivated during UI transitions.
+        // Always run the coroutine on the persistent GameStateManager.
+        if (GameStateManager.Instance == null || !GameStateManager.Instance.isActiveAndEnabled)
+        {
+            Debug.LogWarning("RestartGameButton: GameStateManager.Instance 不存在或未启用，无法启动重开协程。");
+            return;
+        }
+
+        GameStateManager.Instance.StartCoroutine(RestartRoutine());
+    }
+
+    private IEnumerator RestartRoutine()
+    {
         if (towerBuilder == null)
         {
             Debug.LogWarning("RestartGameButton: towerBuilder 未绑定。");
-            return;
+            yield break;
+        }
+
+        if (cameraFollower == null)
+        {
+            cameraFollower = FindObjectOfType<CameraFollower>();
         }
 
         if (GameStateManager.Instance != null)
@@ -64,21 +83,24 @@ public class RestartGameButton : MonoBehaviour
             GameStateManager.Instance.ResetGameState();
         }
 
-        // 重建塔（内部会清空旧方块、重建、并按配置重生球）
+        // Rebuild the tower. ResetTower will keep activation disabled if configured.
         towerBuilder.ResetTower();
 
-        // 复位相机：优先让 CameraFollower 立即更新到新塔尖
+        // Reset camera immediately, then wait until it reaches the new desired follow position.
         if (cameraFollower != null)
         {
             cameraFollower.towerBuilder = towerBuilder;
-
-            // 简化：重开时先把相机放回“开局默认位置”附近，
-            // 后续由 CameraFollower 的 SmoothDamp 从较近距离跟随到新目标。
             cameraFollower.ResetToInitialPosition();
+
+            float start = Time.unscaledTime;
+            while (!cameraFollower.IsNearDesiredPosition(0.2f) && Time.unscaledTime - start < 2.0f)
+            {
+                yield return null;
+            }
         }
         else
         {
-            // 兜底：直接找主相机移动到塔尖附近
+            // Fallback: directly place camera close to the new tower top.
             Camera cam = Camera.main;
             if (cam != null)
             {
@@ -87,6 +109,12 @@ public class RestartGameButton : MonoBehaviour
                 float z = cameraZ != 0f ? cameraZ : cam.transform.position.z;
                 cam.transform.position = new Vector3(centerX, topY - 3f, z);
             }
+        }
+
+        // Only auto-start activation if this tower isn't configured for manual activation.
+        if (!towerBuilder.requireManualStartActivation)
+        {
+            towerBuilder.StartActivation();
         }
     }
 }
