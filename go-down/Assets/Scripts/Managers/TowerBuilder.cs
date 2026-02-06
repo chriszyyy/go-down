@@ -5,6 +5,7 @@ using UnityEngine;
 /// </summary>
 public class TowerBuilder : MonoBehaviour
 {
+    private const float SpecialBlockChance = 0.01f;
     [Header("塔配置")]
     [Tooltip("塔的层数")]
     public int towerLayers = 8;
@@ -470,6 +471,8 @@ public class TowerBuilder : MonoBehaviour
         GameObject block = Instantiate(prefab, position, blockRotation, transform);
         block.name = $"Block_L{layer}_C{col}_{blockComponent.blockTypeName}_R{rotation}";
 
+        TryApplySpecialBlockVisual(block);
+
         // 标记段内占用
         if (occupied != null)
         {
@@ -483,6 +486,43 @@ public class TowerBuilder : MonoBehaviour
         }
 
         return block;
+    }
+
+    void TryApplySpecialBlockVisual(GameObject block)
+    {
+        if (block == null) return;
+
+        if (UnityEngine.Random.value >= SpecialBlockChance) return;
+
+        // Attach animated rainbow gradient + glow (without a compile-time dependency on Visuals asmdef).
+        if (block.GetComponent("RainbowGlowVisual") == null)
+        {
+            var t = System.Type.GetType("RainbowGlowVisual, GoDown.Visuals");
+            if (t != null)
+            {
+                block.AddComponent(t);
+            }
+            else
+            {
+                Debug.LogWarning("TowerBuilder: 未找到 RainbowGlowVisual 类型（GoDown.Visuals）。将跳过特殊方块发光效果。");
+            }
+        }
+
+        // Ensure any palette-based styling won't tint the rainbow shader.
+        Color white = Color.white;
+        white.a = 1f;
+
+        Component style = block.GetComponent("BlockVisualStyle");
+        if (style != null)
+        {
+            style.SendMessage("ApplyStyleAndLock", white, SendMessageOptions.DontRequireReceiver);
+        }
+
+        TowerBlock tb = block.GetComponent<TowerBlock>();
+        if (tb != null)
+        {
+            tb.OverrideOriginalColor(white);
+        }
     }
 
     // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束

@@ -27,6 +27,8 @@ public class BlockVisualStyle : MonoBehaviour
     public SpriteRenderer baseRenderer;
     public SpriteRenderer highlightRenderer;
 
+    private bool styleLocked;
+
     private static readonly Color[] DefaultPalette = new Color[]
     {
         new Color(0.20f, 0.62f, 1.00f, 1f), // blue
@@ -61,7 +63,14 @@ public class BlockVisualStyle : MonoBehaviour
 
     private void Start()
     {
+        if (styleLocked) return;
         ApplyRandomStyle();
+    }
+
+    public void ApplyStyleAndLock(Color baseColor)
+    {
+        styleLocked = true;
+        ApplyStyle(baseColor);
     }
 
     public void ApplyRandomStyle()

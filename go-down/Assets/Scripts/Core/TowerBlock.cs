@@ -64,6 +64,16 @@ public class TowerBlock : MonoBehaviour
         }
     }
 
+    public void OverrideOriginalColor(Color color)
+    {
+        originalColor = color;
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = color;
+        }
+    }
+
     protected virtual void Start()
     {
     }
