@@ -128,7 +128,7 @@ public class FloatingScorePopupSpawner : MonoBehaviour
         t.font = fontOverride != null ? fontOverride : (TryGetBuiltinFont() ?? GetFallbackFont());
         bool useRainbow = (isRewardMode && rewardUseRainbow) || (isSpecialBlock && specialUseRainbow);
         t.color = useRainbow ? Color.white : (isSpecialBlock ? specialColor : normalColor);
-        t.text = delta > 0 ? $"+{delta}" : delta.ToString();
+        t.text = delta > 0 ? $"{delta}" : delta.ToString();
 
         // Ensure the rect is large enough so Unity's Text generator won't truncate.
         float w = Mathf.Clamp(t.preferredWidth + 16f, 80f, 1000f);

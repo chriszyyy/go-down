@@ -154,6 +154,22 @@ public class BlockClearProgressUI : MonoBehaviour
         if (rewardActive)
         {
             // During reward mode we pause accumulating QPS/count.
+            // But destroying a special/rainbow block refills reward time to full.
+            if (block != null && Mathf.Max(1, block.scoreMultiplier) >= Mathf.Max(1, rainbowDetectScoreMultiplier))
+            {
+                float now = Now();
+                rewardStartTime = now;
+                rewardEndTime = now + Mathf.Max(0.01f, rewardDurationSeconds);
+
+                displayedFill = 1f;
+                if (fillImage != null) fillImage.fillAmount = 1f;
+
+                if (valueText != null)
+                {
+                    valueText.text = showValueText ? string.Format(percentLabelFormat, 100f) : string.Empty;
+                }
+            }
+
             return;
         }
 
