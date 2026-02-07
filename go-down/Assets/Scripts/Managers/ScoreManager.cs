@@ -5,6 +5,12 @@ public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance { get; private set; }
 
+    /// <summary>
+    /// Fired when score is awarded for a block destroy.
+    /// Args: worldPosition, deltaPoints (after all multipliers), isSpecialBlock, isRewardMode.
+    /// </summary>
+    public static event Action<Vector3, int, bool, bool> OnScoreGained;
+
     public event Action<int> OnScoreChanged;
     public event Action<int> OnHighScoreChanged;
 
@@ -95,6 +101,17 @@ public class ScoreManager : MonoBehaviour
         if (globalMultiplier != 1)
         {
             points *= globalMultiplier;
+        }
+
+        try
+        {
+            bool isSpecialBlock = Mathf.Max(1, block.scoreMultiplier) >= 10;
+            bool isRewardMode = Mathf.Max(1, GlobalScoreMultiplier) != 1;
+            OnScoreGained?.Invoke(block.transform.position, points, isSpecialBlock, isRewardMode);
+        }
+        catch
+        {
+            // Don't let UI listeners break scoring.
         }
 
         AddScore(points);
