@@ -18,6 +18,9 @@ public class TowerBlock : MonoBehaviour
     [Tooltip("方块得分")]
     public int scoreValue = 10;
 
+    [Tooltip("得分倍率（例如特殊方块=10倍）。最终得分 = 计算得分 * 倍率")]
+    public int scoreMultiplier = 1;
+
     [Header("物理状态")]
     [Tooltip("是否为静态（不受重力影响）")]
     public bool isStatic = true;
@@ -133,7 +136,7 @@ public class TowerBlock : MonoBehaviour
             blockCollider.enabled = false;
         }
 
-        // 触发得分事件
+        // 触发得分事件（倍率在 ScoreManager 中统一处理，避免破坏 scoreValue<=0 的占格兜底逻辑）
         OnBlockScored?.Invoke(this, scoreValue);
 
         // 触发消除事件

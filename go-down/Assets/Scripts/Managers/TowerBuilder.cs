@@ -5,7 +5,10 @@ using UnityEngine;
 /// </summary>
 public class TowerBuilder : MonoBehaviour
 {
-    private const float SpecialBlockChance = 0.018f;
+    [Header("特殊方块")]
+    [Range(0f, 1f)]
+    [Tooltip("生成彩色特殊方块的概率（每生成一个方块抽一次）。例如 0.02 = 2%")]
+    [SerializeField] private float specialBlockChance = 0.02f;
     [Header("塔配置")]
     [Tooltip("塔的层数")]
     public int towerLayers = 8;
@@ -492,7 +495,7 @@ public class TowerBuilder : MonoBehaviour
     {
         if (block == null) return;
 
-        if (UnityEngine.Random.value >= SpecialBlockChance) return;
+        if (UnityEngine.Random.value >= specialBlockChance) return;
 
         // Attach animated rainbow gradient + glow (without a compile-time dependency on Visuals asmdef).
         if (block.GetComponent("RainbowGlowVisual") == null)
@@ -500,7 +503,15 @@ public class TowerBuilder : MonoBehaviour
             var t = System.Type.GetType("RainbowGlowVisual, GoDown.Visuals");
             if (t != null)
             {
-                block.AddComponent(t);
+                var comp = block.AddComponent(t);
+
+                // Keep the normal inset highlight sprite enabled as a light outline.
+                // (RainbowGlowVisual disables it by default; we want it on for special blocks.)
+                var field = t.GetField("disableInsetHighlight");
+                if (field != null)
+                {
+                    field.SetValue(comp, false);
+                }
             }
             else
             {
@@ -508,20 +519,25 @@ public class TowerBuilder : MonoBehaviour
             }
         }
 
-        // Ensure any palette-based styling won't tint the rainbow shader.
-        Color white = Color.white;
-        white.a = 1f;
-
+        // Use the same palette as normal blocks for the inset highlight (outline), but keep the rainbow fill.
+        // We generate a deterministic palette color (ApplyRandomStyle) then lock it, so special blocks remain stable.
         Component style = block.GetComponent("BlockVisualStyle");
         if (style != null)
         {
-            style.SendMessage("ApplyStyleAndLock", white, SendMessageOptions.DontRequireReceiver);
+            style.SendMessage("ApplyRandomStyle", SendMessageOptions.DontRequireReceiver);
+
+            SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                style.SendMessage("ApplyStyleAndLock", sr.color, SendMessageOptions.DontRequireReceiver);
+            }
         }
 
+        // Special block: 10x score when destroyed.
         TowerBlock tb = block.GetComponent<TowerBlock>();
         if (tb != null)
         {
-            tb.OverrideOriginalColor(white);
+            tb.scoreMultiplier = 10;
         }
     }
 

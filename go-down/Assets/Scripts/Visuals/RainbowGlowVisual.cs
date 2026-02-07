@@ -25,6 +25,10 @@ public class RainbowGlowVisual : MonoBehaviour
 
     public float pulseSpeed = 3.0f;
 
+    [Header("Highlight")]
+    [Tooltip("Disable the prefab's inset highlight sprite. Turn this off if you want a light outline like normal blocks.")]
+    public bool disableInsetHighlight = false;
+
     private static Shader s_shader;
     private static Material s_sharedMaterial;
 
@@ -58,10 +62,9 @@ public class RainbowGlowVisual : MonoBehaviour
         EnsureMaterial();
         ApplyMaterialAndProps();
 
-        // This effect already contains shading/glow; the old highlight sprite usually looks wrong on top.
         if (highlightRenderer != null)
         {
-            highlightRenderer.enabled = false;
+            highlightRenderer.enabled = !disableInsetHighlight;
         }
     }
 

@@ -1241,6 +1241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05acc9d24ee99fe488c94b32ed2cd2af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  specialBlockChance: 0.018
   towerLayers: 20
   layerWidth: 5
   startHeight: -3

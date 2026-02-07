@@ -83,6 +83,12 @@ public class ScoreManager : MonoBehaviour
             points = cells * baseScorePerCell;
         }
 
+        int multiplier = Mathf.Max(1, block.scoreMultiplier);
+        if (multiplier != 1)
+        {
+            points *= multiplier;
+        }
+
         AddScore(points);
     }
 
