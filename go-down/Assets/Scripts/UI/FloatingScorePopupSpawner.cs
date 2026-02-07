@@ -18,6 +18,9 @@ public class FloatingScorePopupSpawner : MonoBehaviour
     public bool useUnscaledTime = true;
 
     [Header("Text")]
+    [Tooltip("Extra font size added to all popups (useful for mobile readability).")]
+    public int extraFontSize = 40;
+
     [Tooltip("Default font size for normal blocks.")]
     public int normalFontSize = 22;
 
@@ -116,13 +119,21 @@ public class FloatingScorePopupSpawner : MonoBehaviour
         Text t = go.GetComponent<Text>();
         t.raycastTarget = false;
         t.alignment = TextAnchor.MiddleCenter;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
         // Priority: special/rainbow block > reward mode > normal.
         int size = isSpecialBlock ? specialFontSize : (isRewardMode ? rewardFontSize : normalFontSize);
+        size += extraFontSize;
         t.fontSize = Mathf.Max(8, size);
         t.font = fontOverride != null ? fontOverride : (TryGetBuiltinFont() ?? GetFallbackFont());
         bool useRainbow = (isRewardMode && rewardUseRainbow) || (isSpecialBlock && specialUseRainbow);
         t.color = useRainbow ? Color.white : (isSpecialBlock ? specialColor : normalColor);
         t.text = delta > 0 ? $"+{delta}" : delta.ToString();
+
+        // Ensure the rect is large enough so Unity's Text generator won't truncate.
+        float w = Mathf.Clamp(t.preferredWidth + 16f, 80f, 1000f);
+        float h = Mathf.Clamp(t.preferredHeight + 8f, 30f, 300f);
+        rt.sizeDelta = new Vector2(w, h);
 
         FloatingScorePopup popup = go.GetComponent<FloatingScorePopup>();
         float startHue = Random.value;

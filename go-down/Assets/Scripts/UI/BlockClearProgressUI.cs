@@ -47,6 +47,9 @@ public class BlockClearProgressUI : MonoBehaviour
     [Tooltip("Optional numeric label (e.g., 34/100).")]
     public Text valueText;
 
+    [Tooltip("Show a text label on the bar. Disabled by default for mobile UI.")]
+    public bool showValueText = false;
+
     [Tooltip("Label format. {0}=current blocks, {1}=target blocks, {2}=percent (0-100).")]
     public string labelFormat = "{0}/{1}  {2:0}%";
 
@@ -62,6 +65,11 @@ public class BlockClearProgressUI : MonoBehaviour
 
     [Header("Auto Layout (when auto-created)")]
     public Vector2 barSize = new Vector2(28f, 280f);
+
+    [Tooltip("If enabled, bar height will be set to this fraction of the screen/canvas height.")]
+    [Range(0.1f, 1f)]
+    public float barHeightScreenPercent = 0.6f;
+
     public Vector2 barAnchoredPosition = new Vector2(26f, 0f);
     public Vector2 fillPadding = new Vector2(4f, 8f);
 
@@ -103,6 +111,13 @@ public class BlockClearProgressUI : MonoBehaviour
         {
             normalFillMaterial = fillImage.material;
             normalFillColor = fillImage.color;
+        }
+
+        // Hide value text by default (mobile UI requirement).
+        if (valueText != null && !showValueText)
+        {
+            valueText.text = string.Empty;
+            valueText.enabled = false;
         }
 
         RefreshUI();
@@ -227,10 +242,15 @@ public class BlockClearProgressUI : MonoBehaviour
 
         if (valueText != null)
         {
-            float percent = targetFill * 100f;
-
-            // UI requirement: only show percent on the bar.
-            valueText.text = string.Format(percentLabelFormat, percent);
+            if (!showValueText)
+            {
+                valueText.text = string.Empty;
+            }
+            else
+            {
+                float percent = targetFill * 100f;
+                valueText.text = string.Format(percentLabelFormat, percent);
+            }
         }
     }
 
@@ -265,7 +285,7 @@ public class BlockClearProgressUI : MonoBehaviour
         // Start at 100%.
         displayedFill = 1f;
         if (fillImage != null) fillImage.fillAmount = 1f;
-        if (valueText != null) valueText.text = string.Format(percentLabelFormat, 100f);
+        if (valueText != null) valueText.text = showValueText ? string.Format(percentLabelFormat, 100f) : string.Empty;
     }
 
     private void UpdateRewardMode()
@@ -286,7 +306,7 @@ public class BlockClearProgressUI : MonoBehaviour
 
         if (valueText != null)
         {
-            valueText.text = string.Format(percentLabelFormat, fill * 100f);
+            valueText.text = showValueText ? string.Format(percentLabelFormat, fill * 100f) : string.Empty;
         }
     }
 
@@ -391,7 +411,21 @@ public class BlockClearProgressUI : MonoBehaviour
         rt.anchorMin = new Vector2(0f, 0.5f);
         rt.anchorMax = new Vector2(0f, 0.5f);
         rt.pivot = new Vector2(0f, 0.5f);
-        rt.sizeDelta = barSize;
+        Vector2 finalSize = barSize;
+        float pct = Mathf.Clamp01(barHeightScreenPercent);
+
+        CanvasScaler scalerOnCanvas = canvas != null ? canvas.GetComponent<CanvasScaler>() : null;
+        if (scalerOnCanvas != null && scalerOnCanvas.uiScaleMode == CanvasScaler.ScaleMode.ScaleWithScreenSize)
+        {
+            finalSize.y = Mathf.Max(40f, scalerOnCanvas.referenceResolution.y * pct);
+        }
+        else
+        {
+            float canvasHeight = canvas != null ? (Screen.height / Mathf.Max(0.0001f, canvas.scaleFactor)) : Screen.height;
+            finalSize.y = Mathf.Max(40f, canvasHeight * pct);
+        }
+
+        rt.sizeDelta = finalSize;
         rt.anchoredPosition = barAnchoredPosition;
 
         // Don't use Resources.GetBuiltinResource<Sprite>(...) here: in some Unity versions,
@@ -429,25 +463,28 @@ public class BlockClearProgressUI : MonoBehaviour
         fillImg.fillAmount = 0f;
         fillImg.color = new Color(1f, 1f, 1f, 0.85f);
 
-        // Value text
-        GameObject txt = new GameObject("ValueText", typeof(RectTransform), typeof(Text));
-        txt.transform.SetParent(root.transform, false);
-        RectTransform txtRt = txt.GetComponent<RectTransform>();
-        txtRt.anchorMin = new Vector2(0.5f, 1f);
-        txtRt.anchorMax = new Vector2(0.5f, 1f);
-        txtRt.pivot = new Vector2(0.5f, 0f);
-        txtRt.anchoredPosition = new Vector2(0f, 6f);
-        txtRt.sizeDelta = new Vector2(Mathf.Max(120f, barSize.x * 2f), 32f);
-
-        Text t = txt.GetComponent<Text>();
-        t.alignment = TextAnchor.MiddleCenter;
-        t.font = TryGetBuiltinFont() ?? GetFallbackFont();
-        t.fontSize = 18;
-        t.color = Color.white;
-
         // Bind refs
         fillImage = fillImg;
-        valueText = t;
+
+        // Optional value text (disabled by default)
+        if (showValueText)
+        {
+            GameObject txt = new GameObject("ValueText", typeof(RectTransform), typeof(Text));
+            txt.transform.SetParent(root.transform, false);
+            RectTransform txtRt = txt.GetComponent<RectTransform>();
+            txtRt.anchorMin = new Vector2(0.5f, 1f);
+            txtRt.anchorMax = new Vector2(0.5f, 1f);
+            txtRt.pivot = new Vector2(0.5f, 0f);
+            txtRt.anchoredPosition = new Vector2(0f, 6f);
+            txtRt.sizeDelta = new Vector2(Mathf.Max(120f, barSize.x * 2f), 32f);
+
+            Text t = txt.GetComponent<Text>();
+            t.alignment = TextAnchor.MiddleCenter;
+            t.font = TryGetBuiltinFont() ?? GetFallbackFont();
+            t.fontSize = 18;
+            t.color = Color.white;
+            valueText = t;
+        }
     }
 
     private static Sprite GetFallbackSprite()
