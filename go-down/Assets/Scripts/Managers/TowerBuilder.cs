@@ -539,6 +539,16 @@ public class TowerBuilder : MonoBehaviour
         {
             tb.scoreMultiplier = 10;
         }
+
+        // Special block: award coins when HexagonBall collides (once per block).
+        RainbowCoinReward coinReward = block.GetComponent<RainbowCoinReward>();
+        if (coinReward == null)
+        {
+            coinReward = block.AddComponent<RainbowCoinReward>();
+        }
+
+        coinReward.coinsPerActivation = 5;
+        coinReward.hexagonBallTag = "HexagonBall";
     }
 
     // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束
