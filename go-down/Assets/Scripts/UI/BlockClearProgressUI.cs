@@ -33,6 +33,13 @@ public class BlockClearProgressUI : MonoBehaviour
     [Tooltip("Detect rainbow/special blocks by scoreMultiplier >= this value.")]
     public int rainbowDetectScoreMultiplier = 10;
 
+    [Header("Reward Mode")]
+    [Tooltip("When progress reaches 100%, enter reward mode for this many seconds.")]
+    public float rewardDurationSeconds = 5f;
+
+    [Tooltip("During reward mode, all destroyed blocks score is multiplied by this value.")]
+    public int rewardScoreMultiplier = 3;
+
     [Header("UI")]
     [Tooltip("If null, the script will auto-create a simple UI under the first Canvas it finds.")]
     public Image fillImage;
@@ -54,9 +61,9 @@ public class BlockClearProgressUI : MonoBehaviour
     public float fillFallSpeed = 10f;
 
     [Header("Auto Layout (when auto-created)")]
-    public Vector2 barSize = new Vector2(56f, 280f);
+    public Vector2 barSize = new Vector2(28f, 280f);
     public Vector2 barAnchoredPosition = new Vector2(26f, 0f);
-    public Vector2 fillPadding = new Vector2(8f, 8f);
+    public Vector2 fillPadding = new Vector2(4f, 8f);
 
     private struct CountBucket
     {
@@ -70,7 +77,16 @@ public class BlockClearProgressUI : MonoBehaviour
     private static Sprite s_fallbackSprite;
     private static Font s_fallbackFont;
 
+    private static Shader s_rainbowShader;
+    private static Material s_rainbowUIMaterial;
+
     private float displayedFill;
+
+    private bool rewardActive;
+    private float rewardStartTime;
+    private float rewardEndTime;
+    private Material normalFillMaterial;
+    private Color normalFillColor;
 
     private void OnEnable()
     {
@@ -82,6 +98,13 @@ public class BlockClearProgressUI : MonoBehaviour
     {
         EnsureUI();
         displayedFill = fillImage != null ? fillImage.fillAmount : 0f;
+
+        if (fillImage != null)
+        {
+            normalFillMaterial = fillImage.material;
+            normalFillColor = fillImage.color;
+        }
+
         RefreshUI();
     }
 
@@ -93,12 +116,32 @@ public class BlockClearProgressUI : MonoBehaviour
 
     private void Update()
     {
+        if (rewardActive)
+        {
+            UpdateRewardMode();
+            return;
+        }
+
         PurgeOld();
+
+        // If we reach 100%, enter reward mode.
+        if (GetTargetFill() >= 1f)
+        {
+            StartRewardMode();
+            return;
+        }
+
         RefreshUI();
     }
 
     private void HandleBlockDestroyed(TowerBlock block)
     {
+        if (rewardActive)
+        {
+            // During reward mode we pause accumulating QPS/count.
+            return;
+        }
+
         int add = 1;
 
         if (block != null && Mathf.Max(1, block.scoreMultiplier) >= Mathf.Max(1, rainbowDetectScoreMultiplier))
@@ -108,10 +151,17 @@ public class BlockClearProgressUI : MonoBehaviour
         }
 
         AddCount(add);
+
+        // Trigger reward immediately when threshold is reached via this event.
+        if (!rewardActive && GetTargetFill() >= 1f)
+        {
+            StartRewardMode();
+        }
     }
 
     private void HandleGameReset()
     {
+        EndRewardMode(force: true);
         ClearProgress();
     }
 
@@ -156,6 +206,12 @@ public class BlockClearProgressUI : MonoBehaviour
 
     private void RefreshUI()
     {
+        if (rewardActive)
+        {
+            // Reward mode visuals are handled in UpdateRewardMode.
+            return;
+        }
+
         float targetFill = GetTargetFill();
 
         // Smooth the visual fill amount.
@@ -176,6 +232,111 @@ public class BlockClearProgressUI : MonoBehaviour
             // UI requirement: only show percent on the bar.
             valueText.text = string.Format(percentLabelFormat, percent);
         }
+    }
+
+    private void StartRewardMode()
+    {
+        if (rewardActive) return;
+
+        rewardActive = true;
+        rewardStartTime = Now();
+        rewardEndTime = rewardStartTime + Mathf.Max(0.01f, rewardDurationSeconds);
+
+        // Pause counting and visually switch to rainbow fill.
+        if (fillImage != null)
+        {
+            normalFillMaterial = fillImage.material;
+            normalFillColor = fillImage.color;
+
+            Material rainbowMat = GetRainbowUIMaterial();
+            if (rainbowMat != null)
+            {
+                fillImage.material = rainbowMat;
+                fillImage.color = Color.white;
+            }
+        }
+
+        // Apply score bonus.
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.GlobalScoreMultiplier = Mathf.Max(1, rewardScoreMultiplier);
+        }
+
+        // Start at 100%.
+        displayedFill = 1f;
+        if (fillImage != null) fillImage.fillAmount = 1f;
+        if (valueText != null) valueText.text = string.Format(percentLabelFormat, 100f);
+    }
+
+    private void UpdateRewardMode()
+    {
+        float now = Now();
+        if (now >= rewardEndTime)
+        {
+            EndRewardMode(force: false);
+            return;
+        }
+
+        float duration = Mathf.Max(0.01f, rewardDurationSeconds);
+        float remaining = Mathf.Clamp(rewardEndTime - now, 0f, duration);
+        float fill = remaining / duration;
+
+        displayedFill = fill;
+        if (fillImage != null) fillImage.fillAmount = fill;
+
+        if (valueText != null)
+        {
+            valueText.text = string.Format(percentLabelFormat, fill * 100f);
+        }
+    }
+
+    private void EndRewardMode(bool force)
+    {
+        if (!rewardActive && !force) return;
+
+        rewardActive = false;
+
+        // Restore normal visuals.
+        if (fillImage != null)
+        {
+            fillImage.material = normalFillMaterial;
+            fillImage.color = normalFillColor;
+        }
+
+        // Remove score bonus.
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.GlobalScoreMultiplier = 1;
+        }
+
+        // After reward ends, restart counting from zero.
+        ClearProgress();
+        displayedFill = 0f;
+        if (fillImage != null) fillImage.fillAmount = 0f;
+    }
+
+    private static Material GetRainbowUIMaterial()
+    {
+        if (s_rainbowUIMaterial != null) return s_rainbowUIMaterial;
+
+        if (s_rainbowShader == null)
+        {
+            s_rainbowShader = Shader.Find("GoDown/RainbowGlowSprite");
+        }
+
+        if (s_rainbowShader == null)
+        {
+            Debug.LogWarning("BlockClearProgressUI: Shader 'GoDown/RainbowGlowSprite' not found. Reward fill will use normal material.");
+            return null;
+        }
+
+        s_rainbowUIMaterial = new Material(s_rainbowShader);
+        s_rainbowUIMaterial.name = "RainbowGlowSprite (UI Shared)";
+
+        // Give some variation so it doesn't look too static.
+        s_rainbowUIMaterial.SetFloat("_HueOffset", Random.value);
+
+        return s_rainbowUIMaterial;
     }
 
     private float GetCurrentQps()

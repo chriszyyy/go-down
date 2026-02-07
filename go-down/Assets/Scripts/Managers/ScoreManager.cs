@@ -11,6 +11,8 @@ public class ScoreManager : MonoBehaviour
     public int CurrentScore { get; private set; }
     public int HighScore { get; private set; }
 
+    public int GlobalScoreMultiplier { get; set; } = 1;
+
     private const string HIGH_SCORE_KEY = "HighScore";
 
     [Header("计分规则")]
@@ -89,11 +91,18 @@ public class ScoreManager : MonoBehaviour
             points *= multiplier;
         }
 
+        int globalMultiplier = Mathf.Max(1, GlobalScoreMultiplier);
+        if (globalMultiplier != 1)
+        {
+            points *= globalMultiplier;
+        }
+
         AddScore(points);
     }
 
     private void HandleGameReset()
     {
+        GlobalScoreMultiplier = 1;
         ResetScore();
     }
 
