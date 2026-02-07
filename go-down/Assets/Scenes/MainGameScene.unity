@@ -1424,7 +1424,7 @@ MonoBehaviour:
   lineBlockPrefab: {fileID: 1704691168195623389, guid: 7cba614f0ebd42b4189c4e816a24a2a8, type: 3}
   leftBoundaryPrefab: {fileID: 9137463675010684301, guid: 257e95a9423122c46b5ffb97bd12bdf1, type: 3}
   rightBoundaryPrefab: {fileID: 7016191353958705115, guid: 382dc986d4b2a124b842d730abd2e88f, type: 3}
-  boundaryExtraCellsEachSide: 2
+  boundaryExtraCellsEachSide: 3
   boundaryFollowCameraY: 1
   boundaryFollowYOffset: 0
   hexagonBallPrefab: {fileID: 5149992263456304526, guid: 0c9f9e0c1028a7740b511984ea843433, type: 3}
