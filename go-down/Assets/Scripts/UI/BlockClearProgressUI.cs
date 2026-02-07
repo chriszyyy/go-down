@@ -15,6 +15,13 @@ public class BlockClearProgressUI : MonoBehaviour
     [Tooltip("Target destroyed block count within the window to reach 100%.")]
     public int targetBlocks = 100;
 
+    [Header("Progress Calculation")]
+    [Tooltip("Use QPS (blocks per second) to compute progress ratio. currentQps = count/windowSeconds")]
+    public bool useQps = true;
+
+    [Tooltip("Target QPS to reach 100%. If <=0, falls back to targetBlocks/windowSeconds.")]
+    public float targetQps = 0f;
+
     [Tooltip("Use unscaled time so the window continues during slow-mo/pause UI.")]
     public bool useUnscaledTime = true;
 
@@ -36,6 +43,16 @@ public class BlockClearProgressUI : MonoBehaviour
     [Tooltip("Label format. {0}=current blocks, {1}=target blocks, {2}=percent (0-100).")]
     public string labelFormat = "{0}/{1}  {2:0}%";
 
+    [Tooltip("Percent-only label format. {0}=percent (0-100).")]
+    public string percentLabelFormat = "{0:0}%";
+
+    [Header("Smoothing")]
+    [Tooltip("How quickly the bar rises toward target (fill amount per second). Higher = faster.")]
+    public float fillRiseSpeed = 6f;
+
+    [Tooltip("How quickly the bar falls toward target (fill amount per second). Higher = faster.")]
+    public float fillFallSpeed = 10f;
+
     [Header("Auto Layout (when auto-created)")]
     public Vector2 barSize = new Vector2(56f, 280f);
     public Vector2 barAnchoredPosition = new Vector2(26f, 0f);
@@ -53,6 +70,8 @@ public class BlockClearProgressUI : MonoBehaviour
     private static Sprite s_fallbackSprite;
     private static Font s_fallbackFont;
 
+    private float displayedFill;
+
     private void OnEnable()
     {
         TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
@@ -62,6 +81,7 @@ public class BlockClearProgressUI : MonoBehaviour
     private void Start()
     {
         EnsureUI();
+        displayedFill = fillImage != null ? fillImage.fillAmount : 0f;
         RefreshUI();
     }
 
@@ -136,19 +156,53 @@ public class BlockClearProgressUI : MonoBehaviour
 
     private void RefreshUI()
     {
+        float targetFill = GetTargetFill();
+
+        // Smooth the visual fill amount.
         if (fillImage != null)
         {
-            float denom = Mathf.Max(1, targetBlocks);
-            float progress = Mathf.Clamp01(CurrentCount / denom);
-            fillImage.fillAmount = progress;
+            float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            float speed = targetFill >= displayedFill ? Mathf.Max(0f, fillRiseSpeed) : Mathf.Max(0f, fillFallSpeed);
+
+            // MoveTowards gives stable, frame-rate independent easing.
+            displayedFill = Mathf.MoveTowards(displayedFill, targetFill, speed * Mathf.Max(0f, dt));
+            fillImage.fillAmount = displayedFill;
         }
 
         if (valueText != null)
         {
-            float denom = Mathf.Max(1, targetBlocks);
-            float percent = Mathf.Clamp01(CurrentCount / denom) * 100f;
-            valueText.text = string.Format(labelFormat, CurrentCount, Mathf.Max(0, targetBlocks), percent);
+            float percent = targetFill * 100f;
+
+            // UI requirement: only show percent on the bar.
+            valueText.text = string.Format(percentLabelFormat, percent);
         }
+    }
+
+    private float GetCurrentQps()
+    {
+        float w = Mathf.Max(0.01f, windowSeconds);
+        return CurrentCount / w;
+    }
+
+    private float GetEffectiveTargetQps()
+    {
+        if (targetQps > 0f) return targetQps;
+
+        float w = Mathf.Max(0.01f, windowSeconds);
+        return Mathf.Max(0.0001f, Mathf.Max(0, targetBlocks) / w);
+    }
+
+    private float GetTargetFill()
+    {
+        if (useQps)
+        {
+            float tq = GetEffectiveTargetQps();
+            if (tq <= 0f) return 0f;
+            return Mathf.Clamp01(GetCurrentQps() / tq);
+        }
+
+        float denom = Mathf.Max(1, targetBlocks);
+        return Mathf.Clamp01(CurrentCount / denom);
     }
 
     private void EnsureUI()
