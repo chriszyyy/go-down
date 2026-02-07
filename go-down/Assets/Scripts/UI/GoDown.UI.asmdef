@@ -1,7 +1,8 @@
 {
   "name": "GoDown.UI",
   "references": [
-    "GoDown.Managers"
+    "GoDown.Managers",
+    "GoDown.Core"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
