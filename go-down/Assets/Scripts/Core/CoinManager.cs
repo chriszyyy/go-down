@@ -9,6 +9,12 @@ public class CoinManager : MonoBehaviour
 {
     public static CoinManager Instance { get; private set; }
 
+    /// <summary>
+    /// Fired when coins are gained at a specific world position (for UI feedback).
+    /// Args: worldPosition, deltaCoins.
+    /// </summary>
+    public static event Action<Vector3, int> OnCoinsGained;
+
     public event Action<int> OnCoinsChanged;
 
     public int CurrentCoins { get; private set; }
@@ -42,12 +48,33 @@ public class CoinManager : MonoBehaviour
 
     public void AddCoins(int amount)
     {
-        int add = Mathf.Max(0, amount);
+        AddCoinsInternal(amount);
+    }
+
+    public void AddCoinsAt(Vector3 worldPosition, int amount)
+    {
+        int add = AddCoinsInternal(amount);
         if (add == 0) return;
+
+        try
+        {
+            OnCoinsGained?.Invoke(worldPosition, add);
+        }
+        catch
+        {
+            // Don't let UI listeners break currency updates.
+        }
+    }
+
+    private int AddCoinsInternal(int amount)
+    {
+        int add = Mathf.Max(0, amount);
+        if (add == 0) return 0;
 
         CurrentCoins = Mathf.Max(0, CurrentCoins + add);
         Save();
         OnCoinsChanged?.Invoke(CurrentCoins);
+        return add;
     }
 
     public bool TrySpendCoins(int amount)

@@ -18,15 +18,42 @@ public class RainbowCoinReward : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision == null) return;
-        TryAward(collision.collider);
+
+        Vector3 p = transform.position;
+        if (collision.contactCount > 0)
+        {
+            try
+            {
+                p = collision.GetContact(0).point;
+            }
+            catch
+            {
+                p = transform.position;
+            }
+        }
+
+        TryAward(collision.collider, p);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        TryAward(other);
+        Vector3 p = transform.position;
+        if (other != null)
+        {
+            try
+            {
+                p = other.ClosestPoint(transform.position);
+            }
+            catch
+            {
+                p = transform.position;
+            }
+        }
+
+        TryAward(other, p);
     }
 
-    private void TryAward(Collider2D other)
+    private void TryAward(Collider2D other, Vector3 worldPosition)
     {
         if (awarded) return;
         if (other == null) return;
@@ -43,7 +70,7 @@ public class RainbowCoinReward : MonoBehaviour
 
         if (CoinManager.Instance != null)
         {
-            CoinManager.Instance.AddCoins(Mathf.Max(0, coinsPerActivation));
+            CoinManager.Instance.AddCoinsAt(worldPosition, Mathf.Max(0, coinsPerActivation));
         }
         else
         {
