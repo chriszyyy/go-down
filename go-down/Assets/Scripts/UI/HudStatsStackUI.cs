@@ -31,20 +31,71 @@ public class HudStatsStackUI : MonoBehaviour
     [Tooltip("If true, forces this container to anchor to the top and stretch full width.")]
     public bool forceTopLeftAnchor = true;
 
+    private bool dirty = true;
+    private int lastChildCount = -1;
+    private float lastSpacing;
+    private int lastPaddingLeft;
+    private int lastPaddingRight;
+    private int lastPaddingTop;
+    private int lastPaddingBottom;
+    private bool lastForceTopLeftAnchor;
+
     private void OnEnable()
     {
-        EnsureLayoutComponents();
+        MarkDirty();
+        RefreshIfDirty(force: true);
     }
 
     private void OnTransformChildrenChanged()
     {
-        EnsureLayoutComponents();
+        MarkDirty();
+        RefreshIfDirty(force: false);
+    }
+
+    private void OnValidate()
+    {
+        MarkDirty();
+        RefreshIfDirty(force: false);
     }
 
     private void Update()
     {
-        // Keep it stable in edit mode and play mode.
+        // Keep it stable in edit mode without doing work every frame in play mode.
+        if (Application.isPlaying) return;
+        RefreshIfDirty(force: false);
+    }
+
+    private void MarkDirty()
+    {
+        dirty = true;
+    }
+
+    private void RefreshIfDirty(bool force)
+    {
+        if (!force)
+        {
+            bool settingsChanged =
+                lastChildCount != transform.childCount ||
+                !Mathf.Approximately(lastSpacing, spacing) ||
+                lastPaddingLeft != paddingLeft ||
+                lastPaddingRight != paddingRight ||
+                lastPaddingTop != paddingTop ||
+                lastPaddingBottom != paddingBottom ||
+                lastForceTopLeftAnchor != forceTopLeftAnchor;
+
+            if (!dirty && !settingsChanged) return;
+        }
+
         EnsureLayoutComponents();
+
+        dirty = false;
+        lastChildCount = transform.childCount;
+        lastSpacing = spacing;
+        lastPaddingLeft = paddingLeft;
+        lastPaddingRight = paddingRight;
+        lastPaddingTop = paddingTop;
+        lastPaddingBottom = paddingBottom;
+        lastForceTopLeftAnchor = forceTopLeftAnchor;
     }
 
     private void EnsureLayoutComponents()

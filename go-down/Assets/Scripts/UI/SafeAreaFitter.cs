@@ -12,10 +12,16 @@ using UnityEngine;
 [RequireComponent(typeof(RectTransform))]
 public class SafeAreaFitter : MonoBehaviour
 {
+    [Header("Runtime")]
+    [Tooltip("How often to poll safe area at runtime (seconds). 0 = every frame. Safe area rarely changes, so 0.25-0.5 is usually enough.")]
+    public float runtimePollIntervalSeconds = 0.5f;
+
     private RectTransform rt;
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
     private ScreenOrientation lastOrientation;
+
+    private float nextPollTime;
 
     private void Awake()
     {
@@ -26,10 +32,26 @@ public class SafeAreaFitter : MonoBehaviour
     {
         if (rt == null) rt = GetComponent<RectTransform>();
         ApplySafeArea(force: true);
+        nextPollTime = 0f;
     }
 
     private void Update()
     {
+        if (!Application.isPlaying)
+        {
+            ApplySafeArea(force: false);
+            return;
+        }
+
+        float interval = Mathf.Max(0f, runtimePollIntervalSeconds);
+        if (interval <= 0f)
+        {
+            ApplySafeArea(force: false);
+            return;
+        }
+
+        if (Time.unscaledTime < nextPollTime) return;
+        nextPollTime = Time.unscaledTime + interval;
         ApplySafeArea(force: false);
     }
 

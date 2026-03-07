@@ -1826,6 +1826,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eb3f7d6130274a4aa07a2d48aa71d37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  runtimePollIntervalSeconds: 0.5
 --- !u!114 &1172295460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2101,6 +2102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eb3f7d6130274a4aa07a2d48aa71d37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  runtimePollIntervalSeconds: 0.5
 --- !u!114 &1347602198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2730,6 +2732,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eb3f7d6130274a4aa07a2d48aa71d37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  runtimePollIntervalSeconds: 0.5
 --- !u!114 &1661790643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2761,6 +2764,7 @@ GameObject:
   - component: {fileID: 1773155623}
   - component: {fileID: 1773155625}
   - component: {fileID: 1773155624}
+  - component: {fileID: 1773155626}
   m_Layer: 5
   m_Name: SafeArea
   m_TagString: Untagged
@@ -2785,8 +2789,8 @@ RectTransform:
   - {fileID: 1472018833}
   m_Father: {fileID: 235210107}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0.03671706}
+  m_AnchorMax: {x: 1, y: 0.9492441}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -2828,6 +2832,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773155622}
   m_CullTransparentMesh: 1
+--- !u!114 &1773155626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1773155622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7eb3f7d6130274a4aa07a2d48aa71d37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runtimePollIntervalSeconds: 0.5
 --- !u!1 &1856400261
 GameObject:
   m_ObjectHideFlags: 0
