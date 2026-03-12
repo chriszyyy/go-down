@@ -2157,9 +2157,9 @@ MonoBehaviour:
   layerWidth: 5
   startHeight: -3
   segmentHeightLayers: 20
-  generateAheadLayers: 18
+  generateAheadLayers: 20
   foundationThicknessLayers: 5
-  destroyAboveCameraLayers: 80
+  destroyAboveCameraLayers: 20
   stabilizeNewSegment: 1
   stabilizeDuration: 0.25
   requireManualStartActivation: 0
@@ -2764,7 +2764,6 @@ GameObject:
   - component: {fileID: 1773155623}
   - component: {fileID: 1773155625}
   - component: {fileID: 1773155624}
-  - component: {fileID: 1773155626}
   m_Layer: 5
   m_Name: SafeArea
   m_TagString: Untagged
@@ -2832,19 +2831,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773155622}
   m_CullTransparentMesh: 1
---- !u!114 &1773155626
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1773155622}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7eb3f7d6130274a4aa07a2d48aa71d37, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  runtimePollIntervalSeconds: 0.5
 --- !u!1 &1856400261
 GameObject:
   m_ObjectHideFlags: 0
