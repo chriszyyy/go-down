@@ -94,6 +94,9 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("球相对于顶部的高度偏移")]
     public float ballHeightOffset = 1.5f;
 
+    [Tooltip("六边形球缩放倍率（在预制体原始缩放基础上相乘）。1=不变，建议 1.1~1.25 之间微调。")]
+    public float hexagonBallScaleMultiplier = 1.15f;
+
     [Header("分层激活配置")]
     [Tooltip("额外向下激活的缓冲距离（单位）")]
     public float activationExtraBelow = 2f;
@@ -898,6 +901,14 @@ public class TowerBuilder : MonoBehaviour
 
         hexagonBall = Instantiate(hexagonBallPrefab, ballPosition, Quaternion.identity, transform);
         hexagonBall.name = "HexagonBall";
+
+        // Make it slightly bigger for better readability on mobile.
+        if (hexagonBallPrefab != null)
+        {
+            float m = Mathf.Clamp(hexagonBallScaleMultiplier, 0.25f, 5f);
+            Vector3 baseScale = hexagonBallPrefab.transform.localScale;
+            hexagonBall.transform.localScale = Vector3.Scale(baseScale, new Vector3(m, m, m));
+        }
 
         // Debug.Log($"生成六边形球 at: ({ballPosition.x:F2}, {ballPosition.y:F2})");
     }
