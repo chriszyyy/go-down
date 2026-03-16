@@ -88,7 +88,7 @@ public class GameOverModalUI : MonoBehaviour
     {
         // Hide/show the combo progress bar so it doesn't bleed through the GameOver panel.
         BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
-        if (progress != null) progress.gameObject.SetActive(visible);
+        if (progress != null) progress.SetVisible(visible);
     }
 
     public void RestartGame()

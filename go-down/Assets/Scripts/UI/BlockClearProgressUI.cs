@@ -90,6 +90,9 @@ public class BlockClearProgressUI : MonoBehaviour
 
     private float displayedFill;
 
+    // Reference to the auto-created UI root so we can show/hide it.
+    private GameObject uiRoot;
+
     private bool rewardActive;
     private float rewardStartTime;
     private float rewardEndTime;
@@ -233,6 +236,25 @@ public class BlockClearProgressUI : MonoBehaviour
         buckets.Clear();
         windowCount = 0;
         RefreshUI();
+    }
+
+    /// <summary>
+    /// Show or hide the progress bar UI (e.g. hide during GameOver modal).
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        // Hide the auto-created UI root if we have it.
+        if (uiRoot != null)
+        {
+            uiRoot.SetActive(visible);
+            return;
+        }
+
+        // Fallback: if fillImage is assigned manually in scene, hide its root.
+        if (fillImage != null)
+        {
+            fillImage.transform.root.gameObject.SetActive(visible);
+        }
     }
 
     private void RefreshUI()
@@ -422,6 +444,7 @@ public class BlockClearProgressUI : MonoBehaviour
         // Root
         GameObject root = new GameObject("BlockClearProgressUI", typeof(RectTransform));
         root.transform.SetParent(canvas.transform, false);
+        uiRoot = root;
 
         RectTransform rt = root.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 0.5f);
