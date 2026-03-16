@@ -72,11 +72,23 @@ public class GameOverModalUI : MonoBehaviour
             int score = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
             reasonText.text = string.Format(gameOverScoreFormat, score);
         }
+
+        // Hide HUD elements that would show through the modal.
+        SetHudVisibility(false);
     }
 
     public void Hide()
     {
         if (modalRoot != null) modalRoot.SetActive(false);
+
+        SetHudVisibility(true);
+    }
+
+    private void SetHudVisibility(bool visible)
+    {
+        // Hide/show the combo progress bar so it doesn't bleed through the GameOver panel.
+        BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
+        if (progress != null) progress.gameObject.SetActive(visible);
     }
 
     public void RestartGame()
