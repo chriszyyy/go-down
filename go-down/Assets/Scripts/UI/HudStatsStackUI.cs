@@ -137,27 +137,42 @@ public class HudStatsStackUI : MonoBehaviour
         ContentSizeFitter fitter = GetComponent<ContentSizeFitter>();
         if (fitter != null) fitter.enabled = false;
 
-        // Make sure child Texts won't clip unexpectedly.
+        // Support both direct Text children and container children (e.g. Icon + Value).
         for (int i = 0; i < transform.childCount; i++)
         {
             Transform child = transform.GetChild(i);
             if (child == null) continue;
-
-            Text t = child.GetComponent<Text>();
-            if (t == null) continue;
-
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
 
             // Give each item equal flexible width so they space out.
             LayoutElement le = child.GetComponent<LayoutElement>();
             if (le == null) le = child.gameObject.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
 
-            // Optional: align left/center/right by index for nicer HUD.
-            if (i == 0) t.alignment = TextAnchor.UpperLeft;
-            else if (i == transform.childCount - 1) t.alignment = TextAnchor.UpperRight;
-            else t.alignment = TextAnchor.UpperCenter;
+            Text directText = child.GetComponent<Text>();
+            Text t = directText;
+            if (t == null)
+            {
+                // If this child is a container, try finding a nested value text.
+                t = child.GetComponentInChildren<Text>(includeInactive: true);
+            }
+
+            if (t == null) continue;
+
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // For icon+value containers, keep number close to icon.
+            // For legacy direct-text children, keep index-based alignment.
+            if (directText == null)
+            {
+                t.alignment = TextAnchor.MiddleLeft;
+            }
+            else
+            {
+                if (i == 0) t.alignment = TextAnchor.UpperLeft;
+                else if (i == transform.childCount - 1) t.alignment = TextAnchor.UpperRight;
+                else t.alignment = TextAnchor.UpperCenter;
+            }
         }
     }
 
