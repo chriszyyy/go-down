@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Helper to prevent overlapping HUD Text elements by laying out children in a single top row.
+/// Helper to layout HUD stats in a single top row.
 /// Usage:
 /// - Create an empty GameObject under your SafeArea panel, e.g. "TopLeftStats"
-/// - Put Coins/Score/HighScore Text objects as children of it
+/// - Put stat containers as children (e.g. HighestStat / ScoreStat / CoinStat)
+/// - Each stat container should contain Icon(Image) + Value(Text)
 /// - Add this component to the parent.
 /// </summary>
 [ExecuteAlways]
@@ -13,7 +14,7 @@ using UnityEngine.UI;
 public class HudStatsStackUI : MonoBehaviour
 {
     [Header("Layout")]
-    [Tooltip("Spacing between each line (in UI pixels).")]
+    [Tooltip("Spacing between stat containers (in UI pixels).")]
     public float spacing = 24f;
 
     [Tooltip("Padding (left).")]
@@ -137,7 +138,7 @@ public class HudStatsStackUI : MonoBehaviour
         ContentSizeFitter fitter = GetComponent<ContentSizeFitter>();
         if (fitter != null) fitter.enabled = false;
 
-        // Support both direct Text children and container children (e.g. Icon + Value).
+        // Container-only mode: each direct child is a stat container (Icon + Value Text).
         for (int i = 0; i < transform.childCount; i++)
         {
             Transform child = transform.GetChild(i);
@@ -148,31 +149,12 @@ public class HudStatsStackUI : MonoBehaviour
             if (le == null) le = child.gameObject.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
 
-            Text directText = child.GetComponent<Text>();
-            Text t = directText;
-            if (t == null)
-            {
-                // If this child is a container, try finding a nested value text.
-                t = child.GetComponentInChildren<Text>(includeInactive: true);
-            }
-
+            Text t = child.GetComponentInChildren<Text>(includeInactive: true);
             if (t == null) continue;
 
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
-
-            // For icon+value containers, keep number close to icon.
-            // For legacy direct-text children, keep index-based alignment.
-            if (directText == null)
-            {
-                t.alignment = TextAnchor.MiddleLeft;
-            }
-            else
-            {
-                if (i == 0) t.alignment = TextAnchor.UpperLeft;
-                else if (i == transform.childCount - 1) t.alignment = TextAnchor.UpperRight;
-                else t.alignment = TextAnchor.UpperCenter;
-            }
+            t.alignment = TextAnchor.MiddleLeft;
         }
     }
 

@@ -2753,11 +2753,9 @@ MonoBehaviour:
   titleText: {fileID: 541758706}
   scoreValueText: {fileID: 315892301}
   highScoreText: {fileID: 40805604}
-  reasonText: {fileID: 0}
   restartButton: {fileID: 1537219124}
   scoreValueFormat: '{0}'
   highScoreFormat: "\u6700\u9AD8\u5206\uFF1A{0}"
-  gameOverScoreFormat: "\u6E38\u620F\u7ED3\u675F\uFF0C\u4F60\u7684\u5F97\u5206\u662F{0}"
   hideOnStart: 1
 --- !u!1 &1537219121
 GameObject:
@@ -3342,7 +3340,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1856400262
 RectTransform:
   m_ObjectHideFlags: 0

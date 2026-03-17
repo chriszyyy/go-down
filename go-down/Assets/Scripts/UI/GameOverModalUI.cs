@@ -16,9 +16,6 @@ public class GameOverModalUI : MonoBehaviour
     [Tooltip("显示最高分的 Text，{0}=最高分数值")]
     public Text highScoreText;
 
-    [Tooltip("（兼容旧版）一行显示得分的 Text；新布局建议用 scoreValueText 代替")]
-    public Text reasonText;
-
     [Tooltip("重新游戏按钮（可选，不填则自动在子物体里找 Button）")]
     public Button restartButton;
 
@@ -28,9 +25,6 @@ public class GameOverModalUI : MonoBehaviour
 
     [Tooltip("highScoreText 的格式，{0}=最高分数字")]
     public string highScoreFormat = "最高分：{0}";
-
-    [Tooltip("（兼容旧版）reasonText 的格式，{0}=得分数字")]
-    public string gameOverScoreFormat = "游戏结束，你的得分是{0}";
 
     [Header("Behaviour")]
     [Tooltip("游戏开始时是否隐藏")]
@@ -99,14 +93,6 @@ public class GameOverModalUI : MonoBehaviour
             highScoreText.text = string.Format(highScoreFormat, high);
             highScoreText.horizontalOverflow = HorizontalWrapMode.Overflow;
             highScoreText.verticalOverflow = VerticalWrapMode.Overflow;
-        }
-
-        // Legacy single-line text (kept for backward compat).
-        if (reasonText != null)
-        {
-            reasonText.text = string.Format(gameOverScoreFormat, score);
-            reasonText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            reasonText.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
         // Hide HUD elements that would show through the modal.
