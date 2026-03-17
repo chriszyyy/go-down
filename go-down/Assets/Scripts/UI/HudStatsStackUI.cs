@@ -125,7 +125,7 @@ public class HudStatsStackUI : MonoBehaviour
             return;
         }
 
-        hlg.childAlignment = TextAnchor.UpperLeft;
+        hlg.childAlignment = TextAnchor.LowerCenter;
         hlg.spacing = spacing;
         hlg.padding = new RectOffset(paddingLeft, paddingRight, paddingTop, paddingBottom);
         hlg.childControlWidth = true;
