@@ -27,7 +27,7 @@ public class TowerBlock : MonoBehaviour
 
     [Header("动画配置")]
     [Tooltip("消失动画持续时间")]
-    public float disappearDuration = 0.3f;
+    public float disappearDuration = 0.15f;
 
     [Tooltip("消失时的缩放目标")]
     public float disappearScale = 0.1f;
@@ -134,6 +134,15 @@ public class TowerBlock : MonoBehaviour
         if (blockCollider != null)
         {
             blockCollider.enabled = false;
+        }
+
+        // Immediate visual feedback: get out of the way instantly so next target is easier to click.
+        transform.localScale = originalScale * 0.82f;
+        if (spriteRenderer != null)
+        {
+            Color c = spriteRenderer.color;
+            c.a = Mathf.Min(c.a, 0.55f);
+            spriteRenderer.color = c;
         }
 
         // 触发得分事件（倍率在 ScoreManager 中统一处理，避免破坏 scoreValue<=0 的占格兜底逻辑）
