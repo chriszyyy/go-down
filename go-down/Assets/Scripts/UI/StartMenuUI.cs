@@ -1,0 +1,161 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// Start menu panel controller for single-scene flow.
+/// Includes start button + audio/vibration/share toggles.
+/// </summary>
+public class StartMenuUI : MonoBehaviour
+{
+    [Header("References")]
+    [Tooltip("Menu root object. If null, uses this game object.")]
+    public GameObject panelRoot;
+
+    public Button startButton;
+    public Toggle audioToggle;
+    public Toggle vibrationToggle;
+    public Toggle shareToggle;
+
+    [Header("Behavior")]
+    [Tooltip("Show start panel when game launches.")]
+    public bool showOnStart = true;
+
+    [Tooltip("Show start panel again when game is reset.")]
+    public bool showOnGameReset = false;
+
+    [Tooltip("Pause gameplay while panel is visible.")]
+    public bool pauseTimeWhileVisible = true;
+
+    private bool started;
+
+    private void Awake()
+    {
+        if (panelRoot == null) panelRoot = gameObject;
+
+        if (startButton == null) startButton = GetComponentInChildren<Button>(includeInactive: true);
+    }
+
+    private void OnEnable()
+    {
+        if (startButton != null)
+        {
+            startButton.onClick.RemoveListener(OnStartClicked);
+            startButton.onClick.AddListener(OnStartClicked);
+        }
+
+        if (audioToggle != null)
+        {
+            audioToggle.onValueChanged.RemoveListener(OnAudioToggleChanged);
+            audioToggle.onValueChanged.AddListener(OnAudioToggleChanged);
+        }
+
+        if (vibrationToggle != null)
+        {
+            vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
+            vibrationToggle.onValueChanged.AddListener(OnVibrationToggleChanged);
+        }
+
+        if (shareToggle != null)
+        {
+            shareToggle.onValueChanged.RemoveListener(OnShareToggleChanged);
+            shareToggle.onValueChanged.AddListener(OnShareToggleChanged);
+        }
+
+        GameStateManager.OnGameReset += HandleGameReset;
+    }
+
+    private void Start()
+    {
+        started = true;
+        SyncTogglesFromSettings();
+
+        if (showOnStart)
+        {
+            ShowMenu();
+        }
+        else
+        {
+            HideMenu();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (startButton != null) startButton.onClick.RemoveListener(OnStartClicked);
+        if (audioToggle != null) audioToggle.onValueChanged.RemoveListener(OnAudioToggleChanged);
+        if (vibrationToggle != null) vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
+        if (shareToggle != null) shareToggle.onValueChanged.RemoveListener(OnShareToggleChanged);
+
+        GameStateManager.OnGameReset -= HandleGameReset;
+    }
+
+    private void HandleGameReset()
+    {
+        if (!showOnGameReset) return;
+        SyncTogglesFromSettings();
+        ShowMenu();
+    }
+
+    private void OnStartClicked()
+    {
+        HideMenu();
+    }
+
+    private void ShowMenu()
+    {
+        if (panelRoot != null) panelRoot.SetActive(true);
+        if (pauseTimeWhileVisible) Time.timeScale = 0f;
+
+        // Keep HUD clean when menu is open.
+        BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
+        if (progress != null) progress.SetVisible(false);
+    }
+
+    private void HideMenu()
+    {
+        if (panelRoot != null) panelRoot.SetActive(false);
+
+        if (pauseTimeWhileVisible)
+        {
+            float resume = 1f;
+            if (GameStateManager.Instance != null)
+            {
+                resume = GameStateManager.Instance.resumeTimeScale;
+            }
+            Time.timeScale = resume;
+        }
+
+        BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
+        if (progress != null) progress.SetVisible(true);
+    }
+
+    private void SyncTogglesFromSettings()
+    {
+        if (audioToggle != null)
+            audioToggle.SetIsOnWithoutNotify(GameUserSettings.AudioEnabled);
+
+        if (vibrationToggle != null)
+            vibrationToggle.SetIsOnWithoutNotify(GameUserSettings.VibrationEnabled);
+
+        if (shareToggle != null)
+            shareToggle.SetIsOnWithoutNotify(GameUserSettings.ShareEnabled);
+    }
+
+    private void OnAudioToggleChanged(bool value)
+    {
+        if (!started) return;
+        GameUserSettings.AudioEnabled = value;
+    }
+
+    private void OnVibrationToggleChanged(bool value)
+    {
+        if (!started) return;
+        GameUserSettings.VibrationEnabled = value;
+    }
+
+    private void OnShareToggleChanged(bool value)
+    {
+        if (!started) return;
+        GameUserSettings.ShareEnabled = value;
+    }
+}
