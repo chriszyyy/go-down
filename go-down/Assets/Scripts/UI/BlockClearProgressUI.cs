@@ -64,7 +64,7 @@ public class BlockClearProgressUI : MonoBehaviour
     public float fillFallSpeed = 10f;
 
     [Header("Auto Layout (when auto-created)")]
-    public Vector2 barSize = new Vector2(28f, 280f);
+    public Vector2 barSize = new Vector2(14f, 280f);
 
     [Tooltip("If enabled, bar height will be set to this fraction of the screen/canvas height.")]
     [Range(0.1f, 1f)]
