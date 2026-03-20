@@ -6,8 +6,8 @@ using UnityEngine;
 /// </summary>
 public class FrameRateBootstrapper : MonoBehaviour
 {
-    [Tooltip("Target FPS during gameplay. 60 is a good default for most phones.")]
-    public int targetFps = 60;
+    [Tooltip("Target FPS during gameplay. 120 is a good default for most phones.")]
+    public int targetFps = 120;
 
     [Tooltip("If true, disables VSync so targetFps can take effect.")]
     public bool disableVSync = true;

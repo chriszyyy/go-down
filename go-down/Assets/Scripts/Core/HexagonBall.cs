@@ -22,6 +22,16 @@ public class HexagonBall : MonoBehaviour
     [Tooltip("重力缩放")]
     public float gravityScale = 1f;
 
+    [Header("挑战性调节")]
+    [Tooltip("最终重力倍率（>1 更难控制，<1 更稳）")]
+    public float gravityMultiplier = 1.15f;
+
+    [Tooltip("最终线性阻力倍率（<1 更滑，更难控）")]
+    public float linearDragMultiplier = 0.65f;
+
+    [Tooltip("最终角阻力倍率（<1 更容易旋转，更难控）")]
+    public float angularDragMultiplier = 0.6f;
+
     [Header("边界检测")]
     [Tooltip("安全区域 X 轴范围（仅用于 Gizmos 可视化；胜负请用左右边界触发器判定）")]
     public float safeZoneX = 6f;
@@ -72,9 +82,9 @@ public class HexagonBall : MonoBehaviour
     void ConfigurePhysics()
     {
         rb.mass = mass;
-        rb.drag = linearDrag;
-        rb.angularDrag = angularDrag;
-        rb.gravityScale = gravityScale;
+        rb.drag = Mathf.Max(0f, linearDrag * Mathf.Max(0f, linearDragMultiplier));
+        rb.angularDrag = Mathf.Max(0f, angularDrag * Mathf.Max(0f, angularDragMultiplier));
+        rb.gravityScale = Mathf.Max(0f, gravityScale * Mathf.Max(0f, gravityMultiplier));
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
     }
