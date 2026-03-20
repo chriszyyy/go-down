@@ -9,11 +9,11 @@ using UnityEngine.UI;
 public class BlockClearProgressUI : MonoBehaviour
 {
     [Header("Rolling Window")]
-    [Tooltip("Sliding window duration in seconds (e.g., 60 for 1 minute).")]
-    public float windowSeconds = 60f;
+    [Tooltip("Sliding window duration in seconds (e.g., 10 for 10 seconds).")]
+    public float windowSeconds = 10f;
 
     [Tooltip("Target destroyed block count within the window to reach 100%.")]
-    public int targetBlocks = 100;
+    public int targetBlocks = 30;
 
     [Header("Progress Calculation")]
     [Tooltip("Use QPS (blocks per second) to compute progress ratio. currentQps = count/windowSeconds")]
