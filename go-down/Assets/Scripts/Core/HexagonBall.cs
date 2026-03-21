@@ -30,7 +30,7 @@ public class HexagonBall : MonoBehaviour
     public float linearDragMultiplier = 0.65f;
 
     [Tooltip("最终角阻力倍率（<1 更容易旋转，更难控）")]
-    public float angularDragMultiplier = 0.6f;
+    public float angularDragMultiplier = 0.8f;
 
     [Header("边界检测")]
     [Tooltip("安全区域 X 轴范围（仅用于 Gizmos 可视化；胜负请用左右边界触发器判定）")]
