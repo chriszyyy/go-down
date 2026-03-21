@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Start menu panel controller for single-scene flow.
-/// Includes start button + audio/vibration/share toggles.
+/// Includes start button + audio/vibration toggles + share button.
 /// </summary>
 public class StartMenuUI : MonoBehaviour
 {
@@ -14,7 +14,7 @@ public class StartMenuUI : MonoBehaviour
     public Button startButton;
     public Toggle audioToggle;
     public Toggle vibrationToggle;
-    public Toggle shareToggle;
+    public Button shareButton;
 
     [Header("Behavior")]
     [Tooltip("Show start panel when game launches.")]
@@ -55,10 +55,10 @@ public class StartMenuUI : MonoBehaviour
             vibrationToggle.onValueChanged.AddListener(OnVibrationToggleChanged);
         }
 
-        if (shareToggle != null)
+        if (shareButton != null)
         {
-            shareToggle.onValueChanged.RemoveListener(OnShareToggleChanged);
-            shareToggle.onValueChanged.AddListener(OnShareToggleChanged);
+            shareButton.onClick.RemoveListener(OnShareClicked);
+            shareButton.onClick.AddListener(OnShareClicked);
         }
 
         GameStateManager.OnGameReset += HandleGameReset;
@@ -84,7 +84,7 @@ public class StartMenuUI : MonoBehaviour
         if (startButton != null) startButton.onClick.RemoveListener(OnStartClicked);
         if (audioToggle != null) audioToggle.onValueChanged.RemoveListener(OnAudioToggleChanged);
         if (vibrationToggle != null) vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
-        if (shareToggle != null) shareToggle.onValueChanged.RemoveListener(OnShareToggleChanged);
+        if (shareButton != null) shareButton.onClick.RemoveListener(OnShareClicked);
 
         GameStateManager.OnGameReset -= HandleGameReset;
     }
@@ -136,9 +136,6 @@ public class StartMenuUI : MonoBehaviour
 
         if (vibrationToggle != null)
             vibrationToggle.SetIsOnWithoutNotify(GameUserSettings.VibrationEnabled);
-
-        if (shareToggle != null)
-            shareToggle.SetIsOnWithoutNotify(GameUserSettings.ShareEnabled);
     }
 
     private void OnAudioToggleChanged(bool value)
@@ -153,9 +150,9 @@ public class StartMenuUI : MonoBehaviour
         GameUserSettings.VibrationEnabled = value;
     }
 
-    private void OnShareToggleChanged(bool value)
+    private void OnShareClicked()
     {
-        if (!started) return;
-        GameUserSettings.ShareEnabled = value;
+        // TODO: Hook platform share SDK here.
+        // Intentionally left blank for now.
     }
 }

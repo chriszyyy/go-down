@@ -7,12 +7,10 @@ public static class GameUserSettings
 {
     private const string KEY_AUDIO = "Setting_AudioEnabled";
     private const string KEY_VIBRATION = "Setting_VibrationEnabled";
-    private const string KEY_SHARE = "Setting_ShareEnabled";
 
     private static bool loaded;
     private static bool audioEnabled;
     private static bool vibrationEnabled;
-    private static bool shareEnabled;
 
     public static bool AudioEnabled
     {
@@ -40,19 +38,6 @@ public static class GameUserSettings
         }
     }
 
-    public static bool ShareEnabled
-    {
-        get { EnsureLoaded(); return shareEnabled; }
-        set
-        {
-            EnsureLoaded();
-            if (shareEnabled == value) return;
-            shareEnabled = value;
-            PlayerPrefs.SetInt(KEY_SHARE, value ? 1 : 0);
-            PlayerPrefs.Save();
-        }
-    }
-
     public static void Reload()
     {
         loaded = false;
@@ -65,7 +50,6 @@ public static class GameUserSettings
 
         audioEnabled = PlayerPrefs.GetInt(KEY_AUDIO, 1) == 1;
         vibrationEnabled = PlayerPrefs.GetInt(KEY_VIBRATION, 1) == 1;
-        shareEnabled = PlayerPrefs.GetInt(KEY_SHARE, 1) == 1;
 
         loaded = true;
     }
