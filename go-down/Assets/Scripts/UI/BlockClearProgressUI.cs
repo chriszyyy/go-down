@@ -41,20 +41,11 @@ public class BlockClearProgressUI : MonoBehaviour
     public int rewardScoreMultiplier = 3;
 
     [Header("UI")]
-    [Tooltip("If null, the script will auto-create a simple UI under the first Canvas it finds.")]
+    [Tooltip("Fill image used as progress bar visual. This is required.")]
     public Image fillImage;
 
-    [Tooltip("Optional numeric label (e.g., 34/100).")]
-    public Text valueText;
-
-    [Tooltip("Show a text label on the bar. Disabled by default for mobile UI.")]
-    public bool showValueText = false;
-
-    [Tooltip("Label format. {0}=current blocks, {1}=target blocks, {2}=percent (0-100).")]
-    public string labelFormat = "{0}/{1}  {2:0}%";
-
-    [Tooltip("Percent-only label format. {0}=percent (0-100).")]
-    public string percentLabelFormat = "{0:0}%";
+    [Tooltip("Optional visibility root for manual scene setup (e.g., ComboProgressBar). If empty, tries to infer from fillImage parent.")]
+    public GameObject progressRoot;
 
     [Header("Smoothing")]
     [Tooltip("How quickly the bar rises toward target (fill amount per second). Higher = faster.")]
@@ -62,16 +53,6 @@ public class BlockClearProgressUI : MonoBehaviour
 
     [Tooltip("How quickly the bar falls toward target (fill amount per second). Higher = faster.")]
     public float fillFallSpeed = 10f;
-
-    [Header("Auto Layout (when auto-created)")]
-    public Vector2 barSize = new Vector2(14f, 280f);
-
-    [Tooltip("If enabled, bar height will be set to this fraction of the screen/canvas height.")]
-    [Range(0.1f, 1f)]
-    public float barHeightScreenPercent = 0.6f;
-
-    public Vector2 barAnchoredPosition = new Vector2(26f, 0f);
-    public Vector2 fillPadding = new Vector2(4f, 8f);
 
     private struct CountBucket
     {
@@ -82,16 +63,10 @@ public class BlockClearProgressUI : MonoBehaviour
     private readonly Queue<CountBucket> buckets = new Queue<CountBucket>(256);
     private int windowCount;
 
-    private static Sprite s_fallbackSprite;
-    private static Font s_fallbackFont;
-
     private static Shader s_rainbowShader;
     private static Material s_rainbowUIMaterial;
 
     private float displayedFill;
-
-    // Reference to the auto-created UI root so we can show/hide it.
-    private GameObject uiRoot;
 
     private bool rewardActive;
     private float rewardStartTime;
@@ -107,23 +82,33 @@ public class BlockClearProgressUI : MonoBehaviour
 
     private void Start()
     {
-        EnsureUI();
-        displayedFill = fillImage != null ? fillImage.fillAmount : 0f;
-
-        if (fillImage != null)
+        if (fillImage == null)
         {
-            normalFillMaterial = fillImage.material;
-            normalFillColor = fillImage.color;
+            Debug.LogError("BlockClearProgressUI: fillImage is not assigned.");
+            enabled = false;
+            return;
         }
 
-        // Hide value text by default (mobile UI requirement).
-        if (valueText != null && !showValueText)
+        EnsureFillImageConfig();
+
+        if (progressRoot == null)
         {
-            valueText.text = string.Empty;
-            valueText.enabled = false;
+            progressRoot = ResolveManualProgressRoot();
         }
+
+        displayedFill = fillImage.fillAmount;
+        normalFillMaterial = fillImage.material;
+        normalFillColor = fillImage.color;
 
         RefreshUI();
+    }
+
+    private void EnsureFillImageConfig()
+    {
+        fillImage.type = Image.Type.Filled;
+        fillImage.fillMethod = Image.FillMethod.Horizontal;
+        fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+        fillImage.fillClockwise = true;
     }
 
     private void OnDisable()
@@ -165,12 +150,7 @@ public class BlockClearProgressUI : MonoBehaviour
                 rewardEndTime = now + Mathf.Max(0.01f, rewardDurationSeconds);
 
                 displayedFill = 1f;
-                if (fillImage != null) fillImage.fillAmount = 1f;
-
-                if (valueText != null)
-                {
-                    valueText.text = showValueText ? string.Format(percentLabelFormat, 100f) : string.Empty;
-                }
+                fillImage.fillAmount = 1f;
             }
 
             return;
@@ -243,18 +223,22 @@ public class BlockClearProgressUI : MonoBehaviour
     /// </summary>
     public void SetVisible(bool visible)
     {
-        // Hide the auto-created UI root if we have it.
-        if (uiRoot != null)
+        GameObject target = progressRoot != null ? progressRoot : ResolveManualProgressRoot();
+        if (target != null)
         {
-            uiRoot.SetActive(visible);
-            return;
+            target.SetActive(visible);
         }
+    }
 
-        // Fallback: if fillImage is assigned manually in scene, hide its root.
-        if (fillImage != null)
-        {
-            fillImage.transform.root.gameObject.SetActive(visible);
-        }
+    private GameObject ResolveManualProgressRoot()
+    {
+        if (fillImage == null) return null;
+
+        // Prefer parent container (commonly ComboProgressBar) so background+fill hide together.
+        Transform p = fillImage.transform.parent;
+        if (p != null) return p.gameObject;
+
+        return fillImage.gameObject;
     }
 
     private void RefreshUI()
@@ -268,28 +252,12 @@ public class BlockClearProgressUI : MonoBehaviour
         float targetFill = GetTargetFill();
 
         // Smooth the visual fill amount.
-        if (fillImage != null)
-        {
-            float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
-            float speed = targetFill >= displayedFill ? Mathf.Max(0f, fillRiseSpeed) : Mathf.Max(0f, fillFallSpeed);
+        float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+        float speed = targetFill >= displayedFill ? Mathf.Max(0f, fillRiseSpeed) : Mathf.Max(0f, fillFallSpeed);
 
-            // MoveTowards gives stable, frame-rate independent easing.
-            displayedFill = Mathf.MoveTowards(displayedFill, targetFill, speed * Mathf.Max(0f, dt));
-            fillImage.fillAmount = displayedFill;
-        }
-
-        if (valueText != null)
-        {
-            if (!showValueText)
-            {
-                valueText.text = string.Empty;
-            }
-            else
-            {
-                float percent = targetFill * 100f;
-                valueText.text = string.Format(percentLabelFormat, percent);
-            }
-        }
+        // MoveTowards gives stable, frame-rate independent easing.
+        displayedFill = Mathf.MoveTowards(displayedFill, targetFill, speed * Mathf.Max(0f, dt));
+        fillImage.fillAmount = displayedFill;
     }
 
     private void StartRewardMode()
@@ -322,8 +290,7 @@ public class BlockClearProgressUI : MonoBehaviour
 
         // Start at 100%.
         displayedFill = 1f;
-        if (fillImage != null) fillImage.fillAmount = 1f;
-        if (valueText != null) valueText.text = showValueText ? string.Format(percentLabelFormat, 100f) : string.Empty;
+        fillImage.fillAmount = 1f;
     }
 
     private void UpdateRewardMode()
@@ -340,12 +307,7 @@ public class BlockClearProgressUI : MonoBehaviour
         float fill = remaining / duration;
 
         displayedFill = fill;
-        if (fillImage != null) fillImage.fillAmount = fill;
-
-        if (valueText != null)
-        {
-            valueText.text = showValueText ? string.Format(percentLabelFormat, fill * 100f) : string.Empty;
-        }
+        fillImage.fillAmount = fill;
     }
 
     private void EndRewardMode(bool force)
@@ -370,7 +332,7 @@ public class BlockClearProgressUI : MonoBehaviour
         // After reward ends, restart counting from zero.
         ClearProgress();
         displayedFill = 0f;
-        if (fillImage != null) fillImage.fillAmount = 0f;
+        fillImage.fillAmount = 0f;
     }
 
     private static Material GetRainbowUIMaterial()
@@ -424,152 +386,4 @@ public class BlockClearProgressUI : MonoBehaviour
         return Mathf.Clamp01(CurrentCount / denom);
     }
 
-    private void EnsureUI()
-    {
-        if (fillImage != null) return;
-
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            GameObject c = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvas = c.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-            CanvasScaler scaler = c.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.matchWidthOrHeight = 0.5f;
-        }
-
-        // Root
-        GameObject root = new GameObject("BlockClearProgressUI", typeof(RectTransform));
-        root.transform.SetParent(canvas.transform, false);
-        uiRoot = root;
-
-        RectTransform rt = root.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0.5f);
-        rt.anchorMax = new Vector2(0f, 0.5f);
-        rt.pivot = new Vector2(0f, 0.5f);
-        Vector2 finalSize = barSize;
-        float pct = Mathf.Clamp01(barHeightScreenPercent);
-
-        CanvasScaler scalerOnCanvas = canvas != null ? canvas.GetComponent<CanvasScaler>() : null;
-        if (scalerOnCanvas != null && scalerOnCanvas.uiScaleMode == CanvasScaler.ScaleMode.ScaleWithScreenSize)
-        {
-            finalSize.y = Mathf.Max(40f, scalerOnCanvas.referenceResolution.y * pct);
-        }
-        else
-        {
-            float canvasHeight = canvas != null ? (Screen.height / Mathf.Max(0.0001f, canvas.scaleFactor)) : Screen.height;
-            finalSize.y = Mathf.Max(40f, canvasHeight * pct);
-        }
-
-        rt.sizeDelta = finalSize;
-        rt.anchoredPosition = barAnchoredPosition;
-
-        // Don't use Resources.GetBuiltinResource<Sprite>(...) here: in some Unity versions,
-        // missing built-in UI sprites spam errors even if we handle null.
-        Sprite uiSprite = GetFallbackSprite();
-
-        // Background (tube)
-        GameObject bg = new GameObject("Background", typeof(RectTransform), typeof(Image));
-        bg.transform.SetParent(root.transform, false);
-        RectTransform bgRt = bg.GetComponent<RectTransform>();
-        bgRt.anchorMin = Vector2.zero;
-        bgRt.anchorMax = Vector2.one;
-        bgRt.offsetMin = Vector2.zero;
-        bgRt.offsetMax = Vector2.zero;
-
-        Image bgImg = bg.GetComponent<Image>();
-        bgImg.sprite = uiSprite;
-        bgImg.type = Image.Type.Simple;
-        bgImg.color = new Color(1f, 1f, 1f, 0.25f);
-
-        // Fill
-        GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-        fill.transform.SetParent(bg.transform, false);
-        RectTransform fillRt = fill.GetComponent<RectTransform>();
-        fillRt.anchorMin = Vector2.zero;
-        fillRt.anchorMax = Vector2.one;
-        fillRt.offsetMin = new Vector2(fillPadding.x, fillPadding.y);
-        fillRt.offsetMax = new Vector2(-fillPadding.x, -fillPadding.y);
-
-        Image fillImg = fill.GetComponent<Image>();
-        fillImg.sprite = uiSprite;
-        fillImg.type = Image.Type.Filled;
-        fillImg.fillMethod = Image.FillMethod.Vertical;
-        fillImg.fillOrigin = (int)Image.OriginVertical.Bottom;
-        fillImg.fillAmount = 0f;
-        fillImg.color = new Color(1f, 1f, 1f, 0.85f);
-
-        // Bind refs
-        fillImage = fillImg;
-
-        // Optional value text (disabled by default)
-        if (showValueText)
-        {
-            GameObject txt = new GameObject("ValueText", typeof(RectTransform), typeof(Text));
-            txt.transform.SetParent(root.transform, false);
-            RectTransform txtRt = txt.GetComponent<RectTransform>();
-            txtRt.anchorMin = new Vector2(0.5f, 1f);
-            txtRt.anchorMax = new Vector2(0.5f, 1f);
-            txtRt.pivot = new Vector2(0.5f, 0f);
-            txtRt.anchoredPosition = new Vector2(0f, 6f);
-            txtRt.sizeDelta = new Vector2(Mathf.Max(120f, barSize.x * 2f), 32f);
-
-            Text t = txt.GetComponent<Text>();
-            t.alignment = TextAnchor.MiddleCenter;
-            t.font = TryGetBuiltinFont() ?? GetFallbackFont();
-            t.fontSize = 18;
-            t.color = Color.white;
-            valueText = t;
-        }
-    }
-
-    private static Sprite GetFallbackSprite()
-    {
-        if (s_fallbackSprite != null) return s_fallbackSprite;
-
-        Texture2D tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-        tex.name = "BlockClearProgressUI_Fallback";
-        tex.hideFlags = HideFlags.HideAndDontSave;
-        tex.SetPixel(0, 0, Color.white);
-        tex.Apply(false, true);
-
-        s_fallbackSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
-        s_fallbackSprite.name = "BlockClearProgressUI_Fallback";
-        return s_fallbackSprite;
-    }
-
-    private static Font TryGetBuiltinFont()
-    {
-        // Unity versions vary. Some versions throw if the path is invalid.
-        Font f;
-
-        try
-        {
-            f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (f != null) return f;
-        }
-        catch { }
-
-        try
-        {
-            f = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            if (f != null) return f;
-        }
-        catch { }
-
-        return null;
-    }
-
-    private static Font GetFallbackFont()
-    {
-        if (s_fallbackFont != null) return s_fallbackFont;
-
-        // As a last resort, create a default font. This should exist in most Unity versions.
-        // (If it doesn't, the Text will render with missing font warnings.)
-        s_fallbackFont = Font.CreateDynamicFontFromOSFont("Arial", 18);
-        return s_fallbackFont;
-    }
 }
