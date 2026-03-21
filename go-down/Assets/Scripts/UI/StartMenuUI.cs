@@ -26,7 +26,13 @@ public class StartMenuUI : MonoBehaviour
     [Tooltip("Pause gameplay while panel is visible.")]
     public bool pauseTimeWhileVisible = true;
 
+    [Tooltip("While menu is open, continuously keep it on top and keep combo progress hidden.")]
+    public bool enforceMenuTopWhileVisible = true;
+
     private bool started;
+    private bool menuVisible;
+    private BlockClearProgressUI cachedProgress;
+    private float nextProgressLookupTime;
 
     private void Awake()
     {
@@ -96,6 +102,18 @@ public class StartMenuUI : MonoBehaviour
         ShowMenu();
     }
 
+    private void LateUpdate()
+    {
+        if (!menuVisible || !enforceMenuTopWhileVisible) return;
+
+        if (panelRoot != null)
+        {
+            panelRoot.transform.SetAsLastSibling();
+        }
+
+        EnsureProgressVisible(false);
+    }
+
     private void OnStartClicked()
     {
         HideMenu();
@@ -104,16 +122,23 @@ public class StartMenuUI : MonoBehaviour
     private void ShowMenu()
     {
         if (panelRoot != null) panelRoot.SetActive(true);
+        menuVisible = true;
+
+        if (panelRoot != null)
+        {
+            panelRoot.transform.SetAsLastSibling();
+        }
+
         if (pauseTimeWhileVisible) Time.timeScale = 0f;
 
         // Keep HUD clean when menu is open.
-        BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
-        if (progress != null) progress.SetVisible(false);
+        EnsureProgressVisible(false);
     }
 
     private void HideMenu()
     {
         if (panelRoot != null) panelRoot.SetActive(false);
+        menuVisible = false;
 
         if (pauseTimeWhileVisible)
         {
@@ -125,8 +150,22 @@ public class StartMenuUI : MonoBehaviour
             Time.timeScale = resume;
         }
 
-        BlockClearProgressUI progress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
-        if (progress != null) progress.SetVisible(true);
+        EnsureProgressVisible(true);
+    }
+
+    private void EnsureProgressVisible(bool visible)
+    {
+        if (cachedProgress == null)
+        {
+            if (Time.unscaledTime < nextProgressLookupTime) return;
+            nextProgressLookupTime = Time.unscaledTime + 0.25f;
+            cachedProgress = FindObjectOfType<BlockClearProgressUI>(includeInactive: true);
+        }
+
+        if (cachedProgress != null)
+        {
+            cachedProgress.SetVisible(visible);
+        }
     }
 
     private void SyncTogglesFromSettings()
