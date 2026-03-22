@@ -16,6 +16,25 @@ public class StartMenuUI : MonoBehaviour
     public Toggle vibrationToggle;
     public Button shareButton;
 
+    [Header("Toggle Icons")]
+    [Tooltip("Image used to show audio state icon.")]
+    public Image audioStateImage;
+
+    [Tooltip("Sprite used when audio toggle is ON.")]
+    public Sprite audioOnSprite;
+
+    [Tooltip("Sprite used when audio toggle is OFF.")]
+    public Sprite audioOffSprite;
+
+    [Tooltip("Image used to show vibration state icon.")]
+    public Image vibrationStateImage;
+
+    [Tooltip("Sprite used when vibration toggle is ON.")]
+    public Sprite vibrationOnSprite;
+
+    [Tooltip("Sprite used when vibration toggle is OFF.")]
+    public Sprite vibrationOffSprite;
+
     [Header("Behavior")]
     [Tooltip("Show start panel when game launches.")]
     public bool showOnStart = true;
@@ -175,18 +194,39 @@ public class StartMenuUI : MonoBehaviour
 
         if (vibrationToggle != null)
             vibrationToggle.SetIsOnWithoutNotify(GameUserSettings.VibrationEnabled);
+
+        RefreshToggleStateIcons();
     }
 
     private void OnAudioToggleChanged(bool value)
     {
         if (!started) return;
         GameUserSettings.AudioEnabled = value;
+        ApplyToggleIcon(audioToggle, audioStateImage, audioOnSprite, audioOffSprite);
     }
 
     private void OnVibrationToggleChanged(bool value)
     {
         if (!started) return;
         GameUserSettings.VibrationEnabled = value;
+        ApplyToggleIcon(vibrationToggle, vibrationStateImage, vibrationOnSprite, vibrationOffSprite);
+    }
+
+    private void RefreshToggleStateIcons()
+    {
+        ApplyToggleIcon(audioToggle, audioStateImage, audioOnSprite, audioOffSprite);
+        ApplyToggleIcon(vibrationToggle, vibrationStateImage, vibrationOnSprite, vibrationOffSprite);
+    }
+
+    private static void ApplyToggleIcon(Toggle toggle, Image targetImage, Sprite onSprite, Sprite offSprite)
+    {
+        if (targetImage == null || toggle == null) return;
+
+        Sprite next = toggle.isOn ? onSprite : offSprite;
+        if (next != null)
+        {
+            targetImage.sprite = next;
+        }
     }
 
     private void OnShareClicked()
