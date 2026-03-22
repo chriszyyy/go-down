@@ -2674,10 +2674,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bgmSource: {fileID: 1641948735}
   sfxSource: {fileID: 1764008885}
-  backgroundMusicClip: {fileID: 0}
-  blockClearClip: {fileID: 0}
-  bgmVolume: 0.6
-  blockClearVolume: 0.9
+  backgroundMusicClip: {fileID: 8300000, guid: 28fd5ea75085cf847ac0d28af8e18d12, type: 3}
+  blockClearClip: {fileID: 8300000, guid: 7bd6b897eb5ca4b7d88a205c4a51640c, type: 3}
+  bgmVolume: 0.35
+  blockClearVolume: 0.75
 --- !u!4 &1219402697
 Transform:
   m_ObjectHideFlags: 0
@@ -2687,7 +2687,7 @@ Transform:
   m_GameObject: {fileID: 1219402695}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 507.36807, y: 2091.3528, z: -1.2650154}
+  m_LocalPosition: {x: 642, y: 1427, z: -1.2650154}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
