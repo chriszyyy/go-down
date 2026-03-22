@@ -2679,7 +2679,7 @@ MonoBehaviour:
   rewardBlockClearClip: {fileID: 8300000, guid: 7bd6b897eb5ca4b7d88a205c4a51640c, type: 3}
   bgmVolume: 0.35
   blockClearVolume: 0.75
-  rewardBlockClearVolume: 1
+  rewardBlockClearVolume: 0.75
 --- !u!4 &1219402697
 Transform:
   m_ObjectHideFlags: 0
