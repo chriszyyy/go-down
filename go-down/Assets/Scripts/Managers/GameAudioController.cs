@@ -1,0 +1,135 @@
+using UnityEngine;
+
+/// <summary>
+/// Central audio controller:
+/// - Plays looping background music.
+/// - Plays block-clear SFX when blocks are destroyed.
+/// - Follows GameUserSettings.AudioEnabled at runtime.
+/// </summary>
+public class GameAudioController : MonoBehaviour
+{
+    [Header("Sources")]
+    [Tooltip("Looped background music source. If empty, one will be auto-created on this object.")]
+    public AudioSource bgmSource;
+
+    [Tooltip("One-shot SFX source. If empty, one will be auto-created on this object.")]
+    public AudioSource sfxSource;
+
+    [Header("Clips")]
+    [Tooltip("Background music clip.")]
+    public AudioClip backgroundMusicClip;
+
+    [Tooltip("SFX played when a block is destroyed.")]
+    public AudioClip blockClearClip;
+
+    [Header("Mix")]
+    [Range(0f, 1f)]
+    public float bgmVolume = 0.6f;
+
+    [Range(0f, 1f)]
+    public float blockClearVolume = 0.9f;
+
+    private bool lastAudioEnabled;
+
+    private void Awake()
+    {
+        EnsureSources();
+        ConfigureSources();
+    }
+
+    private void OnEnable()
+    {
+        TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
+    }
+
+    private void Start()
+    {
+        lastAudioEnabled = GameUserSettings.AudioEnabled;
+        ApplyAudioEnabled(lastAudioEnabled);
+    }
+
+    private void OnDisable()
+    {
+        TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
+    }
+
+    private void Update()
+    {
+        bool enabledNow = GameUserSettings.AudioEnabled;
+        if (enabledNow == lastAudioEnabled) return;
+
+        lastAudioEnabled = enabledNow;
+        ApplyAudioEnabled(enabledNow);
+    }
+
+    private void EnsureSources()
+    {
+        if (bgmSource == null)
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        if (sfxSource == null)
+        {
+            sfxSource = gameObject.AddComponent<AudioSource>();
+        }
+    }
+
+    private void ConfigureSources()
+    {
+        if (bgmSource != null)
+        {
+            bgmSource.playOnAwake = false;
+            bgmSource.loop = true;
+            bgmSource.volume = Mathf.Clamp01(bgmVolume);
+            bgmSource.clip = backgroundMusicClip;
+        }
+
+        if (sfxSource != null)
+        {
+            sfxSource.playOnAwake = false;
+            sfxSource.loop = false;
+            sfxSource.volume = 1f;
+        }
+    }
+
+    private void ApplyAudioEnabled(bool audioEnabled)
+    {
+        if (bgmSource != null)
+        {
+            bgmSource.volume = Mathf.Clamp01(bgmVolume);
+
+            if (audioEnabled)
+            {
+                if (backgroundMusicClip != null)
+                {
+                    bgmSource.clip = backgroundMusicClip;
+                    if (!bgmSource.isPlaying)
+                    {
+                        bgmSource.Play();
+                    }
+                }
+            }
+            else
+            {
+                if (bgmSource.isPlaying)
+                {
+                    bgmSource.Stop();
+                }
+            }
+        }
+
+        if (sfxSource != null)
+        {
+            sfxSource.volume = 1f;
+        }
+    }
+
+    private void HandleBlockDestroyed(TowerBlock block)
+    {
+        if (!GameUserSettings.AudioEnabled) return;
+        if (sfxSource == null || blockClearClip == null) return;
+
+        sfxSource.PlayOneShot(blockClearClip, Mathf.Clamp01(blockClearVolume));
+    }
+}
