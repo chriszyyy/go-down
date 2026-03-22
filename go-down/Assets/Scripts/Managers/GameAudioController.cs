@@ -22,12 +22,18 @@ public class GameAudioController : MonoBehaviour
     [Tooltip("SFX played when a block is destroyed.")]
     public AudioClip blockClearClip;
 
+    [Tooltip("SFX played when a block is destroyed during reward mode. Falls back to normal clip if empty.")]
+    public AudioClip rewardBlockClearClip;
+
     [Header("Mix")]
     [Range(0f, 1f)]
     public float bgmVolume = 0.6f;
 
     [Range(0f, 1f)]
     public float blockClearVolume = 0.9f;
+
+    [Range(0f, 1f)]
+    public float rewardBlockClearVolume = 1f;
 
     private bool lastAudioEnabled;
 
@@ -128,8 +134,14 @@ public class GameAudioController : MonoBehaviour
     private void HandleBlockDestroyed(TowerBlock block)
     {
         if (!GameUserSettings.AudioEnabled) return;
-        if (sfxSource == null || blockClearClip == null) return;
+        if (sfxSource == null) return;
 
-        sfxSource.PlayOneShot(blockClearClip, Mathf.Clamp01(blockClearVolume));
+        bool inRewardMode = ScoreManager.Instance != null && ScoreManager.Instance.GlobalScoreMultiplier > 1;
+        AudioClip clip = inRewardMode && rewardBlockClearClip != null ? rewardBlockClearClip : blockClearClip;
+        if (clip == null) return;
+
+        float volume = inRewardMode ? rewardBlockClearVolume : blockClearVolume;
+
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
     }
 }
