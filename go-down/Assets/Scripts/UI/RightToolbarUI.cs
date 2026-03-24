@@ -105,6 +105,11 @@ public class RightToolbarUI : MonoBehaviour
         }
 
         ball.transform.rotation = Quaternion.identity;
+
+        if (GameAudioController.Instance != null)
+        {
+            GameAudioController.Instance.PlayResetToolSfx();
+        }
     }
 
     private void OnClickRainbow()
@@ -140,6 +145,7 @@ public class RightToolbarUI : MonoBehaviour
         if (candidates.Count == 0) return;
 
         int convert = Mathf.Min(need, candidates.Count);
+        bool convertedAny = false;
         for (int i = 0; i < convert; i++)
         {
             int idx = Random.Range(0, candidates.Count);
@@ -149,7 +155,13 @@ public class RightToolbarUI : MonoBehaviour
             if (picked != null)
             {
                 ApplySpecialBlock(picked.gameObject);
+                convertedAny = true;
             }
+        }
+
+        if (convertedAny && GameAudioController.Instance != null)
+        {
+            GameAudioController.Instance.PlayRainbowToolSfx();
         }
     }
 

@@ -28,6 +28,12 @@ public class GameAudioController : MonoBehaviour
     [Tooltip("SFX played when coins are gained (e.g., HexagonBall hits rainbow block).")]
     public AudioClip coinGainClip;
 
+    [Tooltip("SFX played when the Reset Hexagon tool is used.")]
+    public AudioClip resetToolClip;
+
+    [Tooltip("SFX played when the Random Rainbow tool is used.")]
+    public AudioClip rainbowToolClip;
+
     [Header("Mix")]
     [Range(0f, 1f)]
     public float bgmVolume = 0.26f;
@@ -41,10 +47,26 @@ public class GameAudioController : MonoBehaviour
     [Range(0f, 1f)]
     public float coinGainVolume = 0.75f;
 
+    [Range(0f, 1f)]
+    public float resetToolVolume = 0.75f;
+
+    [Range(0f, 1f)]
+    public float rainbowToolVolume = 0.75f;
+
+    public static GameAudioController Instance { get; private set; }
+
     private bool lastAudioEnabled;
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
         EnsureSources();
         ConfigureSources();
     }
@@ -65,6 +87,11 @@ public class GameAudioController : MonoBehaviour
     {
         TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
         CoinManager.OnCoinsGained -= HandleCoinsGained;
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     private void Update()
@@ -160,5 +187,23 @@ public class GameAudioController : MonoBehaviour
         if (sfxSource == null || coinGainClip == null) return;
 
         sfxSource.PlayOneShot(coinGainClip, Mathf.Clamp01(coinGainVolume));
+    }
+
+    public void PlayResetToolSfx()
+    {
+        PlayOneShot(resetToolClip, resetToolVolume);
+    }
+
+    public void PlayRainbowToolSfx()
+    {
+        PlayOneShot(rainbowToolClip, rainbowToolVolume);
+    }
+
+    private void PlayOneShot(AudioClip clip, float volume)
+    {
+        if (!GameUserSettings.AudioEnabled) return;
+        if (sfxSource == null || clip == null) return;
+
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
     }
 }

@@ -2755,10 +2755,14 @@ MonoBehaviour:
   blockClearClip: {fileID: 8300000, guid: 0c008ee3ee72a4362a35be25fa5de043, type: 3}
   rewardBlockClearClip: {fileID: 8300000, guid: 7bd6b897eb5ca4b7d88a205c4a51640c, type: 3}
   coinGainClip: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
+  resetToolClip: {fileID: 8300000, guid: 2c5292ba5cf254919a6b9e2b18e04f49, type: 3}
+  rainbowToolClip: {fileID: 8300000, guid: 89e6bc608da7b47d4914f3d9c2484e48, type: 3}
   bgmVolume: 0.26
   blockClearVolume: 0.75
   rewardBlockClearVolume: 0.75
   coinGainVolume: 0.75
+  resetToolVolume: 0.75
+  rainbowToolVolume: 0.75
 --- !u!4 &1219402697
 Transform:
   m_ObjectHideFlags: 0
