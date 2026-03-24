@@ -25,15 +25,21 @@ public class GameAudioController : MonoBehaviour
     [Tooltip("SFX played when a block is destroyed during reward mode. Falls back to normal clip if empty.")]
     public AudioClip rewardBlockClearClip;
 
+    [Tooltip("SFX played when coins are gained (e.g., HexagonBall hits rainbow block).")]
+    public AudioClip coinGainClip;
+
     [Header("Mix")]
     [Range(0f, 1f)]
-    public float bgmVolume = 0.6f;
+    public float bgmVolume = 0.26f;
 
     [Range(0f, 1f)]
-    public float blockClearVolume = 0.9f;
+    public float blockClearVolume = 0.75f;
 
     [Range(0f, 1f)]
-    public float rewardBlockClearVolume = 1f;
+    public float rewardBlockClearVolume = 0.75f;
+
+    [Range(0f, 1f)]
+    public float coinGainVolume = 0.75f;
 
     private bool lastAudioEnabled;
 
@@ -46,6 +52,7 @@ public class GameAudioController : MonoBehaviour
     private void OnEnable()
     {
         TowerBlock.OnBlockDestroyed += HandleBlockDestroyed;
+        CoinManager.OnCoinsGained += HandleCoinsGained;
     }
 
     private void Start()
@@ -57,6 +64,7 @@ public class GameAudioController : MonoBehaviour
     private void OnDisable()
     {
         TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
+        CoinManager.OnCoinsGained -= HandleCoinsGained;
     }
 
     private void Update()
@@ -143,5 +151,14 @@ public class GameAudioController : MonoBehaviour
         float volume = inRewardMode ? rewardBlockClearVolume : blockClearVolume;
 
         sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+    }
+
+    private void HandleCoinsGained(Vector3 worldPosition, int deltaCoins)
+    {
+        if (!GameUserSettings.AudioEnabled) return;
+        if (deltaCoins <= 0) return;
+        if (sfxSource == null || coinGainClip == null) return;
+
+        sfxSource.PlayOneShot(coinGainClip, Mathf.Clamp01(coinGainVolume));
     }
 }
