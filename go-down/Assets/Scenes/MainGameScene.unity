@@ -2677,7 +2677,7 @@ MonoBehaviour:
   backgroundMusicClip: {fileID: 8300000, guid: 28fd5ea75085cf847ac0d28af8e18d12, type: 3}
   blockClearClip: {fileID: 8300000, guid: cf6c0e7fbef9449c98a0cdb5ea0c4d9f, type: 3}
   rewardBlockClearClip: {fileID: 8300000, guid: 7bd6b897eb5ca4b7d88a205c4a51640c, type: 3}
-  bgmVolume: 0.35
+  bgmVolume: 0.26
   blockClearVolume: 0.75
   rewardBlockClearVolume: 0.75
 --- !u!4 &1219402697
