@@ -12,11 +12,21 @@ public class StartMenuUI : MonoBehaviour
     public GameObject panelRoot;
 
     public Button startButton;
+    public Toggle musicToggle;
     public Toggle audioToggle;
     public Toggle vibrationToggle;
     public Button shareButton;
 
     [Header("Toggle Icons")]
+    [Tooltip("Image used to show music state icon.")]
+    public Image musicStateImage;
+
+    [Tooltip("Sprite used when music toggle is ON.")]
+    public Sprite musicOnSprite;
+
+    [Tooltip("Sprite used when music toggle is OFF.")]
+    public Sprite musicOffSprite;
+
     [Tooltip("Image used to show audio state icon.")]
     public Image audioStateImage;
 
@@ -74,6 +84,12 @@ public class StartMenuUI : MonoBehaviour
             audioToggle.onValueChanged.AddListener(OnAudioToggleChanged);
         }
 
+        if (musicToggle != null)
+        {
+            musicToggle.onValueChanged.RemoveListener(OnMusicToggleChanged);
+            musicToggle.onValueChanged.AddListener(OnMusicToggleChanged);
+        }
+
         if (vibrationToggle != null)
         {
             vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
@@ -107,6 +123,7 @@ public class StartMenuUI : MonoBehaviour
     private void OnDisable()
     {
         if (startButton != null) startButton.onClick.RemoveListener(OnStartClicked);
+        if (musicToggle != null) musicToggle.onValueChanged.RemoveListener(OnMusicToggleChanged);
         if (audioToggle != null) audioToggle.onValueChanged.RemoveListener(OnAudioToggleChanged);
         if (vibrationToggle != null) vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
         if (shareButton != null) shareButton.onClick.RemoveListener(OnShareClicked);
@@ -189,8 +206,11 @@ public class StartMenuUI : MonoBehaviour
 
     private void SyncTogglesFromSettings()
     {
+        if (musicToggle != null)
+            musicToggle.SetIsOnWithoutNotify(GameUserSettings.MusicEnabled);
+
         if (audioToggle != null)
-            audioToggle.SetIsOnWithoutNotify(GameUserSettings.AudioEnabled);
+            audioToggle.SetIsOnWithoutNotify(GameUserSettings.SfxEnabled);
 
         if (vibrationToggle != null)
             vibrationToggle.SetIsOnWithoutNotify(GameUserSettings.VibrationEnabled);
@@ -198,10 +218,17 @@ public class StartMenuUI : MonoBehaviour
         RefreshToggleStateIcons();
     }
 
+    private void OnMusicToggleChanged(bool value)
+    {
+        if (!started) return;
+        GameUserSettings.MusicEnabled = value;
+        ApplyToggleIcon(musicToggle, musicStateImage, musicOnSprite, musicOffSprite);
+    }
+
     private void OnAudioToggleChanged(bool value)
     {
         if (!started) return;
-        GameUserSettings.AudioEnabled = value;
+        GameUserSettings.SfxEnabled = value;
         ApplyToggleIcon(audioToggle, audioStateImage, audioOnSprite, audioOffSprite);
     }
 
@@ -214,6 +241,7 @@ public class StartMenuUI : MonoBehaviour
 
     private void RefreshToggleStateIcons()
     {
+        ApplyToggleIcon(musicToggle, musicStateImage, musicOnSprite, musicOffSprite);
         ApplyToggleIcon(audioToggle, audioStateImage, audioOnSprite, audioOffSprite);
         ApplyToggleIcon(vibrationToggle, vibrationStateImage, vibrationOnSprite, vibrationOffSprite);
     }

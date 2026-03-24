@@ -6,21 +6,41 @@ using UnityEngine;
 public static class GameUserSettings
 {
     private const string KEY_AUDIO = "Setting_AudioEnabled";
+    private const string KEY_MUSIC = "Setting_MusicEnabled";
+    private const string KEY_SFX = "Setting_SfxEnabled";
     private const string KEY_VIBRATION = "Setting_VibrationEnabled";
 
     private static bool loaded;
-    private static bool audioEnabled;
+    private static bool musicEnabled;
+    private static bool sfxEnabled;
     private static bool vibrationEnabled;
 
-    public static bool AudioEnabled
+    public static bool MusicEnabled
     {
-        get { EnsureLoaded(); return audioEnabled; }
+        get { EnsureLoaded(); return musicEnabled; }
         set
         {
             EnsureLoaded();
-            if (audioEnabled == value) return;
-            audioEnabled = value;
-            PlayerPrefs.SetInt(KEY_AUDIO, value ? 1 : 0);
+            if (musicEnabled == value) return;
+
+            musicEnabled = value;
+
+            PlayerPrefs.SetInt(KEY_MUSIC, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+    }
+
+    public static bool SfxEnabled
+    {
+        get { EnsureLoaded(); return sfxEnabled; }
+        set
+        {
+            EnsureLoaded();
+            if (sfxEnabled == value) return;
+
+            sfxEnabled = value;
+
+            PlayerPrefs.SetInt(KEY_SFX, value ? 1 : 0);
             PlayerPrefs.Save();
         }
     }
@@ -48,7 +68,9 @@ public static class GameUserSettings
     {
         if (loaded) return;
 
-        audioEnabled = PlayerPrefs.GetInt(KEY_AUDIO, 1) == 1;
+        bool legacyAudio = PlayerPrefs.GetInt(KEY_AUDIO, 1) == 1;
+        musicEnabled = PlayerPrefs.GetInt(KEY_MUSIC, legacyAudio ? 1 : 0) == 1;
+        sfxEnabled = PlayerPrefs.GetInt(KEY_SFX, legacyAudio ? 1 : 0) == 1;
         vibrationEnabled = PlayerPrefs.GetInt(KEY_VIBRATION, 1) == 1;
 
         loaded = true;

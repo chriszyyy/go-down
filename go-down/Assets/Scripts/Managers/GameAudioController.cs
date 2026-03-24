@@ -4,7 +4,7 @@ using UnityEngine;
 /// Central audio controller:
 /// - Plays looping background music.
 /// - Plays block-clear SFX when blocks are destroyed.
-/// - Follows GameUserSettings.AudioEnabled at runtime.
+/// - Follows GameUserSettings.MusicEnabled / SfxEnabled at runtime.
 /// </summary>
 public class GameAudioController : MonoBehaviour
 {
@@ -55,7 +55,8 @@ public class GameAudioController : MonoBehaviour
 
     public static GameAudioController Instance { get; private set; }
 
-    private bool lastAudioEnabled;
+    private bool lastMusicEnabled;
+    private bool lastSfxEnabled;
 
     private void Awake()
     {
@@ -79,8 +80,9 @@ public class GameAudioController : MonoBehaviour
 
     private void Start()
     {
-        lastAudioEnabled = GameUserSettings.AudioEnabled;
-        ApplyAudioEnabled(lastAudioEnabled);
+        lastMusicEnabled = GameUserSettings.MusicEnabled;
+        lastSfxEnabled = GameUserSettings.SfxEnabled;
+        ApplyAudioSettings(lastMusicEnabled, lastSfxEnabled);
     }
 
     private void OnDisable()
@@ -96,11 +98,13 @@ public class GameAudioController : MonoBehaviour
 
     private void Update()
     {
-        bool enabledNow = GameUserSettings.AudioEnabled;
-        if (enabledNow == lastAudioEnabled) return;
+        bool musicEnabled = GameUserSettings.MusicEnabled;
+        bool sfxEnabled = GameUserSettings.SfxEnabled;
+        if (musicEnabled == lastMusicEnabled && sfxEnabled == lastSfxEnabled) return;
 
-        lastAudioEnabled = enabledNow;
-        ApplyAudioEnabled(enabledNow);
+        lastMusicEnabled = musicEnabled;
+        lastSfxEnabled = sfxEnabled;
+        ApplyAudioSettings(musicEnabled, sfxEnabled);
     }
 
     private void EnsureSources()
@@ -134,13 +138,13 @@ public class GameAudioController : MonoBehaviour
         }
     }
 
-    private void ApplyAudioEnabled(bool audioEnabled)
+    private void ApplyAudioSettings(bool musicEnabled, bool sfxEnabled)
     {
         if (bgmSource != null)
         {
             bgmSource.volume = Mathf.Clamp01(bgmVolume);
 
-            if (audioEnabled)
+            if (musicEnabled)
             {
                 if (backgroundMusicClip != null)
                 {
@@ -168,7 +172,7 @@ public class GameAudioController : MonoBehaviour
 
     private void HandleBlockDestroyed(TowerBlock block)
     {
-        if (!GameUserSettings.AudioEnabled) return;
+        if (!GameUserSettings.SfxEnabled) return;
         if (sfxSource == null) return;
 
         bool inRewardMode = ScoreManager.Instance != null && ScoreManager.Instance.GlobalScoreMultiplier > 1;
@@ -182,7 +186,7 @@ public class GameAudioController : MonoBehaviour
 
     private void HandleCoinsGained(Vector3 worldPosition, int deltaCoins)
     {
-        if (!GameUserSettings.AudioEnabled) return;
+        if (!GameUserSettings.SfxEnabled) return;
         if (deltaCoins <= 0) return;
         if (sfxSource == null || coinGainClip == null) return;
 
@@ -201,7 +205,7 @@ public class GameAudioController : MonoBehaviour
 
     private void PlayOneShot(AudioClip clip, float volume)
     {
-        if (!GameUserSettings.AudioEnabled) return;
+        if (!GameUserSettings.SfxEnabled) return;
         if (sfxSource == null || clip == null) return;
 
         sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
