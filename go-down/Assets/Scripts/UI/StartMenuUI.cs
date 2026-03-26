@@ -155,6 +155,15 @@ public class StartMenuUI : MonoBehaviour
         HideMenu();
     }
 
+    /// <summary>
+    /// External entry point (e.g., from GameOver modal) to open the settings/start menu.
+    /// </summary>
+    public void OpenMenuFromExternal()
+    {
+        SyncTogglesFromSettings();
+        ShowMenu();
+    }
+
     private void ShowMenu()
     {
         if (panelRoot != null) panelRoot.SetActive(true);

@@ -19,6 +19,12 @@ public class GameOverModalUI : MonoBehaviour
     [Tooltip("重新游戏按钮（可选，不填则自动在子物体里找 Button）")]
     public Button restartButton;
 
+    [Tooltip("设置/主界面按钮（可选）。点击后打开 StartMenu 主界面。")]
+    public Button settingsButton;
+
+    [Tooltip("可选：StartMenuUI 引用；为空则运行时自动查找。")]
+    public StartMenuUI startMenuUI;
+
     [Header("Copy")]
     [Tooltip("scoreValueText 的格式，{0}=得分数字")]
     public string scoreValueFormat = "{0}";
@@ -40,6 +46,17 @@ public class GameOverModalUI : MonoBehaviour
             restartButton.onClick.RemoveListener(RestartGame);
             restartButton.onClick.AddListener(RestartGame);
         }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.RemoveListener(OpenSettingsMenu);
+            settingsButton.onClick.AddListener(OpenSettingsMenu);
+        }
+
+        if (startMenuUI == null)
+        {
+            startMenuUI = FindObjectOfType<StartMenuUI>(includeInactive: true);
+        }
     }
 
     private void Start()
@@ -60,6 +77,11 @@ public class GameOverModalUI : MonoBehaviour
     {
         GameStateManager.OnGameOver -= HandleGameOver;
         GameStateManager.OnGameReset -= HandleGameReset;
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.RemoveListener(OpenSettingsMenu);
+        }
     }
 
     private void HandleGameOver(string reason)
@@ -134,6 +156,25 @@ public class GameOverModalUI : MonoBehaviour
         if (towerBuilder != null)
         {
             towerBuilder.ResetTower();
+        }
+    }
+
+    public void OpenSettingsMenu()
+    {
+        if (startMenuUI == null)
+        {
+            startMenuUI = FindObjectOfType<StartMenuUI>(includeInactive: true);
+        }
+
+        Hide();
+
+        if (startMenuUI != null)
+        {
+            startMenuUI.OpenMenuFromExternal();
+        }
+        else
+        {
+            Debug.LogWarning("GameOverModalUI: StartMenuUI not found. Cannot open settings menu.");
         }
     }
 }
