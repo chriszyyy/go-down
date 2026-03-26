@@ -1047,6 +1047,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panelRoot: {fileID: 361270936}
+  contentRootToActivate: {fileID: 0}
   buyResetButton: {fileID: 1772376535}
   buyRainbowButton: {fileID: 476807159}
   backButton: {fileID: 984418268}
@@ -1063,6 +1064,7 @@ MonoBehaviour:
   resetPriceFormat: "\u4EF7\u683C: {0}"
   rainbowPriceFormat: "\u4EF7\u683C: {0}"
   hideOnStart: 1
+  forceActivateChildrenOnOpen: 1
 --- !u!1 &425593390
 GameObject:
   m_ObjectHideFlags: 0
@@ -3367,7 +3369,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1081813782
 RectTransform:
   m_ObjectHideFlags: 0
