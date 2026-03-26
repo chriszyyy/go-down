@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 /// <summary>
 /// Triggers mobile vibration when a block is destroyed.
@@ -9,7 +10,15 @@ public class BlockDestroyVibration : MonoBehaviour
     [Tooltip("Minimum seconds between vibration triggers to avoid excessive buzzing.")]
     public float minIntervalSeconds = 0.04f;
 
+    [Tooltip("How many vibration pulses are played for each destroy event.")]
+    [Range(1, 6)]
+    public int pulsesPerTrigger = 1;
+
+    [Tooltip("Interval between pulses (seconds). Used when pulsesPerTrigger > 1.")]
+    public float pulseIntervalSeconds = 0.06f;
+
     private float lastVibrateTime = -999f;
+    private Coroutine pulseRoutine;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
@@ -29,6 +38,12 @@ public class BlockDestroyVibration : MonoBehaviour
     private void OnDisable()
     {
         TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
+
+        if (pulseRoutine != null)
+        {
+            StopCoroutine(pulseRoutine);
+            pulseRoutine = null;
+        }
     }
 
     private void HandleBlockDestroyed(TowerBlock block)
@@ -39,7 +54,38 @@ public class BlockDestroyVibration : MonoBehaviour
         if (now - lastVibrateTime < Mathf.Max(0f, minIntervalSeconds)) return;
 
         lastVibrateTime = now;
-        TriggerVibration();
+
+        if (pulseRoutine != null)
+        {
+            StopCoroutine(pulseRoutine);
+            pulseRoutine = null;
+        }
+
+        int count = Mathf.Max(1, pulsesPerTrigger);
+        if (count == 1)
+        {
+            TriggerVibration();
+            return;
+        }
+
+        pulseRoutine = StartCoroutine(PlayPulsePattern(count));
+    }
+
+    private IEnumerator PlayPulsePattern(int count)
+    {
+        float wait = Mathf.Max(0f, pulseIntervalSeconds);
+
+        for (int i = 0; i < count; i++)
+        {
+            TriggerVibration();
+
+            if (i < count - 1 && wait > 0f)
+            {
+                yield return new WaitForSecondsRealtime(wait);
+            }
+        }
+
+        pulseRoutine = null;
     }
 
     private static void TriggerVibration()
