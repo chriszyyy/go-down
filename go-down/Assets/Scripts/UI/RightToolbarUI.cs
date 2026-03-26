@@ -18,13 +18,6 @@ public class RightToolbarUI : MonoBehaviour
     [Tooltip("Button that triggers the Rainbow tool.")]
     public Button rainbowButton;
 
-    [Header("Costs (optional)")]
-    [Tooltip("Coins required to use Reset tool. 0 = free.")]
-    public int resetToolCost = 0;
-
-    [Tooltip("Coins required to use Rainbow tool. 0 = free.")]
-    public int rainbowToolCost = 0;
-
     [Header("Rainbow Tool")]
     [Tooltip("How many visible blocks to convert to rainbow.")]
     public int rainbowConvertCount = 2;
@@ -85,7 +78,11 @@ public class RightToolbarUI : MonoBehaviour
 
     private void OnClickReset()
     {
-        if (!TryPay(resetToolCost)) return;
+        if (ToolUsageInventory.Instance == null || !ToolUsageInventory.Instance.TryConsumeResetUse())
+        {
+            Debug.Log("RightToolbarUI: no Reset tool uses left. Buy more in Shop.");
+            return;
+        }
 
         TowerBuilder builder = FindFirstObjectByType<TowerBuilder>();
         HexagonBall ball = FindFirstObjectByType<HexagonBall>();
@@ -114,7 +111,11 @@ public class RightToolbarUI : MonoBehaviour
 
     private void OnClickRainbow()
     {
-        if (!TryPay(rainbowToolCost)) return;
+        if (ToolUsageInventory.Instance == null || !ToolUsageInventory.Instance.TryConsumeRainbowUse())
+        {
+            Debug.Log("RightToolbarUI: no Rainbow tool uses left. Buy more in Shop.");
+            return;
+        }
 
         Camera cam = Camera.main;
         if (cam == null) return;
@@ -215,12 +216,4 @@ public class RightToolbarUI : MonoBehaviour
         coinReward.hexagonBallTag = "HexagonBall";
     }
 
-    private bool TryPay(int cost)
-    {
-        int c = Mathf.Max(0, cost);
-        if (c == 0) return true;
-
-        if (CoinManager.Instance == null) return false;
-        return CoinManager.Instance.TrySpendCoins(c);
-    }
 }

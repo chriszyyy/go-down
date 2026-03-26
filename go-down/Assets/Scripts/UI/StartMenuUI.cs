@@ -16,6 +16,8 @@ public class StartMenuUI : MonoBehaviour
     public Toggle audioToggle;
     public Toggle vibrationToggle;
     public Button shareButton;
+    public Button shopButton;
+    public ShopPanelUI shopPanelUI;
 
     [Header("Toggle Icons")]
     [Tooltip("Image used to show music state icon.")]
@@ -102,6 +104,12 @@ public class StartMenuUI : MonoBehaviour
             shareButton.onClick.AddListener(OnShareClicked);
         }
 
+        if (shopButton != null)
+        {
+            shopButton.onClick.RemoveListener(OnShopClicked);
+            shopButton.onClick.AddListener(OnShopClicked);
+        }
+
         GameStateManager.OnGameReset += HandleGameReset;
     }
 
@@ -127,6 +135,7 @@ public class StartMenuUI : MonoBehaviour
         if (audioToggle != null) audioToggle.onValueChanged.RemoveListener(OnAudioToggleChanged);
         if (vibrationToggle != null) vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggleChanged);
         if (shareButton != null) shareButton.onClick.RemoveListener(OnShareClicked);
+        if (shopButton != null) shopButton.onClick.RemoveListener(OnShopClicked);
 
         GameStateManager.OnGameReset -= HandleGameReset;
     }
@@ -270,5 +279,24 @@ public class StartMenuUI : MonoBehaviour
     {
         // TODO: Hook platform share SDK here.
         // Intentionally left blank for now.
+    }
+
+    private void OnShopClicked()
+    {
+        if (shopPanelUI == null)
+        {
+            shopPanelUI = FindObjectOfType<ShopPanelUI>(includeInactive: true);
+        }
+
+        if (shopPanelUI == null)
+        {
+            Debug.LogWarning("StartMenuUI: ShopPanelUI not found.");
+            return;
+        }
+
+        if (panelRoot != null) panelRoot.SetActive(false);
+        menuVisible = false;
+
+        shopPanelUI.Open(this);
     }
 }
