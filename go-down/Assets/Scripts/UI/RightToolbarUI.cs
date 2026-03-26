@@ -6,7 +6,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Right-side toolbar with tool buttons.
 /// - Reset tool: move HexagonBall to horizontal center.
-/// - Rainbow tool: pick 2 visible blocks and turn them into special/rainbow blocks.
+/// - Rainbow tool: pick visible blocks and convert to special/rainbow blocks.
 /// This component expects the toolbar UI (panel + two Buttons) to be authored in the scene.
 /// </summary>
 public class RightToolbarUI : MonoBehaviour
@@ -17,6 +17,12 @@ public class RightToolbarUI : MonoBehaviour
 
     [Tooltip("Button that triggers the Rainbow tool.")]
     public Button rainbowButton;
+
+    [Tooltip("Optional label to show remaining Reset uses.")]
+    public Text resetUsesText;
+
+    [Tooltip("Optional label to show remaining Rainbow uses.")]
+    public Text rainbowUsesText;
 
     [Header("Rainbow Tool")]
     [Tooltip("How many visible blocks to convert to rainbow.")]
@@ -41,16 +47,22 @@ public class RightToolbarUI : MonoBehaviour
     [Tooltip("Button font size.")]
     public int buttonFontSize = 30;
 
+    [Tooltip("Remaining uses label format. {0}=uses count")]
+    public string usesLabelFormat = "x{0}";
+
     private void OnEnable()
     {
         EnsureEventSystem();
         WireUpButtons();
+        ToolUsageInventory.OnUsesChanged += HandleUsesChanged;
+        RefreshUsesUI();
     }
 
     private void OnDisable()
     {
         if (resetButton != null) resetButton.onClick.RemoveListener(OnClickReset);
         if (rainbowButton != null) rainbowButton.onClick.RemoveListener(OnClickRainbow);
+        ToolUsageInventory.OnUsesChanged -= HandleUsesChanged;
     }
 
     private void EnsureEventSystem()
@@ -216,4 +228,34 @@ public class RightToolbarUI : MonoBehaviour
         coinReward.hexagonBallTag = "HexagonBall";
     }
 
+    private void HandleUsesChanged()
+    {
+        RefreshUsesUI();
+    }
+
+    private void RefreshUsesUI()
+    {
+        int resetUses = ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.ResetUses : 0;
+        int rainbowUses = ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.RainbowUses : 0;
+
+        if (resetUsesText != null)
+        {
+            resetUsesText.text = string.Format(usesLabelFormat, resetUses);
+        }
+
+        if (rainbowUsesText != null)
+        {
+            rainbowUsesText.text = string.Format(usesLabelFormat, rainbowUses);
+        }
+
+        if (resetButton != null)
+        {
+            resetButton.interactable = resetUses > 0;
+        }
+
+        if (rainbowButton != null)
+        {
+            rainbowButton.interactable = rainbowUses > 0;
+        }
+    }
 }
