@@ -12,6 +12,9 @@ public class ShopPanelUI : MonoBehaviour
     [Tooltip("Shop panel root. If null, uses this game object.")]
     public GameObject panelRoot;
 
+    [Tooltip("Optional content root whose children should be forced active when opening shop. If empty, uses panelRoot.")]
+    public Transform contentRootToActivate;
+
     public Button buyResetButton;
     public Button buyRainbowButton;
     public Button backButton;
@@ -36,11 +39,19 @@ public class ShopPanelUI : MonoBehaviour
     [Header("Behaviour")]
     public bool hideOnStart = true;
 
+    [Tooltip("Force all shop child objects active when opening (useful when authoring starts inactive).")]
+    public bool forceActivateChildrenOnOpen = true;
+
     private StartMenuUI ownerMenu;
 
     private void Awake()
     {
         if (panelRoot == null) panelRoot = gameObject;
+
+        if (contentRootToActivate == null && panelRoot != null)
+        {
+            contentRootToActivate = panelRoot.transform;
+        }
 
         WireButtons();
     }
@@ -72,6 +83,18 @@ public class ShopPanelUI : MonoBehaviour
 
         if (panelRoot != null) panelRoot.SetActive(true);
         if (panelRoot != null) panelRoot.transform.SetAsLastSibling();
+
+        if (forceActivateChildrenOnOpen)
+        {
+            Transform root = contentRootToActivate != null
+                ? contentRootToActivate
+                : (panelRoot != null ? panelRoot.transform : null);
+
+            if (root != null)
+            {
+                SetDescendantsActive(root, true);
+            }
+        }
 
         RefreshUI();
     }
@@ -156,5 +179,19 @@ public class ShopPanelUI : MonoBehaviour
 
         if (buyResetButton != null) buyResetButton.interactable = coins >= Mathf.Max(0, resetUsePrice);
         if (buyRainbowButton != null) buyRainbowButton.interactable = coins >= Mathf.Max(0, rainbowUsePrice);
+    }
+
+    private static void SetDescendantsActive(Transform root, bool active)
+    {
+        if (root == null) return;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child == null) continue;
+
+            child.gameObject.SetActive(active);
+            SetDescendantsActive(child, active);
+        }
     }
 }

@@ -1284,7 +1284,6 @@ GameObject:
   - component: {fileID: 476807161}
   - component: {fileID: 476807160}
   - component: {fileID: 476807159}
-  - component: {fileID: 476807158}
   m_Layer: 5
   m_Name: Buy-Rainbow-Button
   m_TagString: Untagged
@@ -1312,22 +1311,6 @@ RectTransform:
   m_AnchoredPosition: {x: -14, y: -331}
   m_SizeDelta: {x: 500, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &476807158
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 476807156}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25d273691a9362345867d2e1ee22bb84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  towerBuilder: {fileID: 1425696444}
-  cameraFollower: {fileID: 772960325}
-  button: {fileID: 476807159}
-  cameraZ: -10
 --- !u!114 &476807159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3124,7 +3107,6 @@ GameObject:
   - component: {fileID: 984418270}
   - component: {fileID: 984418269}
   - component: {fileID: 984418268}
-  - component: {fileID: 984418267}
   m_Layer: 5
   m_Name: Back-Button
   m_TagString: Untagged
@@ -3152,22 +3134,6 @@ RectTransform:
   m_AnchoredPosition: {x: -12, y: 428}
   m_SizeDelta: {x: 500, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &984418267
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984418265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25d273691a9362345867d2e1ee22bb84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  towerBuilder: {fileID: 1425696444}
-  cameraFollower: {fileID: 772960325}
-  button: {fileID: 984418268}
-  cameraZ: -10
 --- !u!114 &984418268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5790,7 +5756,6 @@ GameObject:
   - component: {fileID: 1772376537}
   - component: {fileID: 1772376536}
   - component: {fileID: 1772376535}
-  - component: {fileID: 1772376534}
   m_Layer: 5
   m_Name: Buy-Reset-Button
   m_TagString: Untagged
@@ -5818,22 +5783,6 @@ RectTransform:
   m_AnchoredPosition: {x: -4, y: 14}
   m_SizeDelta: {x: 500, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1772376534
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1772376532}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25d273691a9362345867d2e1ee22bb84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  towerBuilder: {fileID: 1425696444}
-  cameraFollower: {fileID: 772960325}
-  button: {fileID: 1772376535}
-  cameraZ: -10
 --- !u!114 &1772376535
 MonoBehaviour:
   m_ObjectHideFlags: 0
