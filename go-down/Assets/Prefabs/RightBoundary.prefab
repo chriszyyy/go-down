@@ -92,3 +92,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   requiredTag: HexagonBall
   reason: Right Boundary Hit
+  autoCleanupNonBallBlocks: 1
+  cleanupDelaySeconds: 5

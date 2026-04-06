@@ -181,8 +181,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockTypeName: "L5\u65B9\u5757"
   scoreValue: 50
+  scoreMultiplier: 1
   isStatic: 1
-  disappearDuration: 0.3
+  disappearDuration: 0.15
   disappearScale: 0.1
 --- !u!114 &8651110106609422439
 MonoBehaviour:

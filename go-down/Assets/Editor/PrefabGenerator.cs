@@ -87,6 +87,8 @@ public class PrefabGenerator : EditorWindow
         CreateL4BlockPrefab(blockPhysicsMaterial);
         CreateL5BlockPrefab(blockPhysicsMaterial);
         CreateLineBlockPrefab(blockPhysicsMaterial);
+        CreateLine3BlockPrefab(blockPhysicsMaterial);
+        CreateL2BlockPrefab(blockPhysicsMaterial);
 
         // 生成六边形球
         CreateHexagonBallPrefab();
@@ -226,7 +228,7 @@ public class PrefabGenerator : EditorWindow
 
         L3Block block = go.AddComponent<L3Block>();
         block.blockTypeName = "L3方块";
-        block.scoreValue = 30;
+        block.scoreValue = 40;
         block.isStatic = true;
 
         go.AddComponent<BlockVisualStyle>();
@@ -262,7 +264,7 @@ public class PrefabGenerator : EditorWindow
 
         L4Block block = go.AddComponent<L4Block>();
         block.blockTypeName = "L4方块";
-        block.scoreValue = 40;
+        block.scoreValue = 50;
         block.isStatic = true;
 
         go.AddComponent<BlockVisualStyle>();
@@ -343,6 +345,79 @@ public class PrefabGenerator : EditorWindow
         go.layer = LayerMask.NameToLayer("Block");
 
         SavePrefab(go, "Assets/Prefabs/Blocks/LineBlock.prefab");
+        Object.DestroyImmediate(go);
+    }
+
+    // 7. I型方块 (3格横条)
+    private static void CreateLine3BlockPrefab(PhysicsMaterial2D physicsMaterial)
+    {
+        GameObject go = new GameObject("Line3Block");
+
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateLineSprite(3, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateLineHighlightSprite(3, BLOCK_BASE_WHITE));
+
+        BoxCollider2D collider = go.AddComponent<BoxCollider2D>();
+        collider.size = new Vector2(3f * GRID_UNIT - COLLIDER_TOLERANCE, GRID_UNIT - COLLIDER_TOLERANCE);
+        collider.offset = GridCellCenterOffset(3f, 1f);
+        collider.sharedMaterial = physicsMaterial;
+
+        Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.mass = 3f;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
+
+        Line3Block block = go.AddComponent<Line3Block>();
+        block.blockTypeName = "I3型方块";
+        block.scoreValue = 30;
+        block.isStatic = true;
+
+        go.AddComponent<BlockVisualStyle>();
+
+        go.layer = LayerMask.NameToLayer("Block");
+
+        SavePrefab(go, "Assets/Prefabs/Blocks/Line3Block.prefab");
+        Object.DestroyImmediate(go);
+    }
+
+    // 8. L2型方块 (3格L形)
+    private static void CreateL2BlockPrefab(PhysicsMaterial2D physicsMaterial)
+    {
+        GameObject go = new GameObject("L2Block");
+
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateLShapeSprite(2, BLOCK_BASE_WHITE);
+
+        CreateHighlightChild(go, sr, CreateLShapeHighlightSprite(2, BLOCK_BASE_WHITE));
+
+        PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
+        collider.points = CreateLShapeColliderPoints(2);
+        collider.sharedMaterial = physicsMaterial;
+
+        Rigidbody2D rb = go.AddComponent<Rigidbody2D>();
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.mass = 3f;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+        rb.interpolation = RigidbodyInterpolation2D.None;
+        rb.sleepMode = RigidbodySleepMode2D.StartAsleep;
+        rb.drag = DEFAULT_BLOCK_DRAG;
+        rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
+
+        L2Block block = go.AddComponent<L2Block>();
+        block.blockTypeName = "L2方块";
+        block.scoreValue = 30;
+        block.isStatic = true;
+
+        go.AddComponent<BlockVisualStyle>();
+
+        go.layer = LayerMask.NameToLayer("Block");
+
+        SavePrefab(go, "Assets/Prefabs/Blocks/L2Block.prefab");
         Object.DestroyImmediate(go);
     }
 

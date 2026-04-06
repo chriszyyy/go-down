@@ -68,6 +68,12 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("I型（4格）预制体")]
     public GameObject lineBlockPrefab;
 
+    [Tooltip("I型（3格）预制体")]
+    public GameObject line3BlockPrefab;
+
+    [Tooltip("L2型（3格L）预制体")]
+    public GameObject l2BlockPrefab;
+
     [Header("失败边界预制体")]
     [Tooltip("左边界触发器预制体（可选）。用于球碰到左右边界判定失败")]
     public GameObject leftBoundaryPrefab;
@@ -759,6 +765,8 @@ public class TowerBuilder : MonoBehaviour
         if (l4BlockPrefab != null) prefabs.Add(l4BlockPrefab);
         if (l5BlockPrefab != null) prefabs.Add(l5BlockPrefab);
         if (lineBlockPrefab != null) prefabs.Add(lineBlockPrefab);
+        if (line3BlockPrefab != null) prefabs.Add(line3BlockPrefab);
+        if (l2BlockPrefab != null) prefabs.Add(l2BlockPrefab);
         return prefabs;
     }
 
