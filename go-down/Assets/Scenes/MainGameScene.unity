@@ -4636,6 +4636,8 @@ MonoBehaviour:
   l4BlockPrefab: {fileID: 2025943064478699690, guid: ebec1cb871fd2fc4395dbfb1fa260c3b, type: 3}
   l5BlockPrefab: {fileID: 1881958977191369349, guid: 5ff509584ac3b64438f2378267214ad2, type: 3}
   lineBlockPrefab: {fileID: 1704691168195623389, guid: 7cba614f0ebd42b4189c4e816a24a2a8, type: 3}
+  line3BlockPrefab: {fileID: 6804262437724709887, guid: 1567a8b4f4f55ff49bafd31ee6e45df1, type: 3}
+  l2BlockPrefab: {fileID: 2077422384661774256, guid: aaed365548ecf184e98a289ee813360a, type: 3}
   leftBoundaryPrefab: {fileID: 9137463675010684301, guid: 257e95a9423122c46b5ffb97bd12bdf1, type: 3}
   rightBoundaryPrefab: {fileID: 7016191353958705115, guid: 382dc986d4b2a124b842d730abd2e88f, type: 3}
   boundaryExtraCellsEachSide: 2.5

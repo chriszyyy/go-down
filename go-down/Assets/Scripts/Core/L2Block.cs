@@ -59,12 +59,9 @@ public class L2Block : TowerBlock
         }
         else if (Mathf.Approximately(normalizedAngle, 180f))
         {
-            // 180度:
-            // ##    <- (0,1) + (1,1)
-            // .#    <- (1,0)
+            cells.Add((0, 0));
             cells.Add((0, 1));
-            cells.Add((1, 0));
-            cells.Add((1, 1));
+            cells.Add((-1, 1));
         }
         else if (Mathf.Approximately(normalizedAngle, 270f))
         {
