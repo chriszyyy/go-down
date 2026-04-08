@@ -58,6 +58,12 @@ public class RightToolbarUI : MonoBehaviour
         RefreshUsesUI();
     }
 
+    private void Start()
+    {
+        // OnEnable 时 ToolUsageInventory.Instance 可能尚未就绪，Start 时再刷新一次
+        RefreshUsesUI();
+    }
+
     private void OnDisable()
     {
         if (resetButton != null) resetButton.onClick.RemoveListener(OnClickReset);
