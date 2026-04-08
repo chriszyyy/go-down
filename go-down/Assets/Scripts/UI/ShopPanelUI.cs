@@ -69,12 +69,14 @@ public class ShopPanelUI : MonoBehaviour
     private void OnEnable()
     {
         ToolUsageInventory.OnUsesChanged += HandleUsesChanged;
+        CoinManager.OnCoinsGained += HandleCoinsChanged;
         RefreshUI();
     }
 
     private void OnDisable()
     {
         ToolUsageInventory.OnUsesChanged -= HandleUsesChanged;
+        CoinManager.OnCoinsGained -= HandleCoinsChanged;
     }
 
     public void Open(StartMenuUI owner)
@@ -161,6 +163,11 @@ public class ShopPanelUI : MonoBehaviour
     }
 
     private void HandleUsesChanged()
+    {
+        RefreshUI();
+    }
+
+    private void HandleCoinsChanged(Vector3 _, int __)
     {
         RefreshUI();
     }
