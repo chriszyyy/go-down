@@ -4,6 +4,11 @@ using System;
 /// <summary>
 /// 背景控制器 — 根据摄像机Y位置在不同"区域"之间平滑过渡背景颜色。
 /// 区域从上到下：外太空 → 星云/银河 → 星球带 → 地球大气层 → 地面 → 地下 → 地壳/岩浆
+///
+/// 功能：
+/// - 背景颜色渐变
+/// - 星星粒子视差滚动 + 随机闪烁/淡出
+/// - 各层特效粒子（星云尘埃、云层、泥土碎屑、岩浆火星）
 /// </summary>
 public class BackgroundController : MonoBehaviour
 {
@@ -69,6 +74,7 @@ public class BackgroundController : MonoBehaviour
             color = new Color(0.60f, 0.15f, 0.02f) },
     };
 
+    // ─── 星星设置 ─────────────────────────────────────────────
     [Header("星星")]
     [Tooltip("是否显示星星粒子")]
     public bool enableStars = true;
@@ -88,9 +94,9 @@ public class BackgroundController : MonoBehaviour
     [Tooltip("星星散布范围")]
     public Vector2 starsSpreadRange = new Vector2(30f, 20f);
 
-    [Tooltip("星星视差系数（0=完全跟随摄像机不动, 1=完全不跟随）")]
+    [Tooltip("星星视差系数（0=完全跟随，看起来静止; 1=完全不跟随，滚得最快）")]
     [Range(0f, 1f)]
-    public float starsParallaxFactor = 0.95f;
+    public float starsParallaxFactor = 0.3f;
 
     [Tooltip("星星最大尺寸")]
     public float starsMaxSize = 0.08f;
@@ -98,13 +104,33 @@ public class BackgroundController : MonoBehaviour
     [Tooltip("星星最小尺寸")]
     public float starsMinSize = 0.02f;
 
+    // ─── 层效果设置 ─────────────────────────────────────────────
+    [Header("层过渡特效")]
+    [Tooltip("是否启用层过渡粒子效果")]
+    public bool enableLayerEffects = true;
+
+    // 内部生成的层特效粒子系统
+    private ParticleSystem nebulaParticles;   // 星云尘埃 (Y: -50 ~ -300)
+    private ParticleSystem cloudParticles;    // 大气层云朵 (Y: -500 ~ -1000)
+    private ParticleSystem debrisParticles;   // 地下碎屑 (Y: -1200 ~ -2500)
+    private ParticleSystem emberParticles;    // 岩浆火星 (Y: -2500 ~ -4000)
+
+    // 记录摄像机初始Y，用于计算视差偏移
+    private float cameraStartY;
+
     private void Start()
     {
         if (targetCamera == null)
             targetCamera = Camera.main;
 
+        if (targetCamera != null)
+            cameraStartY = targetCamera.transform.position.y;
+
         if (enableStars && starsParticleSystem == null)
             CreateStarsParticleSystem();
+
+        if (enableLayerEffects)
+            CreateLayerEffects();
 
         // 立即应用一次
         UpdateBackground();
@@ -124,10 +150,16 @@ public class BackgroundController : MonoBehaviour
         // 更新背景颜色
         targetCamera.backgroundColor = EvaluateBackgroundColor(camY);
 
-        // 更新星星
+        // 更新星星（视差 + 淡出）
         if (enableStars && starsParticleSystem != null)
         {
             UpdateStars(camY);
+        }
+
+        // 更新层过渡特效
+        if (enableLayerEffects)
+        {
+            UpdateLayerEffects(camY);
         }
     }
 
@@ -163,16 +195,28 @@ public class BackgroundController : MonoBehaviour
         return zones[zones.Length - 1].color;
     }
 
+    // ═══════════════════════════════════════════════════════════
+    //  星 星 系 统
+    // ═══════════════════════════════════════════════════════════
+
     /// <summary>
-    /// 更新星星的位置和透明度
+    /// 更新星星的视差位置和整体透明度。
+    /// 视差原理：摄像机往下移动时，星星跟随得慢一些，所以在屏幕上看起来是往上飘的。
     /// </summary>
     private void UpdateStars(float camY)
     {
-        // 星星始终跟随摄像机XY（发射器在摄像机周围持续生成），Z推到背景
         Vector3 camPos = targetCamera.transform.position;
-        starsParticleSystem.transform.position = new Vector3(camPos.x, camPos.y, 50f);
 
-        // 根据深度淡出星星
+        // 视差：星星只跟随摄像机的一部分移动量，制造深度差异感
+        // parallaxFactor=0 → 完全跟随（不滚动）
+        // parallaxFactor=1 → 完全不跟随（最大滚动）
+        float deltaY = camY - cameraStartY;
+        float parallaxY = camY - deltaY * starsParallaxFactor;
+
+        starsParticleSystem.transform.position = new Vector3(camPos.x, parallaxY, 50f);
+
+        // 根据深度淡出星星 —— 通过调节发射率来实现渐进淡出
+        // 已有粒子通过 Color Over Lifetime 自己闪烁/随机淡出
         float alpha;
         if (camY >= starsFullVisibleY)
         {
@@ -187,14 +231,28 @@ public class BackgroundController : MonoBehaviour
             alpha = (camY - starsFadeOutY) / (starsFullVisibleY - starsFadeOutY);
         }
 
+        // 调节发射率：深处不再生成新星星
+        var emission = starsParticleSystem.emission;
+        emission.rateOverTime = (starsCount / 6f) * alpha;
+
+        // 调节起始颜色的alpha：新生成的星星更暗
         var main = starsParticleSystem.main;
-        Color startColor = main.startColor.color;
-        startColor.a = alpha;
-        main.startColor = new ParticleSystem.MinMaxGradient(startColor);
+        Color startCol = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha * 0.9f));
+        main.startColor = new ParticleSystem.MinMaxGradient(startCol);
+
+        // 完全淡出后停止发射
+        if (alpha <= 0f && starsParticleSystem.isPlaying)
+        {
+            starsParticleSystem.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+        }
+        else if (alpha > 0f && !starsParticleSystem.isPlaying)
+        {
+            starsParticleSystem.Play();
+        }
     }
 
     /// <summary>
-    /// 自动创建简单的星星粒子系统
+    /// 自动创建星星粒子系统，带随机闪烁/淡出效果
     /// </summary>
     private void CreateStarsParticleSystem()
     {
@@ -209,7 +267,7 @@ public class BackgroundController : MonoBehaviour
 
         var main = starsParticleSystem.main;
         main.loop = true;
-        main.startLifetime = 8f;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(4f, 10f); // 随机生命周期
         main.startSpeed = 0.02f;
         main.startSize = new ParticleSystem.MinMaxCurve(starsMinSize, starsMaxSize);
         main.startColor = new Color(1f, 1f, 1f, 0.9f);
@@ -232,9 +290,57 @@ public class BackgroundController : MonoBehaviour
         shape.shapeType = ParticleSystemShapeType.Rectangle;
         shape.scale = new Vector3(starsSpreadRange.x, starsSpreadRange.y, 1f);
 
+        // ── 核心改进：Color Over Lifetime 实现随机闪烁/淡出 ──
+        var colorOverLifetime = starsParticleSystem.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+
+        // 两条alpha曲线，粒子在这两条之间随机取值 → 每颗星星闪烁节奏不同
+        Gradient gradientMin = new Gradient();
+        gradientMin.SetKeys(
+            new GradientColorKey[] {
+                new GradientColorKey(Color.white, 0f),
+                new GradientColorKey(Color.white, 1f)
+            },
+            new GradientAlphaKey[] {
+                new GradientAlphaKey(0.1f, 0f),    // 淡入
+                new GradientAlphaKey(0.6f, 0.15f),  // 亮起
+                new GradientAlphaKey(0.1f, 0.5f),   // 暗掉
+                new GradientAlphaKey(0.4f, 0.75f),  // 再亮
+                new GradientAlphaKey(0f,   1f)      // 消失
+            }
+        );
+
+        Gradient gradientMax = new Gradient();
+        gradientMax.SetKeys(
+            new GradientColorKey[] {
+                new GradientColorKey(Color.white, 0f),
+                new GradientColorKey(Color.white, 1f)
+            },
+            new GradientAlphaKey[] {
+                new GradientAlphaKey(0.5f, 0f),     // 淡入
+                new GradientAlphaKey(1f,   0.2f),   // 最亮
+                new GradientAlphaKey(0.7f, 0.4f),   // 微暗
+                new GradientAlphaKey(1f,   0.7f),   // 再亮
+                new GradientAlphaKey(0f,   1f)      // 消失
+            }
+        );
+
+        colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradientMin, gradientMax);
+
         // 关闭不需要的模块
         var velocityOverLifetime = starsParticleSystem.velocityOverLifetime;
         velocityOverLifetime.enabled = false;
+
+        // Size Over Lifetime：轻微的大小波动模拟闪烁
+        var sizeOverLifetime = starsParticleSystem.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+            new Keyframe(0f, 0.6f),
+            new Keyframe(0.2f, 1f),
+            new Keyframe(0.5f, 0.7f),
+            new Keyframe(0.8f, 1f),
+            new Keyframe(1f, 0.3f)
+        ));
 
         // 渲染器设置
         var renderer = starsParticleSystem.GetComponent<ParticleSystemRenderer>();
@@ -244,5 +350,202 @@ public class BackgroundController : MonoBehaviour
         renderer.material.SetFloat("_Mode", 1); // Additive
 
         starsParticleSystem.Play();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  层 过 渡 特 效
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 创建各层的视觉特效粒子系统
+    /// </summary>
+    private void CreateLayerEffects()
+    {
+        nebulaParticles = CreateEffectSystem("NebulaEffect",
+            color1: new Color(0.4f, 0.2f, 0.8f, 0.15f),
+            color2: new Color(0.2f, 0.5f, 0.9f, 0.1f),
+            count: 40, sizeMin: 0.3f, sizeMax: 0.8f,
+            spread: new Vector2(25f, 18f), lifetime: 6f,
+            speed: 0.1f, sortOrder: -99);
+
+        cloudParticles = CreateEffectSystem("CloudEffect",
+            color1: new Color(1f, 1f, 1f, 0.2f),
+            color2: new Color(0.8f, 0.9f, 1f, 0.15f),
+            count: 30, sizeMin: 1.5f, sizeMax: 4f,
+            spread: new Vector2(30f, 15f), lifetime: 8f,
+            speed: 0.3f, sortOrder: -98);
+
+        debrisParticles = CreateEffectSystem("DebrisEffect",
+            color1: new Color(0.6f, 0.4f, 0.2f, 0.3f),
+            color2: new Color(0.4f, 0.3f, 0.15f, 0.2f),
+            count: 50, sizeMin: 0.05f, sizeMax: 0.15f,
+            spread: new Vector2(20f, 15f), lifetime: 4f,
+            speed: 0.2f, sortOrder: -97);
+
+        emberParticles = CreateEffectSystem("EmberEffect",
+            color1: new Color(1f, 0.4f, 0.1f, 0.6f),
+            color2: new Color(1f, 0.7f, 0.2f, 0.4f),
+            count: 60, sizeMin: 0.03f, sizeMax: 0.1f,
+            spread: new Vector2(20f, 12f), lifetime: 3f,
+            speed: 0.5f, sortOrder: -96);
+
+        // 火星需要向上飘动
+        if (emberParticles != null)
+        {
+            var vel = emberParticles.velocityOverLifetime;
+            vel.enabled = true;
+            vel.y = new ParticleSystem.MinMaxCurve(0.2f, 0.8f);
+            vel.x = new ParticleSystem.MinMaxCurve(-0.15f, 0.15f);
+        }
+    }
+
+    /// <summary>
+    /// 通用特效粒子系统创建方法
+    /// </summary>
+    private ParticleSystem CreateEffectSystem(string objectName,
+        Color color1, Color color2,
+        int count, float sizeMin, float sizeMax,
+        Vector2 spread, float lifetime, float speed, int sortOrder)
+    {
+        GameObject go = new GameObject(objectName);
+        go.transform.SetParent(transform);
+        go.transform.localPosition = Vector3.zero;
+
+        ParticleSystem ps = go.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        var main = ps.main;
+        main.loop = true;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(lifetime * 0.5f, lifetime);
+        main.startSpeed = speed;
+        main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
+        main.startColor = new ParticleSystem.MinMaxGradient(color1, color2);
+        main.maxParticles = count;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.playOnAwake = false;
+        main.gravityModifier = 0f;
+
+        var emission = ps.emission;
+        emission.enabled = true;
+        emission.rateOverTime = count / lifetime;
+
+        var shape = ps.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Rectangle;
+        shape.scale = new Vector3(spread.x, spread.y, 1f);
+
+        // 淡入淡出
+        var colorOverLife = ps.colorOverLifetime;
+        colorOverLife.enabled = true;
+        Gradient fadeGrad = new Gradient();
+        fadeGrad.SetKeys(
+            new GradientColorKey[] {
+                new GradientColorKey(Color.white, 0f),
+                new GradientColorKey(Color.white, 1f)
+            },
+            new GradientAlphaKey[] {
+                new GradientAlphaKey(0f,  0f),
+                new GradientAlphaKey(1f,  0.15f),
+                new GradientAlphaKey(1f,  0.75f),
+                new GradientAlphaKey(0f,  1f)
+            }
+        );
+        colorOverLife.color = fadeGrad;
+
+        var renderer = ps.GetComponent<ParticleSystemRenderer>();
+        renderer.sortingOrder = sortOrder;
+        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
+        renderer.material.color = Color.white;
+        renderer.material.SetFloat("_Mode", 1); // Additive
+
+        // 默认不播放，由UpdateLayerEffects按需开启
+        return ps;
+    }
+
+    /// <summary>
+    /// 根据摄像机深度启用/禁用各层特效，并控制透明度
+    /// </summary>
+    private void UpdateLayerEffects(float camY)
+    {
+        Vector3 camPos = targetCamera.transform.position;
+
+        // ── 星云尘埃 (Y: -50 ~ -400) ──
+        UpdateEffectSystem(nebulaParticles, camY, camPos,
+            fadeInY: -30f, fullStartY: -80f, fullEndY: -300f, fadeOutY: -450f,
+            parallax: 0.2f);
+
+        // ── 大气层云朵 (Y: -500 ~ -1000) ──
+        UpdateEffectSystem(cloudParticles, camY, camPos,
+            fadeInY: -450f, fullStartY: -550f, fullEndY: -900f, fadeOutY: -1100f,
+            parallax: 0.15f);
+
+        // ── 地下碎屑 (Y: -1200 ~ -2500) ──
+        UpdateEffectSystem(debrisParticles, camY, camPos,
+            fadeInY: -1100f, fullStartY: -1300f, fullEndY: -2300f, fadeOutY: -2600f,
+            parallax: 0.1f);
+
+        // ── 岩浆火星 (Y: -2400 ~ -4000) ──
+        UpdateEffectSystem(emberParticles, camY, camPos,
+            fadeInY: -2300f, fullStartY: -2600f, fullEndY: -3800f, fadeOutY: -4200f,
+            parallax: 0.05f);
+    }
+
+    /// <summary>
+    /// 更新单个特效系统：位置（视差）、可见性、发射率
+    /// fadeInY → fullStartY: 淡入
+    /// fullStartY → fullEndY: 完全可见
+    /// fullEndY → fadeOutY: 淡出
+    /// </summary>
+    private void UpdateEffectSystem(ParticleSystem ps, float camY, Vector3 camPos,
+        float fadeInY, float fullStartY, float fullEndY, float fadeOutY,
+        float parallax)
+    {
+        if (ps == null) return;
+
+        // 计算可见度
+        float visibility = 0f;
+        if (camY > fadeInY || camY < fadeOutY)
+        {
+            visibility = 0f;
+        }
+        else if (camY <= fadeInY && camY > fullStartY)
+        {
+            // 淡入区间
+            visibility = (fadeInY - camY) / (fadeInY - fullStartY);
+        }
+        else if (camY <= fullStartY && camY >= fullEndY)
+        {
+            // 完全可见
+            visibility = 1f;
+        }
+        else if (camY < fullEndY && camY >= fadeOutY)
+        {
+            // 淡出区间
+            visibility = (camY - fadeOutY) / (fullEndY - fadeOutY);
+        }
+
+        visibility = Mathf.Clamp01(visibility);
+
+        // 控制播放/停止
+        if (visibility <= 0f)
+        {
+            if (ps.isPlaying)
+                ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+            return;
+        }
+
+        if (!ps.isPlaying)
+            ps.Play();
+
+        // 视差定位
+        float deltaY = camY - cameraStartY;
+        float parallaxY = camY - deltaY * parallax;
+        ps.transform.position = new Vector3(camPos.x, parallaxY, 45f);
+
+        // 根据可见度调节发射率
+        var emission = ps.emission;
+        var main = ps.main;
+        float baseRate = main.maxParticles / main.startLifetime.constantMax;
+        emission.rateOverTime = baseRate * visibility;
     }
 }

@@ -15,7 +15,7 @@ A hexagonal ball sits atop a tower of blocks. Players tap blocks to destroy them
 Assets/
   Scripts/
     Core/         → GoDown.Core (no refs) — Block types, CoinManager, ToolUsageInventory, HexagonBall
-    Managers/     → GoDown.Managers (refs: Core) — TowerBuilder, GameStateManager, ScoreManager, GameAudioController, GameUserSettings, CameraFollower, BlockDestroyVibration
+    Managers/     → GoDown.Managers (refs: Core) — TowerBuilder, GameStateManager, ScoreManager, GameAudioController, GameUserSettings, CameraFollower, BlockDestroyVibration, BackgroundController, FrameRateBootstrapper
     UI/           → GoDown.UI (refs: Managers, Core) — All UI panels and HUD elements (uGUI)
     Gameplay/     → GoDown.Gameplay (refs: Managers, Core) — GameOverBoundary
     Visuals/      → GoDown.Visuals (no refs) — BlockVisualStyle, RainbowGlowVisual
@@ -23,6 +23,8 @@ Assets/
   Editor/         → PrefabGenerator (editor-only, generates block prefabs + sprites)
   Prefabs/Blocks/ → Generated prefab assets
   Sprites/        → Generated sprite assets
+  Shaders/        → Custom shaders (RainbowGlowSprite.shader)
+  Audio/          → Music/ and SFX/
 ```
 
 ## Assembly Dependency Rules (CRITICAL)
@@ -186,3 +188,36 @@ FinalScore = BaseScore × Block.scoreMultiplier × ScoreManager.GlobalScoreMulti
 - Seam constraint: Top 2 layers of new segment pre-occupied by previous segment's bottom blocks
 - New segments frozen during `stabilizeDuration` before activation
 - Old blocks above camera culled for performance
+
+### Background & Visual Layers System (BackgroundController)
+
+**Background Zones** — 10 depth regions with smooth color interpolation via `Color.Lerp`:
+
+| Zone | Y Position | Color Theme |
+|------|-----------|-------------|
+| 外太空 (Outer Space) | 10 | Near-black (0.02, 0.02, 0.06) |
+| 深空星云 (Deep Nebula) | -50 | Dark purple (0.05, 0.02, 0.12) |
+| 银河系 (Milky Way) | -150 | Blue-purple (0.08, 0.06, 0.18) |
+| 星球带 (Planet Belt) | -300 | Deep blue (0.04, 0.08, 0.22) |
+| 近地轨道 (Near Earth Orbit) | -500 | Dark blue (0.02, 0.05, 0.25) |
+| 大气层 (Atmosphere) | -800 | Sky blue (0.35, 0.65, 0.92) |
+| 地面 (Ground) | -1200 | Green-brown (0.45, 0.55, 0.30) |
+| 地下 (Underground) | -1800 | Dark brown (0.30, 0.18, 0.08) |
+| 地壳 (Crust) | -2500 | Dark red-orange (0.40, 0.12, 0.05) |
+| 岩浆 (Lava) | -4000 | Orange-red (0.60, 0.15, 0.02) |
+
+**Star Particle System:**
+- Auto-created ParticleSystem at Z=50 (behind gameplay)
+- 200 particles, rectangular emission (30×20), additive blending
+- Parallax factor: 0.95 (nearly static relative to camera)
+- Alpha fades from full at Y=-100 to zero at Y=-600
+- Sorting order: -100
+
+**Layer Transition Visual Effects** (planned):
+- Space: star particles with random twinkle/fade
+- Nebula zone: color dust particles
+- Atmosphere: cloud wisps, atmospheric glow
+- Ground: dirt/rock particle debris
+- Underground/Core: ember particles, heat haze
+
+**Key File:** `Assets/Scripts/Managers/BackgroundController.cs` — lives in GoDown.Managers assembly
