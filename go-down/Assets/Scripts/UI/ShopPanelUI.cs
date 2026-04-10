@@ -30,11 +30,11 @@ public class ShopPanelUI : MonoBehaviour
     public Text resetPriceText;
     public Text rainbowPriceText;
 
-    public string coinsFormat = "金币: {0}";
-    public string resetUsesFormat = "复位次数: {0}";
-    public string rainbowUsesFormat = "彩块次数: {0}";
-    public string resetPriceFormat = "价格: {0}";
-    public string rainbowPriceFormat = "价格: {0}";
+    public string coinsFormat = "{0}";
+    public string resetUsesFormat = "{0}";
+    public string rainbowUsesFormat = "{0}";
+    public string resetPriceFormat = "{0}";
+    public string rainbowPriceFormat = "{0}";
 
     [Header("Behaviour")]
     public bool hideOnStart = true;
