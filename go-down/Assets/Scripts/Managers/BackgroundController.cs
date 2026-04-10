@@ -90,7 +90,7 @@ public class BackgroundController : MonoBehaviour
 
     [Tooltip("星星视差系数（0=完全跟随摄像机不动, 1=完全不跟随）")]
     [Range(0f, 1f)]
-    public float starsParallaxFactor = 0.85f;
+    public float starsParallaxFactor = 0.95f;
 
     [Tooltip("星星最大尺寸")]
     public float starsMaxSize = 0.08f;
@@ -168,10 +168,9 @@ public class BackgroundController : MonoBehaviour
     /// </summary>
     private void UpdateStars(float camY)
     {
-        // 视差效果：星星只跟随摄像机一部分，产生远处背景缓慢移动的感觉
+        // 星星始终跟随摄像机XY（发射器在摄像机周围持续生成），Z推到背景
         Vector3 camPos = targetCamera.transform.position;
-        float parallaxY = camPos.y * (1f - starsParallaxFactor);
-        starsParticleSystem.transform.position = new Vector3(camPos.x, parallaxY, 50f);
+        starsParticleSystem.transform.position = new Vector3(camPos.x, camPos.y, 50f);
 
         // 根据深度淡出星星
         float alpha;
@@ -210,19 +209,19 @@ public class BackgroundController : MonoBehaviour
 
         var main = starsParticleSystem.main;
         main.loop = true;
-        main.startLifetime = Mathf.Infinity;
-        main.startSpeed = 0f;
+        main.startLifetime = 8f;
+        main.startSpeed = 0.02f;
         main.startSize = new ParticleSystem.MinMaxCurve(starsMinSize, starsMaxSize);
         main.startColor = new Color(1f, 1f, 1f, 0.9f);
         main.maxParticles = starsCount;
-        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
         main.playOnAwake = false;
         main.gravityModifier = 0f;
 
-        // 发射器：一次性喷出所有粒子
+        // 持续发射 + 初始burst填满屏幕
         var emission = starsParticleSystem.emission;
         emission.enabled = true;
-        emission.rateOverTime = 0;
+        emission.rateOverTime = starsCount / 6f;
         emission.SetBursts(new ParticleSystem.Burst[] {
             new ParticleSystem.Burst(0f, starsCount)
         });
