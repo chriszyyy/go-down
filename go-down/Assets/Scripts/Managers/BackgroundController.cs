@@ -83,7 +83,7 @@ public class BackgroundController : MonoBehaviour
     public float starsFadeOutY = -600f;
 
     [Tooltip("星星完全可见的Y位置")]
-    public float starsFullVisibleY = -100f;
+    public float starsFullVisibleY = 20f;
 
     [Tooltip("星星粒子系统（如果为空则自动创建）")]
     public ParticleSystem starsParticleSystem;
@@ -99,10 +99,10 @@ public class BackgroundController : MonoBehaviour
     public float starsParallaxFactor = 0.3f;
 
     [Tooltip("星星最大尺寸")]
-    public float starsMaxSize = 0.08f;
+    public float starsMaxSize = 0.25f;
 
     [Tooltip("星星最小尺寸")]
-    public float starsMinSize = 0.02f;
+    public float starsMinSize = 0.05f;
 
     // ─── 层效果设置 ─────────────────────────────────────────────
     [Header("层过渡特效")]
@@ -345,9 +345,7 @@ public class BackgroundController : MonoBehaviour
         // 渲染器设置
         var renderer = starsParticleSystem.GetComponent<ParticleSystemRenderer>();
         renderer.sortingOrder = -100;
-        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
-        renderer.material.color = Color.white;
-        renderer.material.SetFloat("_Mode", 1); // Additive
+        renderer.material = CreateAdditiveMaterial();
 
         starsParticleSystem.Play();
     }
@@ -454,12 +452,65 @@ public class BackgroundController : MonoBehaviour
 
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.sortingOrder = sortOrder;
-        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
-        renderer.material.color = Color.white;
-        renderer.material.SetFloat("_Mode", 1); // Additive
+        renderer.material = CreateAdditiveMaterial();
 
         // 默认不播放，由UpdateLayerEffects按需开启
         return ps;
+    }
+
+    /// <summary>
+    /// 创建Additive混合模式的粒子材质，内含程序化生成的圆形渐变纹理
+    /// </summary>
+    private Material CreateAdditiveMaterial()
+    {
+        // 使用URP粒子着色器（项目使用URP渲染管线）
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+        // URP粒子着色器的Additive设置
+        mat.SetFloat("_Surface", 1); // Transparent
+        mat.SetFloat("_Blend", 2);   // Additive
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+        mat.SetInt("_ZWrite", 0);
+        mat.renderQueue = 3000;
+        mat.SetColor("_BaseColor", Color.white);
+
+        // 程序化生成圆形渐变纹理，避免粒子渲染成方块
+        mat.SetTexture("_BaseMap", CreateCircleTexture(32));
+
+        return mat;
+    }
+
+    /// <summary>
+    /// 程序化生成一张圆形渐变纹理（中心亮，边缘淡出到透明）
+    /// </summary>
+    private static Texture2D circleTextureCache;
+    private Texture2D CreateCircleTexture(int size)
+    {
+        if (circleTextureCache != null) return circleTextureCache;
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float center = size * 0.5f;
+        float maxDist = center;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x + 0.5f - center;
+                float dy = y + 0.5f - center;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy) / maxDist;
+                // 从中心到边缘：白色柔和渐变到透明
+                float alpha = Mathf.Clamp01(1f - dist * dist);
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+        }
+
+        tex.Apply(false, true); // 设为不可读以节省内存
+        circleTextureCache = tex;
+        return tex;
     }
 
     /// <summary>
