@@ -10,6 +10,10 @@ public class ToolUsageInventory : MonoBehaviour
 
     public static event Action OnUsesChanged;
 
+    [Header("调试")]
+    [Tooltip("开启后工具不消耗次数（无限使用）")]
+    public bool unlimitedUses = false;
+
     public int ResetUses { get; private set; }
     public int RainbowUses { get; private set; }
 
@@ -42,6 +46,7 @@ public class ToolUsageInventory : MonoBehaviour
 
     public bool TryConsumeResetUse()
     {
+        if (unlimitedUses) return true;
         if (ResetUses <= 0) return false;
 
         ResetUses--;
@@ -52,6 +57,7 @@ public class ToolUsageInventory : MonoBehaviour
 
     public bool TryConsumeRainbowUse()
     {
+        if (unlimitedUses) return true;
         if (RainbowUses <= 0) return false;
 
         RainbowUses--;

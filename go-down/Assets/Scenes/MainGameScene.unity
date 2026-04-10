@@ -2571,6 +2571,7 @@ GameObject:
   - component: {fileID: 687055237}
   - component: {fileID: 687055236}
   - component: {fileID: 687055240}
+  - component: {fileID: 687055241}
   m_Layer: 5
   m_Name: ResetToolButton
   m_TagString: Untagged
@@ -2701,6 +2702,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &687055241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 687055234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d06570322654846439609a976522de0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unlimitedUses: 0
 --- !u!1 &772960320
 GameObject:
   m_ObjectHideFlags: 0
@@ -6656,6 +6670,91 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773155622}
   m_CullTransparentMesh: 1
+--- !u!1 &1820244315
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1820244317}
+  - component: {fileID: 1820244316}
+  m_Layer: 0
+  m_Name: BackgroundController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1820244316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820244315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a29cce0eb818e40b06dd0851fef145, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 772960322}
+  zones:
+  - name: "\u5916\u592A\u7A7A"
+    yPosition: 10
+    color: {r: 0.02, g: 0.02, b: 0.06, a: 1}
+  - name: "\u6DF1\u7A7A\u661F\u4E91"
+    yPosition: -50
+    color: {r: 0.05, g: 0.02, b: 0.12, a: 1}
+  - name: "\u94F6\u6CB3\u7CFB"
+    yPosition: -150
+    color: {r: 0.08, g: 0.06, b: 0.18, a: 1}
+  - name: "\u661F\u7403\u5E26"
+    yPosition: -300
+    color: {r: 0.04, g: 0.08, b: 0.22, a: 1}
+  - name: "\u8FD1\u5730\u8F68\u9053"
+    yPosition: -500
+    color: {r: 0.02, g: 0.05, b: 0.25, a: 1}
+  - name: "\u5927\u6C14\u5C42"
+    yPosition: -800
+    color: {r: 0.35, g: 0.65, b: 0.92, a: 1}
+  - name: "\u5730\u9762"
+    yPosition: -1200
+    color: {r: 0.45, g: 0.55, b: 0.3, a: 1}
+  - name: "\u5730\u4E0B"
+    yPosition: -1800
+    color: {r: 0.3, g: 0.18, b: 0.08, a: 1}
+  - name: "\u5730\u58F3"
+    yPosition: -2500
+    color: {r: 0.4, g: 0.12, b: 0.05, a: 1}
+  - name: "\u5CA9\u6D46"
+    yPosition: -4000
+    color: {r: 0.6, g: 0.15, b: 0.02, a: 1}
+  enableStars: 1
+  starsFadeOutY: -600
+  starsFullVisibleY: -100
+  starsParticleSystem: {fileID: 0}
+  starsCount: 200
+  starsSpreadRange: {x: 30, y: 20}
+  starsParallaxFactor: 0.85
+  starsMaxSize: 0.08
+  starsMinSize: 0.02
+--- !u!4 &1820244317
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820244315}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1162.1193, y: 1502.7338, z: -12.524653}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1856400261
 GameObject:
   m_ObjectHideFlags: 0
@@ -7268,3 +7367,4 @@ SceneRoots:
   - {fileID: 2054651152}
   - {fileID: 300414152}
   - {fileID: 1219402697}
+  - {fileID: 1820244317}
