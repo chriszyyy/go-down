@@ -80,7 +80,7 @@ public class BackgroundController : MonoBehaviour
     public bool enableStars = true;
 
     [Tooltip("星星完全消失的Y位置（接近大气层时淡出）")]
-    public float starsFadeOutY = -600f;
+    public float starsFadeOutY = -900f;
 
     [Tooltip("星星完全可见的Y位置")]
     public float starsFullVisibleY = 20f;
@@ -110,10 +110,10 @@ public class BackgroundController : MonoBehaviour
     public bool enableLayerEffects = true;
 
     // 内部生成的层特效粒子系统
-    private ParticleSystem nebulaParticles;   // 星云尘埃 (Y: -50 ~ -300)
-    private ParticleSystem cloudParticles;    // 大气层云朵 (Y: -500 ~ -1000)
-    private ParticleSystem debrisParticles;   // 地下碎屑 (Y: -1200 ~ -2500)
-    private ParticleSystem emberParticles;    // 岩浆火星 (Y: -2500 ~ -4000)
+    private ParticleSystem nebulaParticles;   // 星云尘埃 (Y: -20 ~ -480)
+    private ParticleSystem cloudParticles;    // 大气层云朵 (Y: -420 ~ -1200)
+    private ParticleSystem debrisParticles;   // 地下碎屑 (Y: -1100 ~ -2700)
+    private ParticleSystem emberParticles;    // 岩浆火星 (Y: -2400 ~ -4200)
 
     // 记录摄像机初始Y，用于计算视差偏移
     private float cameraStartY;
@@ -360,30 +360,30 @@ public class BackgroundController : MonoBehaviour
     private void CreateLayerEffects()
     {
         nebulaParticles = CreateEffectSystem("NebulaEffect",
-            color1: new Color(0.4f, 0.2f, 0.8f, 0.15f),
-            color2: new Color(0.2f, 0.5f, 0.9f, 0.1f),
-            count: 40, sizeMin: 0.3f, sizeMax: 0.8f,
+            color1: new Color(0.4f, 0.2f, 0.8f, 0.18f),
+            color2: new Color(0.2f, 0.5f, 0.9f, 0.14f),
+            count: 50, sizeMin: 0.4f, sizeMax: 1.2f,
             spread: new Vector2(25f, 18f), lifetime: 6f,
             speed: 0.1f, sortOrder: -99);
 
         cloudParticles = CreateEffectSystem("CloudEffect",
-            color1: new Color(1f, 1f, 1f, 0.2f),
-            color2: new Color(0.8f, 0.9f, 1f, 0.15f),
-            count: 30, sizeMin: 1.5f, sizeMax: 4f,
+            color1: new Color(1f, 1f, 1f, 0.25f),
+            color2: new Color(0.8f, 0.9f, 1f, 0.2f),
+            count: 60, sizeMin: 2.0f, sizeMax: 5.5f,
             spread: new Vector2(30f, 15f), lifetime: 8f,
-            speed: 0.3f, sortOrder: -98);
+            speed: 0.2f, sortOrder: -98);
 
         debrisParticles = CreateEffectSystem("DebrisEffect",
-            color1: new Color(0.6f, 0.4f, 0.2f, 0.3f),
-            color2: new Color(0.4f, 0.3f, 0.15f, 0.2f),
-            count: 50, sizeMin: 0.05f, sizeMax: 0.15f,
+            color1: new Color(0.6f, 0.4f, 0.2f, 0.45f),
+            color2: new Color(0.4f, 0.3f, 0.15f, 0.3f),
+            count: 80, sizeMin: 0.12f, sizeMax: 0.35f,
             spread: new Vector2(20f, 15f), lifetime: 4f,
-            speed: 0.2f, sortOrder: -97);
+            speed: 0.15f, sortOrder: -97);
 
         emberParticles = CreateEffectSystem("EmberEffect",
-            color1: new Color(1f, 0.4f, 0.1f, 0.6f),
-            color2: new Color(1f, 0.7f, 0.2f, 0.4f),
-            count: 60, sizeMin: 0.03f, sizeMax: 0.1f,
+            color1: new Color(1f, 0.4f, 0.1f, 0.7f),
+            color2: new Color(1f, 0.7f, 0.2f, 0.5f),
+            count: 80, sizeMin: 0.08f, sizeMax: 0.25f,
             spread: new Vector2(20f, 12f), lifetime: 3f,
             speed: 0.5f, sortOrder: -96);
 
@@ -392,8 +392,8 @@ public class BackgroundController : MonoBehaviour
         {
             var vel = emberParticles.velocityOverLifetime;
             vel.enabled = true;
-            vel.y = new ParticleSystem.MinMaxCurve(0.2f, 0.8f);
-            vel.x = new ParticleSystem.MinMaxCurve(-0.15f, 0.15f);
+            vel.y = new ParticleSystem.MinMaxCurve(0.3f, 1.0f);
+            vel.x = new ParticleSystem.MinMaxCurve(-0.2f, 0.2f);
         }
     }
 
@@ -520,24 +520,24 @@ public class BackgroundController : MonoBehaviour
     {
         Vector3 camPos = targetCamera.transform.position;
 
-        // ── 星云尘埃 (Y: -50 ~ -400) ──
+        // ── 星云尘埃 (Y: -20 ~ -480) ──
         UpdateEffectSystem(nebulaParticles, camY, camPos,
-            fadeInY: -30f, fullStartY: -80f, fullEndY: -300f, fadeOutY: -450f,
+            fadeInY: -20f, fullStartY: -60f, fullEndY: -350f, fadeOutY: -480f,
             parallax: 0.2f);
 
-        // ── 大气层云朵 (Y: -500 ~ -1000) ──
+        // ── 大气层云朵 (Y: -420 ~ -1200) ──
         UpdateEffectSystem(cloudParticles, camY, camPos,
-            fadeInY: -450f, fullStartY: -550f, fullEndY: -900f, fadeOutY: -1100f,
+            fadeInY: -420f, fullStartY: -500f, fullEndY: -1050f, fadeOutY: -1200f,
             parallax: 0.15f);
 
-        // ── 地下碎屑 (Y: -1200 ~ -2500) ──
+        // ── 地下碎屑 (Y: -1100 ~ -2700) ──
         UpdateEffectSystem(debrisParticles, camY, camPos,
-            fadeInY: -1100f, fullStartY: -1300f, fullEndY: -2300f, fadeOutY: -2600f,
+            fadeInY: -1100f, fullStartY: -1200f, fullEndY: -2400f, fadeOutY: -2700f,
             parallax: 0.1f);
 
-        // ── 岩浆火星 (Y: -2400 ~ -4000) ──
+        // ── 岩浆火星 (Y: -2400 ~ -4200) ──
         UpdateEffectSystem(emberParticles, camY, camPos,
-            fadeInY: -2300f, fullStartY: -2600f, fullEndY: -3800f, fadeOutY: -4200f,
+            fadeInY: -2400f, fullStartY: -2550f, fullEndY: -3900f, fadeOutY: -4200f,
             parallax: 0.05f);
     }
 
