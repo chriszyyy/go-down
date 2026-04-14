@@ -345,7 +345,7 @@ public class BackgroundController : MonoBehaviour
         // 渲染器设置
         var renderer = starsParticleSystem.GetComponent<ParticleSystemRenderer>();
         renderer.sortingOrder = -100;
-        renderer.material = CreateAdditiveMaterial();
+        renderer.material = CreateAdditiveMaterial(CreateStarTexture(32));
 
         starsParticleSystem.Play();
     }
@@ -364,36 +364,41 @@ public class BackgroundController : MonoBehaviour
             color2: new Color(0.2f, 0.5f, 0.9f, 0.14f),
             count: 50, sizeMin: 0.4f, sizeMax: 1.2f,
             spread: new Vector2(25f, 18f), lifetime: 6f,
-            speed: 0.1f, sortOrder: -99);
+            speed: 0.1f, sortOrder: -99,
+            texture: CreateNebulaTexture(64));
 
         cloudParticles = CreateEffectSystem("CloudEffect",
             color1: new Color(1f, 1f, 1f, 0.25f),
             color2: new Color(0.8f, 0.9f, 1f, 0.2f),
             count: 60, sizeMin: 2.0f, sizeMax: 5.5f,
             spread: new Vector2(30f, 15f), lifetime: 8f,
-            speed: 0.2f, sortOrder: -98);
+            speed: 0.2f, sortOrder: -98,
+            texture: LoadParticleTexture("Particles/cloud_placeholder"));
 
         debrisParticles = CreateEffectSystem("DebrisEffect",
             color1: new Color(0.6f, 0.4f, 0.2f, 0.45f),
             color2: new Color(0.4f, 0.3f, 0.15f, 0.3f),
             count: 80, sizeMin: 0.12f, sizeMax: 0.35f,
             spread: new Vector2(20f, 15f), lifetime: 4f,
-            speed: 0.15f, sortOrder: -97);
+            speed: 0.15f, sortOrder: -97,
+            texture: LoadParticleTexture("Particles/debris_placeholder"));
 
         emberParticles = CreateEffectSystem("EmberEffect",
             color1: new Color(1f, 0.4f, 0.1f, 0.7f),
             color2: new Color(1f, 0.7f, 0.2f, 0.5f),
             count: 80, sizeMin: 0.08f, sizeMax: 0.25f,
             spread: new Vector2(20f, 12f), lifetime: 3f,
-            speed: 0.5f, sortOrder: -96);
+            speed: 0.5f, sortOrder: -96,
+            texture: CreateEmberTexture(32));
 
         // 火星需要向上飘动
         if (emberParticles != null)
         {
             var vel = emberParticles.velocityOverLifetime;
             vel.enabled = true;
-            vel.y = new ParticleSystem.MinMaxCurve(0.3f, 1.0f);
             vel.x = new ParticleSystem.MinMaxCurve(-0.2f, 0.2f);
+            vel.y = new ParticleSystem.MinMaxCurve(0.3f, 1.0f);
+            vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
         }
     }
 
@@ -403,7 +408,8 @@ public class BackgroundController : MonoBehaviour
     private ParticleSystem CreateEffectSystem(string objectName,
         Color color1, Color color2,
         int count, float sizeMin, float sizeMax,
-        Vector2 spread, float lifetime, float speed, int sortOrder)
+        Vector2 spread, float lifetime, float speed, int sortOrder,
+        Texture2D texture = null)
     {
         GameObject go = new GameObject(objectName);
         go.transform.SetParent(transform);
@@ -452,16 +458,16 @@ public class BackgroundController : MonoBehaviour
 
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.sortingOrder = sortOrder;
-        renderer.material = CreateAdditiveMaterial();
+        renderer.material = CreateAdditiveMaterial(texture ?? CreateCircleTexture(32));
 
         // 默认不播放，由UpdateLayerEffects按需开启
         return ps;
     }
 
     /// <summary>
-    /// 创建Additive混合模式的粒子材质，内含程序化生成的圆形渐变纹理
+    /// 创建Additive混合模式的粒子材质
     /// </summary>
-    private Material CreateAdditiveMaterial()
+    private Material CreateAdditiveMaterial(Texture2D texture)
     {
         // 使用URP粒子着色器（项目使用URP渲染管线）
         var mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
@@ -473,9 +479,7 @@ public class BackgroundController : MonoBehaviour
         mat.SetInt("_ZWrite", 0);
         mat.renderQueue = 3000;
         mat.SetColor("_BaseColor", Color.white);
-
-        // 程序化生成圆形渐变纹理，避免粒子渲染成方块
-        mat.SetTexture("_BaseMap", CreateCircleTexture(32));
+        mat.SetTexture("_BaseMap", texture);
 
         return mat;
     }
@@ -514,6 +518,139 @@ public class BackgroundController : MonoBehaviour
     }
 
     /// <summary>
+    /// 程序化生成四角星形纹理（十字光芒）
+    /// </summary>
+    private static Texture2D starTextureCache;
+    private Texture2D CreateStarTexture(int size)
+    {
+        if (starTextureCache != null) return starTextureCache;
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float center = size * 0.5f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = Mathf.Abs(x + 0.5f - center) / center;  // 0..1
+                float dy = Mathf.Abs(y + 0.5f - center) / center;  // 0..1
+
+                // 十字臂：沿轴方向的窄高斯衰减
+                float armX = Mathf.Exp(-dx * 6f) * Mathf.Exp(-dy * dy * 8f);
+                float armY = Mathf.Exp(-dy * 6f) * Mathf.Exp(-dx * dx * 8f);
+                // 中心光晕
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                float glow = Mathf.Exp(-dist * dist * 4f);
+
+                float alpha = Mathf.Clamp01(Mathf.Max(armX, Mathf.Max(armY, glow)));
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+        }
+
+        tex.Apply(false, true);
+        starTextureCache = tex;
+        return tex;
+    }
+
+    /// <summary>
+    /// 程序化生成星云纹理（噪声扰动的柔和云团）
+    /// </summary>
+    private static Texture2D nebulaTextureCache;
+    private Texture2D CreateNebulaTexture(int size)
+    {
+        if (nebulaTextureCache != null) return nebulaTextureCache;
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float center = size * 0.5f;
+        float maxDist = center;
+        // 随机偏移避免每次同一PerlinNoise采样
+        float noiseOffsetX = 42.7f;
+        float noiseOffsetY = 17.3f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x + 0.5f - center;
+                float dy = y + 0.5f - center;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy) / maxDist;
+
+                // Perlin噪声扰动边缘
+                float noise = Mathf.PerlinNoise(
+                    (x + noiseOffsetX) * 0.15f,
+                    (y + noiseOffsetY) * 0.15f);
+                float threshold = 0.65f + noise * 0.35f;
+
+                float alpha = Mathf.Clamp01(threshold - dist);
+                alpha = alpha * alpha; // 柔化边缘
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+        }
+
+        tex.Apply(false, true);
+        nebulaTextureCache = tex;
+        return tex;
+    }
+
+    /// <summary>
+    /// 程序化生成火星/余烬纹理（纵向拉伸的水滴形）
+    /// </summary>
+    private static Texture2D emberTextureCache;
+    private Texture2D CreateEmberTexture(int size)
+    {
+        if (emberTextureCache != null) return emberTextureCache;
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float center = size * 0.5f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = (x + 0.5f - center) / center;    // -1..1
+                float dy = (y + 0.5f - center) / center;    // -1..1
+
+                // 纵向拉伸的椭圆（Y轴更长）
+                float ellipse = (dx * dx) / (0.35f * 0.35f) + (dy * dy) / (0.9f * 0.9f);
+                float alpha = Mathf.Clamp01(1f - ellipse);
+
+                // 底部（低Y）更亮，顶部渐淡 → 水滴/火焰尾迹效果
+                float verticalBias = Mathf.Clamp01(1f - (dy + 1f) * 0.4f);
+                alpha *= verticalBias;
+
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+        }
+
+        tex.Apply(false, true);
+        emberTextureCache = tex;
+        return tex;
+    }
+
+    /// <summary>
+    /// 从Resources加载粒子纹理，找不到则回退到圆形纹理
+    /// </summary>
+    private Texture2D LoadParticleTexture(string resourcePath)
+    {
+        Texture2D tex = Resources.Load<Texture2D>(resourcePath);
+        if (tex == null)
+        {
+            Debug.LogWarning($"粒子纹理未找到: {resourcePath}，使用默认圆形");
+            return CreateCircleTexture(32);
+        }
+        return tex;
+    }
+
+    /// <summary>
     /// 根据摄像机深度启用/禁用各层特效，并控制透明度
     /// </summary>
     private void UpdateLayerEffects(float camY)
@@ -522,23 +659,19 @@ public class BackgroundController : MonoBehaviour
 
         // ── 星云尘埃 (Y: -20 ~ -480) ──
         UpdateEffectSystem(nebulaParticles, camY, camPos,
-            fadeInY: -20f, fullStartY: -60f, fullEndY: -350f, fadeOutY: -480f,
-            parallax: 0.2f);
+            fadeInY: -20f, fullStartY: -60f, fullEndY: -350f, fadeOutY: -480f);
 
         // ── 大气层云朵 (Y: -420 ~ -1200) ──
         UpdateEffectSystem(cloudParticles, camY, camPos,
-            fadeInY: -420f, fullStartY: -500f, fullEndY: -1050f, fadeOutY: -1200f,
-            parallax: 0.15f);
+            fadeInY: -420f, fullStartY: -500f, fullEndY: -1050f, fadeOutY: -1200f);
 
         // ── 地下碎屑 (Y: -1100 ~ -2700) ──
         UpdateEffectSystem(debrisParticles, camY, camPos,
-            fadeInY: -1100f, fullStartY: -1200f, fullEndY: -2400f, fadeOutY: -2700f,
-            parallax: 0.1f);
+            fadeInY: -1100f, fullStartY: -1200f, fullEndY: -2400f, fadeOutY: -2700f);
 
         // ── 岩浆火星 (Y: -2400 ~ -4200) ──
         UpdateEffectSystem(emberParticles, camY, camPos,
-            fadeInY: -2400f, fullStartY: -2550f, fullEndY: -3900f, fadeOutY: -4200f,
-            parallax: 0.05f);
+            fadeInY: -2400f, fullStartY: -2550f, fullEndY: -3900f, fadeOutY: -4200f);
     }
 
     /// <summary>
@@ -548,8 +681,7 @@ public class BackgroundController : MonoBehaviour
     /// fullEndY → fadeOutY: 淡出
     /// </summary>
     private void UpdateEffectSystem(ParticleSystem ps, float camY, Vector3 camPos,
-        float fadeInY, float fullStartY, float fullEndY, float fadeOutY,
-        float parallax)
+        float fadeInY, float fullStartY, float fullEndY, float fadeOutY)
     {
         if (ps == null) return;
 
@@ -588,10 +720,8 @@ public class BackgroundController : MonoBehaviour
         if (!ps.isPlaying)
             ps.Play();
 
-        // 视差定位
-        float deltaY = camY - cameraStartY;
-        float parallaxY = camY - deltaY * parallax;
-        ps.transform.position = new Vector3(camPos.x, parallaxY, 45f);
+        // 层特效始终跟随摄像机，保证粒子在可视范围内
+        ps.transform.position = new Vector3(camPos.x, camY, 45f);
 
         // 根据可见度调节发射率
         var emission = ps.emission;
