@@ -165,6 +165,9 @@ public class BackgroundController : MonoBehaviour
         {
             UpdateLayerEffects(camY);
         }
+
+        // 在所有系统更新完后再记录，供下帧使用
+        lastCamY = camY;
     }
 
     /// <summary>
@@ -206,16 +209,21 @@ public class BackgroundController : MonoBehaviour
             starsParticleSystem.Clear();
             starsParticleSystem.Emit(starsCount);
         }
-        lastCamY = camY;
 
         // 视差：星星只跟随摄像机的一部分移动量，制造深度差异感
-        // parallaxFactor=0 → 完全跟随（不滚动）
-        // parallaxFactor=1 → 完全不跟随（最大滚动）
+        // 通过持续漂移 cameraStartY，保持视差窗口在合理范围内
         float deltaY = camY - cameraStartY;
+        float maxOffset = targetCamera.orthographicSize * 0.7f;
+        // 当偏移超限时，缓慢移动基准点以保持星星持续滚动
+        if (Mathf.Abs(deltaY * starsParallaxFactor) > maxOffset)
+        {
+            float sign = deltaY > 0f ? 1f : -1f;
+            float targetStart = camY - sign * (maxOffset / starsParallaxFactor);
+            cameraStartY = Mathf.Lerp(cameraStartY, targetStart, Time.deltaTime * 2f);
+        }
+
+        deltaY = camY - cameraStartY;
         float parallaxOffset = deltaY * starsParallaxFactor;
-        // 限制视差偏移不超过摄像机可视范围的一半，防止星星飘出画面
-        float maxOffset = targetCamera.orthographicSize * 0.8f;
-        parallaxOffset = Mathf.Clamp(parallaxOffset, -maxOffset, maxOffset);
         float parallaxY = camY - parallaxOffset;
 
         starsParticleSystem.transform.position = new Vector3(camPos.x, parallaxY, 50f);
@@ -265,7 +273,7 @@ public class BackgroundController : MonoBehaviour
         main.startSize = new ParticleSystem.MinMaxCurve(starsMinSize, starsMaxSize);
         main.startColor = new Color(1f, 1f, 1f, 1f);
         main.maxParticles = starsCount;
-        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.playOnAwake = false;
         main.gravityModifier = 0f;
 
@@ -668,21 +676,20 @@ public class BackgroundController : MonoBehaviour
     }
 
     /// <summary>
-    /// 更新单个特效系统：位置（视差）、可见性、发射率
-    /// fadeInY → fullStartY: 淡入
-    /// fullStartY → fullEndY: 完全可见
-    /// fullEndY → fadeOutY: 淡出
+    /// 更新单个特效系统：位置、可见性、粒子填充。
+    /// 世界空间粒子留在出生位置，摄像机移动后它们滚出屏幕。
+    /// 每帧检查可视范围内粒子数量，不足则补充发射。
     /// </summary>
+    private static ParticleSystem.Particle[] particleBuffer = new ParticleSystem.Particle[500];
+
     private void UpdateEffectSystem(ParticleSystem ps, float camY, Vector3 camPos,
         float fadeInY, float fullStartY, float fullEndY, float fadeOutY)
     {
         if (ps == null) return;
 
-        // 计算可见度
         float visibility = BackgroundMathUtils.CalculateEffectVisibility(
             camY, fadeInY, fullStartY, fullEndY, fadeOutY);
 
-        // 控制播放/停止
         if (visibility <= 0f)
         {
             if (ps.isPlaying)
@@ -690,22 +697,50 @@ public class BackgroundController : MonoBehaviour
             return;
         }
 
-        // 层特效始终跟随摄像机，保证粒子在可视范围内
+        // 移动发射器到摄像机位置（新粒子在此处生成）
         ps.transform.position = new Vector3(camPos.x, camY, 45f);
+
+        var psMain = ps.main;
+        int targetCount = Mathf.RoundToInt(psMain.maxParticles * visibility);
 
         if (!ps.isPlaying)
         {
             ps.Play();
-            // 首次进入该层时立即发射一批粒子，避免空白等待
-            var main = ps.main;
-            int burstCount = Mathf.RoundToInt(main.maxParticles * visibility * 0.6f);
-            if (burstCount > 0)
-                ps.Emit(burstCount);
+            // 首次进入立即填满
+            if (targetCount > 0)
+                ps.Emit(targetCount);
+            return;
         }
 
-        // 根据可见度调节发射率
+        // 统计当前在摄像机可视范围内的粒子数
+        float viewHalfH = targetCamera.orthographicSize;
+        float viewHalfW = viewHalfH * targetCamera.aspect;
+        int aliveCount = ps.GetParticles(particleBuffer);
+        int visibleCount = 0;
+        for (int i = 0; i < aliveCount; i++)
+        {
+            // 世界空间粒子的position就是世界坐标
+            Vector3 pPos = particleBuffer[i].position;
+            if (Mathf.Abs(pPos.x - camPos.x) < viewHalfW &&
+                Mathf.Abs(pPos.y - camY) < viewHalfH)
+            {
+                visibleCount++;
+            }
+        }
+
+        // 如果可视范围内粒子不足目标数量的40%，补充发射
+        int minVisible = Mathf.RoundToInt(targetCount * 0.4f);
+        if (visibleCount < minVisible)
+        {
+            int deficit = targetCount - visibleCount;
+            // 限制单帧发射量，避免卡顿
+            int emitCount = Mathf.Min(deficit, Mathf.RoundToInt(psMain.maxParticles * 0.3f));
+            if (emitCount > 0)
+                ps.Emit(emitCount);
+        }
+
+        // 基础发射率保持补充
         var emission = ps.emission;
-        var psMain = ps.main;
         float baseRate = psMain.maxParticles / psMain.startLifetime.constantMax;
         emission.rateOverTime = baseRate * visibility;
     }

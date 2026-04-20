@@ -5004,7 +5004,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   specialBlockChance: 0.018
   towerLayers: 20
-  layerWidth: 0
+  layerWidth: 5
   startHeight: -3
   segmentHeightLayers: 20
   generateAheadLayers: 20
