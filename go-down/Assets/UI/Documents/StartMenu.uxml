@@ -2,41 +2,11 @@
     <Style src="project://database/Assets/UI/Styles/theme.uss?fileID=7433441132597879392&amp;guid=17651a3551c5e0f47a351277b58b0376&amp;type=3#theme" />
     <ui:VisualElement name="root" class="screen">
         <ui:VisualElement name="bg-image" class="bg-image" picking-mode="Ignore" />
-        <ui:VisualElement name="top-bar" class="top-bar">
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--flag" />
-                <ui:Label name="high-score-value" text="0" class="stat-pill__value" />
-            </ui:VisualElement>
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--gem" />
-                <ui:Label name="gem-value" text="0" class="stat-pill__value" />
-                <ui:Button name="add-gems-btn" text="+" class="stat-pill__plus" />
-            </ui:VisualElement>
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--coin" />
-                <ui:Label name="coin-value" text="0" class="stat-pill__value" />
-                <ui:Button name="add-coins-btn" text="+" class="stat-pill__plus" />
-            </ui:VisualElement>
-        </ui:VisualElement>
         <ui:VisualElement name="middle-row" class="middle-row">
-            <ui:VisualElement class="side-rail side-rail--left">
-                <ui:Button name="setting-side-btn" class="icon-btn" />
-                <ui:Label text="SETTING" class="icon-btn__caption" />
-                <ui:Button name="ranking-btn" class="icon-btn" />
-                <ui:Label text="RANKING" class="icon-btn__caption" />
-                <ui:Button name="daily-btn" class="icon-btn" />
-                <ui:Label text="DAILY" class="icon-btn__caption" />
-            </ui:VisualElement>
             <ui:VisualElement class="center-stack">
                 <ui:Label text="GO" class="logo" />
                 <ui:Label text="DOWN" class="logo" />
                 <ui:Label text="点击消除，让六边形小球不断下落！" class="subtitle" />
-            </ui:VisualElement>
-            <ui:VisualElement class="side-rail side-rail--right">
-                <ui:Button name="free-gift-btn" class="icon-btn" />
-                <ui:Label text="FREE GIFT" class="icon-btn__caption" />
-                <ui:Button name="shop-side-btn" class="icon-btn" />
-                <ui:Label text="SHOP" class="icon-btn__caption" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="bottom-actions" class="bottom-actions">
