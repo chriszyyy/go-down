@@ -10,15 +10,15 @@
         </ui:VisualElement>
         <ui:VisualElement name="bottom-actions" class="bottom-actions">
             <ui:Button name="play-btn" class="btn btn--play">
-                <ui:VisualElement class="btn__icon" />
+                <ui:VisualElement picking-mode="Ignore" class="btn__icon btn__icon--play" />
                 <ui:Label text="START GAME" class="btn__label" />
             </ui:Button>
             <ui:Button name="shop-btn" class="btn btn--shop">
-                <ui:VisualElement class="btn__icon" />
+                <ui:VisualElement picking-mode="Ignore" class="btn__icon btn__icon--shop" />
                 <ui:Label text="SHOP" class="btn__label" />
             </ui:Button>
             <ui:Button name="options-btn" class="btn btn--settings">
-                <ui:VisualElement class="btn__icon" />
+                <ui:VisualElement picking-mode="Ignore" class="btn__icon btn__icon--settings" />
                 <ui:Label text="SETTING" class="btn__label" />
             </ui:Button>
         </ui:VisualElement>

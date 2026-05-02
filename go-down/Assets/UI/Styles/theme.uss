@@ -218,71 +218,77 @@
     margin-bottom: 12px;
 }
 
+/* 按钮本体：使用 PNG 作为背景。三张贴图原始宽度略有差异（348/338/324），
+   使用 stretch-to-fill 强制填充到同一容器尺寸，保证三个按钮可视大小完全一致。
+   变形在这种胶囊形状上几乎看不出来。 */
 .btn {
-    width: 86%;
-    height: 150px;
-    margin-top: 22px;
-    padding-left: 32px;
-    padding-right: 32px;
-    border-radius: 78px;
+    width: 700px;
+    height: 195px;
+    margin-top: 18px;
+    padding: 0;
     border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-scale-mode: stretch-to-fill;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    transition-property: background-color, scale;
-    transition-duration: 120ms;
+    transition-property: scale;
+    transition-duration: 100ms;
+}
+
+.btn:hover {
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .btn:active {
     scale: 0.97 0.97;
 }
 
-.btn__icon {
-    width: 56px;
-    height: 56px;
-    margin-right: 22px;
-    border-radius: var(--radius-pill);
-    background-color: rgba(255, 255, 255, 0.22);
-}
-
+/* 按钮上的文字，统一白色 + 深色描边，三个按钮保持一致 */
 .btn__label {
-    color: var(--color-text);
-    font-size: 50px;
+    color: rgb(255, 255, 255);
+    font-size: 60px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     letter-spacing: 3px;
+    -unity-text-outline-width: 2.5px;
+    -unity-text-outline-color: rgba(20, 20, 35, 0.9);
+    margin: 0;
+    padding: 0;
+    /* 预留：当加入 .btn__icon 后，文字会被推到右边。 */
 }
 
+/* 预留给以后的图标 (用户提供后才启用) */
+.btn__icon {
+    width: 90px;
+    height: 90px;
+    margin-right: 24px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.btn__icon--play {
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconPlay.png");
+}
+
+.btn__icon--shop {
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconShop.png");
+}
+
+.btn__icon--settings {
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconSetting.png");
+}
+
+/* 各按钮的 PNG 贴图 */
 .btn--play {
-    background-color: var(--color-play);
-}
-
-.btn--play:hover {
-    background-color: var(--color-play-hi);
-}
-
-.btn--play .btn__label {
-    color: var(--color-text-dark);
-}
-
-.btn--play .btn__icon {
-    background-color: rgba(60, 35, 5, 0.85);
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnPlay.png");
 }
 
 .btn--shop {
-    background-color: var(--color-shop);
-}
-
-.btn--shop:hover {
-    background-color: var(--color-shop-hi);
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnShop.png");
 }
 
 .btn--settings {
-    background-color: var(--color-settings);
-}
-
-.btn--settings:hover {
-    background-color: var(--color-settings-hi);
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnSetting.png");
 }
 
 .panel {
