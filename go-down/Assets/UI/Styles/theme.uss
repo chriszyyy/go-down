@@ -193,6 +193,16 @@
     letter-spacing: 6px;
 }
 
+/* Logo 图片版本：使用 PNG 作为背景，保留原始宽高比 */
+.logo-img {
+    width: 720px;
+    height: 396px;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_Logo.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .subtitle {
     color: var(--color-text);
     font-size: 26px;
