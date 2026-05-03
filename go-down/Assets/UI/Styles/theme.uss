@@ -57,6 +57,14 @@
     background-color: rgba(0, 0, 0, 0.18);
 }
 
+/* Shop / Settings 等子页面用的背景：一张通用大图，scale-and-crop 自动从中心裁剪，
+   不拉伸不压缩。 */
+.bg-image--page {
+    background-image: url("project://database/Assets/UI/Sprites/PageBG.png");
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgba(0, 0, 0, 0.30);
+}
+
 .top-bar {
     flex-direction: row;
     justify-content: space-between;

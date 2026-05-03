@@ -20,7 +20,7 @@
          ============================================================ -->
     <ui:VisualElement name="root" class="screen">
 
-        <ui:VisualElement name="bg-image" picking-mode="Ignore" class="bg-image" />
+        <ui:VisualElement name="bg-image" picking-mode="Ignore" class="bg-image bg-image--page" />
 
         <!-- 顶部状态栏 -->
         <ui:VisualElement name="top-bar" class="top-bar">
