@@ -1,0 +1,188 @@
+/* ============================================================
+ * settings.uss — 设置面板专属样式
+ * 共享部分（顶栏 / header / section-card / bottom-nav）
+ * 已经在 theme.uss。
+ * ============================================================ */
+
+.settings-scroll {
+    flex-grow: 1;
+}
+
+/* —— 一行设置（图标 + 标签 + 控件） —— */
+.row {
+    flex-direction: row;
+    align-items: center;
+    height: 90px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.row__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background-color: rgba(180, 200, 230, 0.35);
+    margin-right: 16px;
+}
+
+.row__label {
+    color: var(--color-text);
+    font-size: 28px;
+    -unity-font-style: bold;
+    flex-grow: 0;
+    width: 360px;
+    letter-spacing: 1px;
+}
+
+/* —— Slider（音量条） —— */
+.unity-slider {
+    flex-grow: 1;
+    margin-left: 12px;
+    margin-right: 12px;
+    height: 40px;
+}
+.unity-slider .unity-base-slider__tracker {
+    background-color: rgba(60, 80, 130, 0.7);
+    border-radius: 999px;
+    border-width: 0;
+    height: 14px;
+}
+.unity-slider .unity-base-slider__dragger {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background-color: rgb(255, 255, 255);
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.6);
+    margin-top: -12px;
+}
+/* 已填充段（unity 没原生支持，用滑块前面的 progress 区域表示） */
+.unity-slider .unity-base-slider__tracker {
+    /* 用一个渐变近似：浅绿到深绿不易实现。先纯色绿色作为已填充。 */
+}
+
+/* 喇叭按钮 */
+.btn-mute {
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.5);
+    background-color: rgba(40, 90, 200, 0.6);
+    color: var(--color-text);
+    font-size: 30px;
+    padding: 0;
+    margin: 0;
+    margin-left: 12px;
+}
+.btn-mute:hover { background-color: rgba(70, 130, 240, 0.7); }
+.btn-mute:active { scale: 0.94 0.94; }
+
+/* —— Toggle 开关（震动 / 触感反馈） —— */
+.unity-toggle {
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.unity-toggle .unity-toggle__input {
+    width: 110px;
+    height: 56px;
+    border-radius: 999px;
+    background-color: rgba(60, 80, 130, 0.7);
+    border-width: 0;
+    margin: 0;
+}
+.unity-toggle .unity-toggle__checkmark {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background-color: rgb(255, 255, 255);
+    margin: 4px;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+.unity-toggle:checked .unity-toggle__input {
+    background-color: rgb(80, 200, 110);
+}
+
+/* —— 难度 segmented（EASY / NORMAL / HARD） —— */
+.segmented {
+    flex-direction: row;
+    flex-grow: 0;
+}
+.segment-btn {
+    width: 130px;
+    height: 70px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.4);
+    border-radius: 14px;
+    background-color: rgba(15, 22, 50, 0.8);
+    color: rgb(150, 170, 210);
+    font-size: 26px;
+    -unity-font-style: bold;
+    margin-left: 4px;
+    margin-right: 4px;
+    padding: 0;
+}
+.segment-btn:hover { background-color: rgba(40, 70, 130, 0.7); }
+.segment-btn:active { scale: 0.96 0.96; }
+.segment-btn--active {
+    background-color: var(--color-play);
+    color: var(--color-text-dark);
+    border-color: var(--color-play-hi);
+}
+
+/* —— OTHER 区里的链接行（带箭头） —— */
+.row-link {
+    flex-direction: row;
+    align-items: center;
+    height: 100px;
+    background-color: rgba(15, 22, 50, 0.6);
+    border-radius: 18px;
+    border-width: 1px;
+    border-color: rgba(80, 140, 255, 0.3);
+    margin-bottom: 12px;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+.row-link:hover { background-color: rgba(40, 70, 130, 0.55); }
+.row-link:active { scale: 0.99 0.99; }
+
+.row-link__value {
+    color: var(--color-text);
+    font-size: 26px;
+    -unity-font-style: bold;
+    margin-right: 8px;
+}
+
+.row-link__chevron {
+    color: rgb(120, 180, 255);
+    font-size: 36px;
+    -unity-font-style: bold;
+    width: 32px;
+    -unity-text-align: middle-right;
+}
+
+/* —— 红色 RESET PROGRESS —— */
+.reset-btn {
+    height: 100px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-radius: 50px;
+    border-width: 0;
+    background-color: rgb(220, 50, 60);
+    color: var(--color-text);
+    font-size: 32px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    padding: 0;
+}
+.reset-btn:hover { background-color: rgb(245, 75, 85); }
+.reset-btn:active { scale: 0.97 0.97; }
+
+.version-label {
+    color: var(--color-text-muted);
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    margin-top: 6px;
+    margin-bottom: 18px;
+}

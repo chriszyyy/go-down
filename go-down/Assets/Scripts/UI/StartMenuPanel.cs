@@ -43,6 +43,35 @@ public class StartMenuPanel : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void OnShop() => Debug.Log("[StartMenu] Shop clicked");
-    private void OnOptions() => Debug.Log("[StartMenu] Settings/Options clicked");
+    private void OnShop()
+    {
+        Debug.Log("[StartMenu] Shop clicked");
+        var panel = ShopPanel.Instance ?? FindFirstObjectByType<ShopPanel>(FindObjectsInactive.Include);
+        if (panel != null)
+        {
+            gameObject.SetActive(false);
+            panel.Show(gameObject);
+        }
+        else
+        {
+            Debug.LogWarning("[StartMenu] ShopPanel not found in scene. " +
+                             "添加一个带 UIDocument 的 GameObject (Source Asset = Shop.uxml) 并挂上 ShopPanel 脚本。");
+        }
+    }
+
+    private void OnOptions()
+    {
+        Debug.Log("[StartMenu] Settings/Options clicked");
+        var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
+        if (panel != null)
+        {
+            gameObject.SetActive(false);
+            panel.Show(gameObject);
+        }
+        else
+        {
+            Debug.LogWarning("[StartMenu] SettingsPanel not found in scene. " +
+                             "添加一个带 UIDocument 的 GameObject (Source Asset = Settings.uxml) 并挂上 SettingsPanel 脚本。");
+        }
+    }
 }

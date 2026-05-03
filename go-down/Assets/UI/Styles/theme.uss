@@ -319,3 +319,163 @@
 .btn--secondary {
     background-color: rgba(255, 255, 255, 0.08);
 }
+
+/* ============================================================
+ * 子页面共享样式（Shop / Settings 都用到的）
+ *   - 顶部 header（返回按钮 + 标题横幅）
+ *   - 卡片式 section（带标题）
+ *   - 底部导航（购物车 / 收藏 / 设置）
+ * ============================================================ */
+
+/* —— 顶部 header（返回箭头 + 标题横幅） —— */
+.header-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 18px;
+    margin-bottom: 24px;
+}
+
+.back-btn {
+    width: 90px;
+    height: 90px;
+    border-radius: 22px;
+    border-width: 3px;
+    border-color: var(--color-pill-border);
+    background-color: var(--color-pill-bg);
+    color: var(--color-text);
+    font-size: 50px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+    margin: 0;
+    margin-right: 24px;
+}
+
+.back-btn:hover {
+    background-color: rgba(40, 60, 110, 0.95);
+}
+
+.back-btn:active {
+    scale: 0.94 0.94;
+}
+
+.banner {
+    flex-grow: 1;
+    height: 110px;
+    border-radius: 28px;
+    border-width: 3px;
+    border-color: var(--color-pill-border);
+    background-color: rgba(40, 70, 160, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+.banner__title {
+    color: var(--color-text);
+    font-size: 64px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.5);
+}
+
+/* —— 卡片式分组（settings 的 AUDIO / GAMEPLAY / OTHER 等） —— */
+.section-card {
+    background-color: rgba(15, 22, 50, 0.7);
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.4);
+    padding: 22px;
+    margin-bottom: 22px;
+}
+
+.section-title {
+    color: rgb(120, 180, 255);
+    font-size: 28px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+}
+
+/* shop 的 SPECIAL 分隔线 */
+.section-divider {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    margin-bottom: 14px;
+}
+
+.section-divider__line {
+    height: 2px;
+    width: 80px;
+    background-color: rgba(120, 180, 255, 0.6);
+    margin-left: 14px;
+    margin-right: 14px;
+}
+
+.section-divider__text {
+    color: rgb(120, 180, 255);
+    font-size: 28px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+}
+
+/* —— 底部导航（购物车 / 收藏 / 设置） —— */
+.bottom-nav {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    height: 150px;
+    background-color: rgba(15, 22, 50, 0.85);
+    border-radius: 30px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.5);
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-top: 18px;
+}
+
+.nav-btn {
+    flex-grow: 1;
+    height: 130px;
+    margin-left: 6px;
+    margin-right: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 24px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgb(160, 175, 210);
+    font-size: 22px;
+    -unity-font-style: bold;
+    padding: 0;
+    transition-property: background-color, scale;
+    transition-duration: 120ms;
+}
+
+.nav-btn:hover {
+    background-color: rgba(80, 140, 255, 0.15);
+}
+
+.nav-btn:active {
+    scale: 0.95 0.95;
+}
+
+.nav-btn--active {
+    background-color: rgba(40, 90, 200, 0.85);
+    color: var(--color-text);
+    border-width: 2px;
+    border-color: rgb(120, 180, 255);
+}
+
+/* 占位图标（用户后续可改成 background-image: url("...") 即可） */
+.placeholder-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background-color: rgba(180, 200, 230, 0.35);
+    margin-bottom: 4px;
+}

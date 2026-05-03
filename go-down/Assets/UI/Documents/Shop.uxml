@@ -1,0 +1,162 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Styles/theme.uss" />
+    <ui:Style src="project://database/Assets/UI/Styles/shop.uss" />
+
+    <!-- ============================================================
+         商店页面（Shop）
+         结构：
+            screen
+              ├── bg-image                    背景图（共享 StartMenu_BG）
+              ├── top-bar                     高分 / 钻石 / 金币
+              ├── header-row                  返回箭头 + SHOP 横幅
+              ├── tab-bar                     BALLS / BLOCKS 切换
+              ├── ScrollView (.shop-scroll)
+              │     ├── item-grid (3 columns × 2 rows: 普通球)
+              │     ├── section-divider “SPECIAL”
+              │     └── item-grid (3 columns × 1 row: 特殊球)
+              └── bottom-nav                  购物车（active）/ 收藏 / 设置
+         所有按钮都按 name 通过 Q<Button>() 在 ShopPanel.cs 中绑定。
+         ============================================================ -->
+    <ui:VisualElement name="root" class="screen">
+
+        <ui:VisualElement name="bg-image" picking-mode="Ignore" class="bg-image" />
+
+        <!-- 顶部状态栏 -->
+        <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:VisualElement class="stat-pill">
+                <ui:VisualElement class="stat-pill__icon stat-pill__icon--flag" />
+                <ui:Label name="high-score-value" text="0" class="stat-pill__value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="stat-pill">
+                <ui:VisualElement class="stat-pill__icon stat-pill__icon--gem" />
+                <ui:Label name="gem-value" text="0" class="stat-pill__value" />
+                <ui:Button name="add-gems-btn" text="+" class="stat-pill__plus" />
+            </ui:VisualElement>
+            <ui:VisualElement class="stat-pill">
+                <ui:VisualElement class="stat-pill__icon stat-pill__icon--coin" />
+                <ui:Label name="coin-value" text="0" class="stat-pill__value" />
+                <ui:Button name="add-coins-btn" text="+" class="stat-pill__plus" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 页面标题：返回 + SHOP -->
+        <ui:VisualElement class="header-row">
+            <ui:Button name="back-btn" text="←" class="back-btn" />
+            <ui:VisualElement class="banner">
+                <ui:Label text="SHOP" class="banner__title" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- BALLS / BLOCKS 切换 -->
+        <ui:VisualElement class="tab-bar">
+            <ui:Button name="tab-balls" text="BALLS" class="tab-btn tab-btn--active" />
+            <ui:Button name="tab-blocks" text="BLOCKS" class="tab-btn" />
+        </ui:VisualElement>
+
+        <!-- 主内容滚动区（普通球 + SPECIAL + 特殊球） -->
+        <ui:ScrollView name="shop-scroll" class="shop-scroll" mode="Vertical">
+
+            <ui:VisualElement class="item-grid">
+                <!-- Row 1 -->
+                <ui:Button name="item-classic" class="item-card item-card--selected">
+                    <ui:VisualElement class="item-thumb item-thumb--classic" picking-mode="Ignore" />
+                    <ui:Label text="CLASSIC" class="item-card__name" />
+                    <ui:VisualElement class="item-card__check" picking-mode="Ignore" />
+                </ui:Button>
+                <ui:Button name="item-blue" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--blue" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="500" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="item-purple" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--purple" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="800" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+
+                <!-- Row 2 -->
+                <ui:Button name="item-green" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--green" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="1000" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="item-red" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--red" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="1200" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="item-rainbow" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--rainbow" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="1500" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
+            <!-- SPECIAL 分隔 -->
+            <ui:VisualElement class="section-divider">
+                <ui:VisualElement class="section-divider__line" picking-mode="Ignore" />
+                <ui:Label text="SPECIAL" class="section-divider__text" />
+                <ui:VisualElement class="section-divider__line" picking-mode="Ignore" />
+            </ui:VisualElement>
+
+            <!-- 特殊球 -->
+            <ui:VisualElement class="item-grid">
+                <ui:Button name="item-soccer" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--soccer" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="2000" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="item-basket" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--basket" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="2000" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="item-planet" class="item-card item-card--locked">
+                    <ui:VisualElement class="item-thumb item-thumb--planet" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__lock" picking-mode="Ignore" />
+                    <ui:VisualElement class="item-card__price">
+                        <ui:VisualElement class="item-card__price-coin" picking-mode="Ignore" />
+                        <ui:Label text="2500" class="item-card__price-text" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
+        </ui:ScrollView>
+
+        <!-- 底部导航 -->
+        <ui:VisualElement class="bottom-nav">
+            <ui:Button name="nav-shop" class="nav-btn nav-btn--active">
+                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+                <ui:Label text="SHOP" />
+            </ui:Button>
+            <ui:Button name="nav-rate" class="nav-btn">
+                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+            </ui:Button>
+            <ui:Button name="nav-settings" class="nav-btn">
+                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+            </ui:Button>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
