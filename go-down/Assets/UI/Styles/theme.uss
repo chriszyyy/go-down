@@ -258,10 +258,12 @@
     /* 预留：当加入 .btn__icon 后，文字会被推到右边。 */
 }
 
-/* 预留给以后的图标 (用户提供后才启用) */
+/* 按钮内的图标，scale-to-fit 保持原始宽高比，绝对不变形。
+   三张图原始比例略有差异（Play 0.85:1 / Shop 1.10:1 / Setting 1.13:1），
+   会有轻微大小差异，但不会拉伸变形。 */
 .btn__icon {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
     margin-right: 24px;
     -unity-background-scale-mode: scale-to-fit;
 }
