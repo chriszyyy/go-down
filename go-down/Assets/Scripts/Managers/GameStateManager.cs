@@ -27,8 +27,10 @@ public class GameStateManager : MonoBehaviour
 
         Instance = this;
 
-        // Ensure a sane timeScale when entering play mode.
-        if (pauseTimeOnGameOver && Time.timeScale == 0f)
+        // 进入 Play 模式时把 timeScale 拉回 1（避免上次 GameOver 残留的 0）。
+        // 但要尊重 UI 面板的主动暂停 —— 比如 StartMenu 一上来就调用 UIPause.Acquire()
+        // 把 timeScale 设成 0，这里不能盲目覆盖。
+        if (pauseTimeOnGameOver && Time.timeScale == 0f && !UIPause.IsPaused)
         {
             Time.timeScale = resumeTimeScale;
         }

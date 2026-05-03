@@ -34,6 +34,8 @@ public class ShopPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        UIPause.Acquire(); // 面板可见 → 暂停游戏
+
         var root = GetComponent<UIDocument>().rootVisualElement;
         if (root == null) return;
 
@@ -61,6 +63,8 @@ public class ShopPanel : MonoBehaviour
 
     private void OnDisable()
     {
+        UIPause.Release();
+
         if (backButton != null) backButton.clicked -= OnBack;
         // tabBalls/tabBlocks/nav-* 用 lambda 不易精确解绑，
         // 占位实现里依赖 OnEnable 重新查询不会重复绑定（每次 Q<> 拿到的是同一个元素，
@@ -78,8 +82,8 @@ public class ShopPanel : MonoBehaviour
         Debug.Log("[Shop] nav: settings");
         if (SettingsPanel.Instance != null)
         {
-            Hide();
             SettingsPanel.Instance.Show(returnTarget);
+            Hide();
         }
     }
 
@@ -101,7 +105,8 @@ public class ShopPanel : MonoBehaviour
     /// <summary>隐藏本面板，激活返回目标。</summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
+        // 先打开返回目标再隐藏自己，保证 UIPause refcount 始终 >= 1。
         if (returnTarget != null) returnTarget.SetActive(true);
+        gameObject.SetActive(false);
     }
 }

@@ -49,6 +49,8 @@ public class SettingsPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        UIPause.Acquire(); // 面板可见 → 暂停游戏
+
         var root = GetComponent<UIDocument>().rootVisualElement;
         if (root == null) return;
 
@@ -94,6 +96,8 @@ public class SettingsPanel : MonoBehaviour
 
     private void OnDisable()
     {
+        UIPause.Release();
+
         if (backButton != null) backButton.clicked -= OnBack;
         // 占位实现，其它 lambda 订阅在面板隐藏后随 root 一起被销毁，无需精确解绑。
     }
@@ -109,8 +113,8 @@ public class SettingsPanel : MonoBehaviour
         Debug.Log("[Settings] nav: shop");
         if (ShopPanel.Instance != null)
         {
-            Hide();
             ShopPanel.Instance.Show(returnTarget);
+            Hide();
         }
     }
 
@@ -132,7 +136,8 @@ public class SettingsPanel : MonoBehaviour
     /// <summary>隐藏本面板，激活返回目标。</summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
+        // 先打开返回目标再隐藏自己，保证 UIPause refcount 始终 >= 1。
         if (returnTarget != null) returnTarget.SetActive(true);
+        gameObject.SetActive(false);
     }
 }

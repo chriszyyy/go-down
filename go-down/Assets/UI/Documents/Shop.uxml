@@ -41,7 +41,7 @@
 
         <!-- 页面标题：返回 + SHOP -->
         <ui:VisualElement class="header-row">
-            <ui:Button name="back-btn" text="←" class="back-btn" />
+            <ui:Button name="back-btn" class="back-btn" />
             <ui:VisualElement class="banner">
                 <ui:Label text="SHOP" class="banner__title" />
             </ui:VisualElement>

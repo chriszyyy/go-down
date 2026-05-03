@@ -10,12 +10,18 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(UIDocument))]
 public class StartMenuPanel : MonoBehaviour
 {
+    [Tooltip("点击 START GAME 时激活的对象（一般是 TowerBuilder）。\n" +
+             "默认 inactive，避免起始菜单期间 tower 物理已经在跑、被透过 UI 点到。")]
+    [SerializeField] private GameObject gameRoot;
+
     private Button playButton;
     private Button shopButton;
     private Button optionsButton;
 
     private void OnEnable()
     {
+        UIPause.Acquire(); // 菜单可见 → 暂停游戏，防止 tower 物理、点击穿透
+
         var root = GetComponent<UIDocument>().rootVisualElement;
         if (root == null) return;
 
@@ -30,6 +36,8 @@ public class StartMenuPanel : MonoBehaviour
 
     private void OnDisable()
     {
+        UIPause.Release();
+
         if (playButton != null) playButton.clicked -= OnPlay;
         if (shopButton != null) shopButton.clicked -= OnShop;
         if (optionsButton != null) optionsButton.clicked -= OnOptions;
@@ -39,6 +47,10 @@ public class StartMenuPanel : MonoBehaviour
     private void OnPlay()
     {
         Debug.Log("[StartMenu] Play clicked");
+        // 激活实际游戏（TowerBuilder GameObject 默认 inactive，
+        // 这样起始菜单期间 tower 不会被构建、物理也不会跑）
+        if (gameRoot != null) gameRoot.SetActive(true);
+
         // 隐藏菜单 → 进入游戏
         gameObject.SetActive(false);
     }
@@ -49,8 +61,9 @@ public class StartMenuPanel : MonoBehaviour
         var panel = ShopPanel.Instance ?? FindFirstObjectByType<ShopPanel>(FindObjectsInactive.Include);
         if (panel != null)
         {
-            gameObject.SetActive(false);
+            // 先打开新面板再隐藏本面板，保证 UIPause refcount 始终 >= 1，避免一帧 timeScale=1
             panel.Show(gameObject);
+            gameObject.SetActive(false);
         }
         else
         {
@@ -65,8 +78,8 @@ public class StartMenuPanel : MonoBehaviour
         var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
         if (panel != null)
         {
-            gameObject.SetActive(false);
             panel.Show(gameObject);
+            gameObject.SetActive(false);
         }
         else
         {

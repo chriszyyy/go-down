@@ -42,7 +42,7 @@
 
         <!-- 页面标题 -->
         <ui:VisualElement class="header-row">
-            <ui:Button name="back-btn" text="←" class="back-btn" />
+            <ui:Button name="back-btn" class="back-btn" />
             <ui:VisualElement class="banner">
                 <ui:Label text="SETTING" class="banner__title" />
             </ui:VisualElement>
