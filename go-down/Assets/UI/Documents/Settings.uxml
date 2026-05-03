@@ -1,139 +1,40 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:Style src="project://database/Assets/UI/Styles/theme.uss" />
-    <ui:Style src="project://database/Assets/UI/Styles/settings.uss" />
-
-    <!-- ============================================================
-         设置页面（Settings）
-         结构：
-            screen
-              ├── bg-image                    背景图
-              ├── top-bar                     高分 / 钻石 / 金币
-              ├── header-row                  返回箭头 + SETTING 横幅
-              ├── ScrollView (.settings-scroll)
-              │     ├── section-card AUDIO    Music slider / SFX slider
-              │     ├── section-card GAMEPLAY 震动 / 触感 / 难度
-              │     ├── section-card OTHER    语言 / 评分 / 隐私政策
-              │     ├── reset-btn             RESET PROGRESS
-              │     └── version-label         Version 1.0.0
-              └── bottom-nav                  购物车 / 收藏 / 设置（active）
-         所有交互元素都按 name 通过 Q<>() 在 SettingsPanel.cs 中绑定。
-         ============================================================ -->
+    <Style src="project://database/Assets/UI/Styles/theme.uss?fileID=7433441132597879392&amp;guid=17651a3551c5e0f47a351277b58b0376&amp;type=3#theme" />
+    <Style src="project://database/Assets/UI/Styles/settings.uss?fileID=7433441132597879392&amp;guid=556a4e9a7714dc042b5af5ded8a449e4&amp;type=3#settings" />
     <ui:VisualElement name="root" class="screen">
-
         <ui:VisualElement name="bg-image" picking-mode="Ignore" class="bg-image bg-image--page" />
-
-        <!-- 顶部状态栏 -->
-        <ui:VisualElement name="top-bar" class="top-bar">
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--flag" />
-                <ui:Label name="high-score-value" text="0" class="stat-pill__value" />
-            </ui:VisualElement>
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--gem" />
-                <ui:Label name="gem-value" text="0" class="stat-pill__value" />
-                <ui:Button name="add-gems-btn" text="+" class="stat-pill__plus" />
-            </ui:VisualElement>
-            <ui:VisualElement class="stat-pill">
-                <ui:VisualElement class="stat-pill__icon stat-pill__icon--coin" />
-                <ui:Label name="coin-value" text="0" class="stat-pill__value" />
-                <ui:Button name="add-coins-btn" text="+" class="stat-pill__plus" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <!-- 页面标题 -->
         <ui:VisualElement class="header-row">
             <ui:Button name="back-btn" class="back-btn" />
             <ui:VisualElement class="banner">
                 <ui:Label text="SETTING" class="banner__title" />
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <ui:ScrollView name="settings-scroll" class="settings-scroll" mode="Vertical">
-
-            <!-- AUDIO -->
-            <ui:VisualElement class="section-card">
+        <ui:ScrollView name="settings-scroll" mode="Vertical" class="settings-scroll">
+            <ui:VisualElement class="section-card" style="height: 356px; margin-bottom: 30px;">
                 <ui:Label text="AUDIO" class="section-title" />
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="MUSIC" class="row__label" />
-                    <ui:Slider name="music-slider" low-value="0" high-value="1" value="0.7" />
-                    <ui:Button name="music-mute-btn" text="🔊" class="btn-mute" />
+                <ui:VisualElement class="audio-row">
+                    <ui:VisualElement picking-mode="Ignore" class="audio-icon audio-icon--music" />
+                    <ui:Slider name="music-slider" low-value="0" high-value="1" value="0.7" class="audio-slider" />
+                    <ui:Toggle name="music-toggle" value="true" class="audio-toggle" />
                 </ui:VisualElement>
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="SOUND EFFECTS" class="row__label" />
-                    <ui:Slider name="sfx-slider" low-value="0" high-value="1" value="0.5" />
-                    <ui:Button name="sfx-mute-btn" text="🔊" class="btn-mute" />
+                <ui:VisualElement class="audio-row">
+                    <ui:VisualElement picking-mode="Ignore" class="audio-icon audio-icon--sfx" />
+                    <ui:Slider name="sfx-slider" low-value="0" high-value="1" value="0.5" class="audio-slider" />
+                    <ui:Toggle name="sfx-toggle" value="true" class="audio-toggle" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- GAMEPLAY -->
-            <ui:VisualElement class="section-card">
-                <ui:Label text="GAMEPLAY" class="section-title" />
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="VIBRATION" class="row__label" />
-                    <ui:Toggle name="vibration-toggle" value="true" />
-                </ui:VisualElement>
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="HAPTIC FEEDBACK" class="row__label" />
-                    <ui:Toggle name="haptic-toggle" value="true" />
-                </ui:VisualElement>
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="DIFFICULTY" class="row__label" />
-                    <ui:VisualElement class="segmented">
-                        <ui:Button name="diff-easy" text="EASY" class="segment-btn" />
-                        <ui:Button name="diff-normal" text="NORMAL" class="segment-btn segment-btn--active" />
-                        <ui:Button name="diff-hard" text="HARD" class="segment-btn" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-            </ui:VisualElement>
-
-            <!-- OTHER -->
-            <ui:VisualElement class="section-card">
-                <ui:Label text="OTHER" class="section-title" />
-                <ui:Button name="row-language" class="row-link">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="LANGUAGE" class="row__label" />
-                    <ui:VisualElement style="flex-grow:1;" picking-mode="Ignore" />
-                    <ui:Label name="language-value" text="ENGLISH" class="row-link__value" />
-                    <ui:Label text="›" class="row-link__chevron" />
-                </ui:Button>
-                <ui:Button name="row-rate" class="row-link">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="RATE US" class="row__label" />
-                    <ui:VisualElement style="flex-grow:1;" picking-mode="Ignore" />
-                    <ui:Label text="›" class="row-link__chevron" />
-                </ui:Button>
-                <ui:Button name="row-privacy" class="row-link">
-                    <ui:VisualElement class="row__icon" picking-mode="Ignore" />
-                    <ui:Label text="PRIVACY POLICY" class="row__label" />
-                    <ui:VisualElement style="flex-grow:1;" picking-mode="Ignore" />
-                    <ui:Label text="›" class="row-link__chevron" />
-                </ui:Button>
-            </ui:VisualElement>
-
-            <!-- 重置 -->
-            <ui:Button name="reset-btn" text="↻  RESET PROGRESS" class="reset-btn" />
-            <ui:Label text="Version 1.0.0" class="version-label" />
-
         </ui:ScrollView>
-
-        <!-- 底部导航 -->
         <ui:VisualElement class="bottom-nav">
             <ui:Button name="nav-shop" class="nav-btn">
-                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
             </ui:Button>
             <ui:Button name="nav-rate" class="nav-btn">
-                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
             </ui:Button>
             <ui:Button name="nav-settings" class="nav-btn nav-btn--active">
-                <ui:VisualElement class="placeholder-icon" picking-mode="Ignore" />
+                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
                 <ui:Label text="SETTING" />
             </ui:Button>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

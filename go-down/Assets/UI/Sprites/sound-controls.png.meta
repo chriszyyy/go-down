@@ -123,7 +123,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: sound-controls_0
+      name: music-icon
       rect:
         serializedVersion: 2
         x: 200
@@ -131,7 +131,7 @@ TextureImporter:
         width: 102
         height: 112
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -144,7 +144,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_1
+      name: progress-bar-empty
       rect:
         serializedVersion: 2
         x: 461
@@ -152,7 +152,7 @@ TextureImporter:
         width: 953
         height: 54
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -165,7 +165,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_2
+      name: sound-icon
       rect:
         serializedVersion: 2
         x: 200
@@ -173,7 +173,7 @@ TextureImporter:
         width: 107
         height: 93
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -186,7 +186,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_5
+      name: progress-bar-full
       rect:
         serializedVersion: 2
         x: 458
@@ -194,7 +194,7 @@ TextureImporter:
         width: 958
         height: 51
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -207,7 +207,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_6
+      name: toggle-round-dot
       rect:
         serializedVersion: 2
         x: 768
@@ -215,7 +215,7 @@ TextureImporter:
         width: 84
         height: 85
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -228,7 +228,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_7
+      name: on-toggle
       rect:
         serializedVersion: 2
         x: 220
@@ -236,7 +236,7 @@ TextureImporter:
         width: 456
         height: 153
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -249,7 +249,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_8
+      name: off-toggle
       rect:
         serializedVersion: 2
         x: 850
@@ -257,7 +257,7 @@ TextureImporter:
         width: 508
         height: 153
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -270,7 +270,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_9
+      name: on-toggle-without-round-dot
       rect:
         serializedVersion: 2
         x: 220
@@ -278,7 +278,7 @@ TextureImporter:
         width: 456
         height: 148
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -291,7 +291,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: sound-controls_10
+      name: off-toggle-without-round-dot
       rect:
         serializedVersion: 2
         x: 851
@@ -299,7 +299,7 @@ TextureImporter:
         width: 507
         height: 148
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -322,17 +322,17 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      sound-controls_0: 527104351
-      sound-controls_1: 1507802591
-      sound-controls_10: 763782775
-      sound-controls_2: 140152964
+      music-icon: 527104351
+      off-toggle: -191149957
+      off-toggle-without-round-dot: 763782775
+      on-toggle: 171358473
+      on-toggle-without-round-dot: 416846405
+      progress-bar-empty: 1507802591
+      progress-bar-full: -2106050260
       sound-controls_3: 1168977334
       sound-controls_4: 922314840
-      sound-controls_5: -2106050260
-      sound-controls_6: 536652276
-      sound-controls_7: 171358473
-      sound-controls_8: -191149957
-      sound-controls_9: 416846405
+      sound-icon: 140152964
+      toggle-round-dot: 536652276
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

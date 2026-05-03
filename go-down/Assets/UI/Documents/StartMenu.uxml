@@ -4,7 +4,7 @@
         <ui:VisualElement name="bg-image" picking-mode="Ignore" class="bg-image" />
         <ui:VisualElement name="middle-row" class="middle-row">
             <ui:VisualElement class="center-stack">
-                <ui:VisualElement name="logo" picking-mode="Ignore" class="logo-img" style="margin-top: 18%;" />
+                <ui:VisualElement name="logo" picking-mode="Ignore" class="logo-img" style="margin-top: 15%;" />
                 <ui:Label text="点击消除，让六边形小球不断下落！" class="subtitle" />
             </ui:VisualElement>
         </ui:VisualElement>

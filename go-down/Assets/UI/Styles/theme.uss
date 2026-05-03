@@ -40,29 +40,25 @@
     align-items: stretch;
     padding-left: 36px;
     padding-right: 36px;
-    padding-top: 48px;
+    padding-top: 130px;
     padding-bottom: 56px;
 }
 
-/* 全屏背景图（占满整个 screen，位于所有内容之下） */
 .bg-image {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BG.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BG.png?fileID=21300000&guid=9b7fccdda5cd003408364df676766bd9&type=3#StartMenu_BG");
     -unity-background-scale-mode: scale-and-crop;
-    /* 让上面的内容稍微更醒目，淡淡压暗一下背景 */
     background-color: rgba(0, 0, 0, 0.18);
 }
 
-/* Shop / Settings 等子页面用的背景：一张通用大图，scale-and-crop 自动从中心裁剪，
-   不拉伸不压缩。 */
 .bg-image--page {
-    background-image: url("project://database/Assets/UI/Sprites/PageBG.png");
+    background-image: url("project://database/Assets/UI/Sprites/PageBG.png?fileID=21300000&guid=7e4389102c1df4b40861b62fd5d4266c&type=3#PageBG");
     -unity-background-scale-mode: scale-and-crop;
-    background-color: rgba(0, 0, 0, 0.30);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .top-bar {
@@ -201,13 +197,12 @@
     letter-spacing: 6px;
 }
 
-/* Logo 图片版本：使用 PNG 作为背景，保留原始宽高比 */
 .logo-img {
     width: 720px;
     height: 396px;
     margin-top: 40px;
     margin-bottom: 12px;
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_Logo.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_Logo.png?fileID=21300000&guid=a68efdb8832ab9a49abb8e4d2c485747&type=3#StartMenu_Logo");
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -226,9 +221,6 @@
     margin-bottom: 12px;
 }
 
-/* 按钮本体：使用 PNG 作为背景。三张贴图原始宽度略有差异（348/338/324），
-   使用 stretch-to-fill 强制填充到同一容器尺寸，保证三个按钮可视大小完全一致。
-   变形在这种胶囊形状上几乎看不出来。 */
 .btn {
     width: 700px;
     height: 195px;
@@ -252,7 +244,6 @@
     scale: 0.97 0.97;
 }
 
-/* 按钮上的文字，统一白色 + 深色描边，三个按钮保持一致 */
 .btn__label {
     color: rgb(255, 255, 255);
     font-size: 60px;
@@ -263,12 +254,8 @@
     -unity-text-outline-color: rgba(20, 20, 35, 0.9);
     margin: 0;
     padding: 0;
-    /* 预留：当加入 .btn__icon 后，文字会被推到右边。 */
 }
 
-/* 按钮内的图标，scale-to-fit 保持原始宽高比，绝对不变形。
-   三张图原始比例略有差异（Play 0.85:1 / Shop 1.10:1 / Setting 1.13:1），
-   会有轻微大小差异，但不会拉伸变形。 */
 .btn__icon {
     width: 100px;
     height: 100px;
@@ -277,28 +264,27 @@
 }
 
 .btn__icon--play {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconPlay.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconPlay.png?fileID=21300000&guid=7d2501f23ecdb444e9904250b018ecc5&type=3#StartMenu_IconPlay");
 }
 
 .btn__icon--shop {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconShop.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconShop.png?fileID=21300000&guid=d8009a69340cf264bbcc4b4297385bc8&type=3#StartMenu_IconShop");
 }
 
 .btn__icon--settings {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconSetting.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconSetting.png?fileID=21300000&guid=74bc84011350345459deade7a654d8bc&type=3#StartMenu_IconSetting");
 }
 
-/* 各按钮的 PNG 贴图 */
 .btn--play {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnPlay.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnPlay.png?fileID=21300000&guid=7833687fafc2db8459430f4826771224&type=3#StartMenu_BtnPlay");
 }
 
 .btn--shop {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnShop.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnShop.png?fileID=21300000&guid=a03a82638bf989043974f24d3b1573ce&type=3#StartMenu_BtnShop");
 }
 
 .btn--settings {
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnSetting.png");
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnSetting.png?fileID=21300000&guid=d929dccfd560594468ac0a7ac5d07b41&type=3#StartMenu_BtnSetting");
 }
 
 .panel {
@@ -328,14 +314,6 @@
     background-color: rgba(255, 255, 255, 0.08);
 }
 
-/* ============================================================
- * 子页面共享样式（Shop / Settings 都用到的）
- *   - 顶部 header（返回按钮 + 标题横幅）
- *   - 卡片式 section（带标题）
- *   - 底部导航（购物车 / 收藏 / 设置）
- * ============================================================ */
-
-/* —— 顶部 header（返回箭头 + 标题横幅） —— */
 .header-row {
     flex-direction: row;
     align-items: center;
@@ -349,7 +327,7 @@
     border-width: 0;
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0);
-    background-image: url("project://database/Assets/UI/Sprites/BackBtn.png");
+    background-image: url("project://database/Assets/UI/Sprites/BackBtn.png?fileID=21300000&guid=4c572eaa69642c24e95461e5a4df8ddc&type=3#BackBtn");
     -unity-background-scale-mode: scale-to-fit;
     color: rgba(0, 0, 0, 0);
     padding: 0;
@@ -386,7 +364,6 @@
     -unity-text-outline-color: rgba(0, 0, 0, 0.5);
 }
 
-/* —— 卡片式分组（settings 的 AUDIO / GAMEPLAY / OTHER 等） —— */
 .section-card {
     background-color: rgba(15, 22, 50, 0.7);
     border-radius: 24px;
@@ -404,7 +381,6 @@
     margin-bottom: 14px;
 }
 
-/* shop 的 SPECIAL 分隔线 */
 .section-divider {
     flex-direction: row;
     align-items: center;
@@ -428,7 +404,6 @@
     letter-spacing: 4px;
 }
 
-/* —— 底部导航（购物车 / 收藏 / 设置） —— */
 .bottom-nav {
     flex-direction: row;
     justify-content: space-around;
@@ -477,7 +452,6 @@
     border-color: rgb(120, 180, 255);
 }
 
-/* 占位图标（用户后续可改成 background-image: url("...") 即可） */
 .placeholder-icon {
     width: 56px;
     height: 56px;

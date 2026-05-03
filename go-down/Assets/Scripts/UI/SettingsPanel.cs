@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// 设置面板控制器（UI Toolkit）。
-/// 占位实现：滑块 / 开关 / 难度按钮 / 链接行的状态改变都打 Debug.Log，
-/// 等接入真实 GameUserSettings 等系统后再把数值持久化。
+/// 设置面板控制器（UI Toolkit）—— 简化版。
+/// 只暴露音乐 / 音效两组：滑块控制音量，开关直接静音/恢复。
+/// 占位实现：所有变更打 Debug.Log；接入 GameUserSettings 后替换为真实持久化。
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class SettingsPanel : MonoBehaviour
@@ -18,20 +18,14 @@ public class SettingsPanel : MonoBehaviour
 
     private Slider musicSlider;
     private Slider sfxSlider;
-    private Button musicMuteButton;
-    private Button sfxMuteButton;
+    private Toggle musicToggle;
+    private Toggle sfxToggle;
 
-    private Toggle vibrationToggle;
-    private Toggle hapticToggle;
-
-    private Button diffEasy;
-    private Button diffNormal;
-    private Button diffHard;
-
-    private Button rowLanguage;
-    private Button rowRate;
-    private Button rowPrivacy;
-    private Button resetButton;
+    // 动态插入到滑块 tracker 与 dragger 之间的填充结构（外层裁剪 wrap + 内层等宽 image）
+    private VisualElement musicFillWrap;
+    private VisualElement musicFillImage;
+    private VisualElement sfxFillWrap;
+    private VisualElement sfxFillImage;
 
     private Button navShop;
     private Button navRate;
@@ -40,11 +34,6 @@ public class SettingsPanel : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this) Instance = null;
     }
 
     private void OnEnable()
@@ -57,41 +46,29 @@ public class SettingsPanel : MonoBehaviour
         backButton = root.Q<Button>("back-btn");
         musicSlider = root.Q<Slider>("music-slider");
         sfxSlider = root.Q<Slider>("sfx-slider");
-        musicMuteButton = root.Q<Button>("music-mute-btn");
-        sfxMuteButton = root.Q<Button>("sfx-mute-btn");
-        vibrationToggle = root.Q<Toggle>("vibration-toggle");
-        hapticToggle = root.Q<Toggle>("haptic-toggle");
-        diffEasy = root.Q<Button>("diff-easy");
-        diffNormal = root.Q<Button>("diff-normal");
-        diffHard = root.Q<Button>("diff-hard");
-        rowLanguage = root.Q<Button>("row-language");
-        rowRate = root.Q<Button>("row-rate");
-        rowPrivacy = root.Q<Button>("row-privacy");
-        resetButton = root.Q<Button>("reset-btn");
+        musicToggle = root.Q<Toggle>("music-toggle");
+        sfxToggle = root.Q<Toggle>("sfx-toggle");
         navShop = root.Q<Button>("nav-shop");
         navRate = root.Q<Button>("nav-rate");
         navSettings = root.Q<Button>("nav-settings");
 
         if (backButton != null) backButton.clicked += OnBack;
-        if (musicMuteButton != null) musicMuteButton.clicked += () => Debug.Log("[Settings] music mute");
-        if (sfxMuteButton != null) sfxMuteButton.clicked += () => Debug.Log("[Settings] sfx mute");
-        if (musicSlider != null) musicSlider.RegisterValueChangedCallback(e => Debug.Log($"[Settings] music = {e.newValue:F2}"));
-        if (sfxSlider != null) sfxSlider.RegisterValueChangedCallback(e => Debug.Log($"[Settings] sfx = {e.newValue:F2}"));
-        if (vibrationToggle != null) vibrationToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] vibration = {e.newValue}"));
-        if (hapticToggle != null) hapticToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] haptic = {e.newValue}"));
 
-        if (diffEasy != null) diffEasy.clicked += () => SelectDifficulty(0);
-        if (diffNormal != null) diffNormal.clicked += () => SelectDifficulty(1);
-        if (diffHard != null) diffHard.clicked += () => SelectDifficulty(2);
+        // 滑块：在 tracker 与 dragger 之间插入一个填充结构，随值变化更新可见宽度
+        WireSlider(musicSlider, ref musicFillWrap, ref musicFillImage, "music");
+        WireSlider(sfxSlider, ref sfxFillWrap, ref sfxFillImage, "sfx");
 
-        if (rowLanguage != null) rowLanguage.clicked += () => Debug.Log("[Settings] Language clicked");
-        if (rowRate != null) rowRate.clicked += () => Debug.Log("[Settings] Rate Us clicked");
-        if (rowPrivacy != null) rowPrivacy.clicked += () => Debug.Log("[Settings] Privacy Policy clicked");
-        if (resetButton != null) resetButton.clicked += () => Debug.Log("[Settings] Reset Progress clicked (placeholder)");
+        if (musicToggle != null) musicToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] music on = {e.newValue}"));
+        if (sfxToggle != null) sfxToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] sfx on = {e.newValue}"));
 
         if (navShop != null) navShop.clicked += OnNavShop;
         if (navRate != null) navRate.clicked += () => Debug.Log("[Settings] nav: rate");
         if (navSettings != null) navSettings.clicked += () => Debug.Log("[Settings] nav: settings (already here)");
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     private void OnDisable()
@@ -118,12 +95,94 @@ public class SettingsPanel : MonoBehaviour
         }
     }
 
-    private void SelectDifficulty(int level)
+    /// <summary>
+    /// 把一个 slider 接入填充贴图：插入 wrap+image，注册值变化与几何变化回调，
+    /// 使填充 wrap 的宽度始终等于当前进度百分比，内层 image 保持 tracker 完整像素宽度。
+    /// </summary>
+    private static void WireSlider(Slider slider, ref VisualElement wrap, ref VisualElement image, string label)
     {
-        if (diffEasy != null) diffEasy.EnableInClassList("segment-btn--active", level == 0);
-        if (diffNormal != null) diffNormal.EnableInClassList("segment-btn--active", level == 1);
-        if (diffHard != null) diffHard.EnableInClassList("segment-btn--active", level == 2);
-        Debug.Log($"[Settings] difficulty = {level}");
+        if (slider == null) return;
+
+        (wrap, image) = AttachSliderFill(slider);
+        var capturedWrap = wrap;
+        var capturedImage = image;
+
+        slider.RegisterValueChangedCallback(e =>
+        {
+            UpdateSliderFill(slider, capturedWrap);
+            Debug.Log($"[Settings] {label} = {e.newValue:F2}");
+        });
+
+        // tracker 决定可视宽度；几何变化时同步 wrap 百分比 + 内层 image 像素宽度
+        var tracker = slider.Q(className: "unity-base-slider__tracker");
+        if (tracker != null)
+        {
+            tracker.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                UpdateSliderFill(slider, capturedWrap);
+                SyncFillImageWidth(tracker, capturedImage);
+            });
+        }
+
+        // slider 自身首帧布局完成后也跑一次，确保初始进度立刻显示
+        slider.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            UpdateSliderFill(slider, capturedWrap);
+            SyncFillImageWidth(tracker, capturedImage);
+        });
+    }
+
+    /// <summary>
+    /// 在 slider 的 tracker 内插入一个"填充"结构。
+    /// 把 wrap 作为 tracker 的 child 而不是 input 的 sibling —— 这样 dragger（input 的另一个 child）
+    /// 自然在 tracker 整体之后渲染，永远在拖动球之下，不需要每帧 BringToFront。
+    /// 为了不拉伸贴图本身，采用外层裁剪 + 内层锁定 tracker 完整像素宽度。
+    /// </summary>
+    private static (VisualElement wrap, VisualElement image) AttachSliderFill(Slider slider)
+    {
+        var tracker = slider.Q(className: "unity-base-slider__tracker");
+        if (tracker == null) return (null, null);
+
+        var wrap = new VisualElement
+        {
+            name = slider.name + "-fill",
+            pickingMode = PickingMode.Ignore
+        };
+        wrap.AddToClassList("audio-slider__fill");
+
+        var image = new VisualElement
+        {
+            name = slider.name + "-fill-image",
+            pickingMode = PickingMode.Ignore
+        };
+        image.AddToClassList("audio-slider__fill-image");
+        wrap.Add(image);
+
+        // 直接挂到 tracker 内部。tracker 在 input 容器里早于 dragger，
+        // 因此 dragger 总是在 tracker（含其全部子元素）之上渲染。
+        tracker.Add(wrap);
+        return (wrap, image);
+    }
+
+    /// <summary>根据 slider 的当前值更新填充 wrapper 的宽度百分比。</summary>
+    private static void UpdateSliderFill(Slider slider, VisualElement wrap)
+    {
+        if (slider == null || wrap == null) return;
+        float lo = slider.lowValue, hi = slider.highValue;
+        float pct = hi > lo ? Mathf.Clamp01((slider.value - lo) / (hi - lo)) : 0f;
+        wrap.style.width = new StyleLength(Length.Percent(pct * 100f));
+    }
+
+    /// <summary>同步内层 image 的实际像素宽度 = tracker 的像素宽度，这样无论 wrap 由多窄，
+    /// 贴图都以原始比例完整渲染，只是被 wrap 裁剪出看到的部分。</summary>
+    private static void SyncFillImageWidth(VisualElement tracker, VisualElement image)
+    {
+        if (tracker == null || image == null) return;
+        float w = tracker.resolvedStyle.width;
+        if (w > 0f)
+        {
+            image.style.width = new StyleLength(w);
+        }
     }
 
     /// <summary>显示本面板。</summary>
