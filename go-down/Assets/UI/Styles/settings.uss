@@ -79,9 +79,12 @@
     -unity-background-scale-mode: scale-to-fit;
     border-width: 0;
     border-radius: 0;
+    /* 不设 margin-left：Unity 默认会把 dragger.left 从 0 到 (trackerWidth - draggerWidth) 进行插值，
+       这样拖动球完全在 tracker 内部，不会两端外翻。填充以像素计算为
+       knob.left = pct * (trackerWidth - draggerWidth)，与拖动球左边缘对齐。 */
     top: 50%;
     margin-top: -25px;
-    margin-left: -25px;
+    margin-left: 0;
 }
 
 .audio-slider .unity-base-slider__dragger-border {

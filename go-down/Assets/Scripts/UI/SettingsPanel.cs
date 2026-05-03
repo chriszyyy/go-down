@@ -174,13 +174,24 @@ public class SettingsPanel : MonoBehaviour
         return (wrap, image);
     }
 
-    /// <summary>根据 slider 的当前值更新填充 wrapper 的宽度百分比。</summary>
+    /// <summary>根据 slider 的当前值更新填充 wrapper 的宽度。
+    /// 用 “拖动球的左边缘位置” 作为填充末端以像素为单位精确对齐：
+    /// 填充宽度 = pct × (trackerWidth − draggerWidth)。这样无论 slider 处于哪个位置，
+    /// 填充的右边缘都能紧贴拖动球的左边缘。</summary>
     private static void UpdateSliderFill(Slider slider, VisualElement wrap)
     {
         if (slider == null || wrap == null) return;
         float lo = slider.lowValue, hi = slider.highValue;
         float pct = hi > lo ? Mathf.Clamp01((slider.value - lo) / (hi - lo)) : 0f;
-        wrap.style.width = new StyleLength(Length.Percent(pct * 100f));
+
+        var tracker = slider.Q(className: "unity-base-slider__tracker");
+        var dragger = slider.Q(className: "unity-base-slider__dragger");
+        if (tracker == null) return;
+
+        float trackerW = tracker.resolvedStyle.width;
+        float draggerW = dragger != null ? dragger.resolvedStyle.width : 0f;
+        float fillPx = Mathf.Max(0f, pct * Mathf.Max(0f, trackerW - draggerW));
+        wrap.style.width = new StyleLength(fillPx);
     }
 
     /// <summary>同步内层 image 的实际像素宽度 = tracker 的像素宽度，这样无论 wrap 由多窄，
