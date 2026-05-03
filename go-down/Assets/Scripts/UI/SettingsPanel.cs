@@ -58,8 +58,18 @@ public class SettingsPanel : MonoBehaviour
         WireSlider(musicSlider, ref musicFillWrap, ref musicFillImage, "music");
         WireSlider(sfxSlider, ref sfxFillWrap, ref sfxFillImage, "sfx");
 
-        if (musicToggle != null) musicToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] music on = {e.newValue}"));
-        if (sfxToggle != null) sfxToggle.RegisterValueChangedCallback(e => Debug.Log($"[Settings] sfx on = {e.newValue}"));
+        // —— 接入实际的游戏音频系统 ——
+        // 1) 用持久化的设置初始化 UI
+        if (musicSlider != null) musicSlider.SetValueWithoutNotify(GameUserSettings.MusicVolume);
+        if (sfxSlider != null) sfxSlider.SetValueWithoutNotify(GameUserSettings.SfxVolume);
+        if (musicToggle != null) musicToggle.SetValueWithoutNotify(GameUserSettings.MusicEnabled);
+        if (sfxToggle != null) sfxToggle.SetValueWithoutNotify(GameUserSettings.SfxEnabled);
+
+        // 2) 用户操作 → 写回设置（GameAudioController 会在 Update 里轮询应用）
+        if (musicSlider != null) musicSlider.RegisterValueChangedCallback(e => GameUserSettings.MusicVolume = e.newValue);
+        if (sfxSlider != null) sfxSlider.RegisterValueChangedCallback(e => GameUserSettings.SfxVolume = e.newValue);
+        if (musicToggle != null) musicToggle.RegisterValueChangedCallback(e => GameUserSettings.MusicEnabled = e.newValue);
+        if (sfxToggle != null) sfxToggle.RegisterValueChangedCallback(e => GameUserSettings.SfxEnabled = e.newValue);
 
         if (navShop != null) navShop.clicked += OnNavShop;
         if (navRate != null) navRate.clicked += () => Debug.Log("[Settings] nav: rate");

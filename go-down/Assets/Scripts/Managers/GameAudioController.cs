@@ -57,6 +57,7 @@ public class GameAudioController : MonoBehaviour
 
     private bool lastMusicEnabled;
     private bool lastSfxEnabled;
+    private float lastMusicVolume;
 
     private void Awake()
     {
@@ -82,6 +83,7 @@ public class GameAudioController : MonoBehaviour
     {
         lastMusicEnabled = GameUserSettings.MusicEnabled;
         lastSfxEnabled = GameUserSettings.SfxEnabled;
+        lastMusicVolume = GameUserSettings.MusicVolume;
         ApplyAudioSettings(lastMusicEnabled, lastSfxEnabled);
     }
 
@@ -100,10 +102,18 @@ public class GameAudioController : MonoBehaviour
     {
         bool musicEnabled = GameUserSettings.MusicEnabled;
         bool sfxEnabled = GameUserSettings.SfxEnabled;
-        if (musicEnabled == lastMusicEnabled && sfxEnabled == lastSfxEnabled) return;
+        float musicVol = GameUserSettings.MusicVolume;
+
+        if (musicEnabled == lastMusicEnabled
+            && sfxEnabled == lastSfxEnabled
+            && Mathf.Approximately(musicVol, lastMusicVolume))
+        {
+            return;
+        }
 
         lastMusicEnabled = musicEnabled;
         lastSfxEnabled = sfxEnabled;
+        lastMusicVolume = musicVol;
         ApplyAudioSettings(musicEnabled, sfxEnabled);
     }
 
@@ -142,7 +152,8 @@ public class GameAudioController : MonoBehaviour
     {
         if (bgmSource != null)
         {
-            bgmSource.volume = Mathf.Clamp01(bgmVolume);
+            // 用户音量 × 项目预调音量
+            bgmSource.volume = Mathf.Clamp01(bgmVolume * GameUserSettings.MusicVolume);
 
             if (musicEnabled)
             {
@@ -181,7 +192,7 @@ public class GameAudioController : MonoBehaviour
 
         float volume = inRewardMode ? rewardBlockClearVolume : blockClearVolume;
 
-        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume * GameUserSettings.SfxVolume));
     }
 
     private void HandleCoinsGained(Vector3 worldPosition, int deltaCoins)
@@ -190,7 +201,7 @@ public class GameAudioController : MonoBehaviour
         if (deltaCoins <= 0) return;
         if (sfxSource == null || coinGainClip == null) return;
 
-        sfxSource.PlayOneShot(coinGainClip, Mathf.Clamp01(coinGainVolume));
+        sfxSource.PlayOneShot(coinGainClip, Mathf.Clamp01(coinGainVolume * GameUserSettings.SfxVolume));
     }
 
     public void PlayResetToolSfx()
@@ -208,6 +219,6 @@ public class GameAudioController : MonoBehaviour
         if (!GameUserSettings.SfxEnabled) return;
         if (sfxSource == null || clip == null) return;
 
-        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume * GameUserSettings.SfxVolume));
     }
 }
