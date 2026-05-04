@@ -95,9 +95,12 @@ public class SettingsPanel : MonoBehaviour
     private void OnNavShop()
     {
         Debug.Log("[Settings] nav: shop");
-        if (ShopPanel.Instance != null)
+        // 同上：ShopPanel.Instance 可能从未初始化（面板初始 inactive）。
+        var panel = ShopPanel.Instance ?? FindFirstObjectByType<ShopPanel>(FindObjectsInactive.Include);
+        if (panel != null)
         {
-            ShopPanel.Instance.Show(returnTarget);
+            // 不传 returnTarget：保留对方 Inspector 里设好的原始返回目标。
+            panel.Show();
             Hide();
         }
     }

@@ -77,9 +77,13 @@ public class ShopPanel : MonoBehaviour
     private void OnNavSettings()
     {
         Debug.Log("[Shop] nav: settings");
-        if (SettingsPanel.Instance != null)
+        // Instance 只有在面板被 Awake 过后才会赋值；初始状态下 SettingsPanel 的 UIDocument 子节点
+        // 是 inactive 的，Awake 从未运行，所以要同时在场景里查找包括 inactive 在内的面板。
+        var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
+        if (panel != null)
         {
-            SettingsPanel.Instance.Show(returnTarget);
+            // 不传 returnTarget：保留对方 Inspector 里设好的原始返回目标（一般是 StartMenu）。
+            panel.Show();
             Hide();
         }
     }

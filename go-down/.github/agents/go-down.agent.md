@@ -95,6 +95,7 @@ This file defines **rules, conventions, and workflows**. Game feature documentat
 - `CLAUDE.md` — quick reference (assembly graph, file map, conventions)
 - `development_tasks.md` — current roadmap
 - `Assets/Scripts/**` source comments — implementation details (block coordinates, scoring, lifecycle, BackgroundController zones, etc.)
+- `.github/agents/prompt-improvements.md` — **当前 prompt 的待优化清单**。遇到反复踩的坑，先翻这里看是否已记录；学到新坑就 append 一条。用户提到 "更新 agent prompt" 时，先读这个文件挑出准备纳入的条目。
 
 Do **not** rely on documentation pasted into this prompt — read the actual files when you need a fact.
 
