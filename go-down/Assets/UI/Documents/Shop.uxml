@@ -111,14 +111,12 @@
         </ui:ScrollView>
         <ui:VisualElement class="bottom-nav">
             <ui:Button name="nav-shop" class="nav-btn nav-btn--active">
-                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
+                <ui:VisualElement picking-mode="Ignore" class="nav-icon nav-icon--shop" />
                 <ui:Label text="SHOP" />
             </ui:Button>
-            <ui:Button name="nav-rate" class="nav-btn">
-                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
-            </ui:Button>
             <ui:Button name="nav-settings" class="nav-btn">
-                <ui:VisualElement picking-mode="Ignore" class="placeholder-icon" />
+                <ui:VisualElement picking-mode="Ignore" class="nav-icon nav-icon--settings" />
+                <ui:Label text="SETTING" />
             </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>

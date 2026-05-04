@@ -28,7 +28,6 @@ public class SettingsPanel : MonoBehaviour
     private VisualElement sfxFillImage;
 
     private Button navShop;
-    private Button navRate;
     private Button navSettings;
 
     private void Awake()
@@ -49,7 +48,6 @@ public class SettingsPanel : MonoBehaviour
         musicToggle = root.Q<Toggle>("music-toggle");
         sfxToggle = root.Q<Toggle>("sfx-toggle");
         navShop = root.Q<Button>("nav-shop");
-        navRate = root.Q<Button>("nav-rate");
         navSettings = root.Q<Button>("nav-settings");
 
         if (backButton != null) backButton.clicked += OnBack;
@@ -72,7 +70,6 @@ public class SettingsPanel : MonoBehaviour
         if (sfxToggle != null) sfxToggle.RegisterValueChangedCallback(e => GameUserSettings.SfxEnabled = e.newValue);
 
         if (navShop != null) navShop.clicked += OnNavShop;
-        if (navRate != null) navRate.clicked += () => Debug.Log("[Settings] nav: rate");
         if (navSettings != null) navSettings.clicked += () => Debug.Log("[Settings] nav: settings (already here)");
     }
 

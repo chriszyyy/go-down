@@ -19,7 +19,6 @@ public class ShopPanel : MonoBehaviour
     private Button tabBalls;
     private Button tabBlocks;
     private Button navShop;
-    private Button navRate;
     private Button navSettings;
 
     private void Awake()
@@ -43,14 +42,12 @@ public class ShopPanel : MonoBehaviour
         tabBalls = root.Q<Button>("tab-balls");
         tabBlocks = root.Q<Button>("tab-blocks");
         navShop = root.Q<Button>("nav-shop");
-        navRate = root.Q<Button>("nav-rate");
         navSettings = root.Q<Button>("nav-settings");
 
         if (backButton != null) backButton.clicked += OnBack;
         if (tabBalls != null) tabBalls.clicked += () => SelectTab(true);
         if (tabBlocks != null) tabBlocks.clicked += () => SelectTab(false);
-        if (navShop != null) navShop.clicked += () => Debug.Log("[Shop] nav: shop");
-        if (navRate != null) navRate.clicked += () => Debug.Log("[Shop] nav: rate");
+        if (navShop != null) navShop.clicked += () => Debug.Log("[Shop] nav: shop (already here)");
         if (navSettings != null) navSettings.clicked += OnNavSettings;
 
         // 商品按钮：批量绑定，点击时打日志（占位）

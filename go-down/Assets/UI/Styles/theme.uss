@@ -454,6 +454,22 @@
     border-color: rgb(120, 180, 255);
 }
 
+/* 底部导航图标 */
+.nav-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.nav-icon--shop {
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconShop.png?fileID=21300000&guid=d8009a69340cf264bbcc4b4297385bc8&type=3#StartMenu_IconShop");
+}
+
+.nav-icon--settings {
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_IconSetting.png?fileID=21300000&guid=74bc84011350345459deade7a654d8bc&type=3#StartMenu_IconSetting");
+}
+
 .placeholder-icon {
     width: 56px;
     height: 56px;
