@@ -97,12 +97,11 @@ public class SettingsPanel : MonoBehaviour
         Debug.Log("[Settings] nav: shop");
         // 同上：ShopPanel.Instance 可能从未初始化（面板初始 inactive）。
         var panel = ShopPanel.Instance ?? FindFirstObjectByType<ShopPanel>(FindObjectsInactive.Include);
-        if (panel != null)
-        {
-            // 不传 returnTarget：保留对方 Inspector 里设好的原始返回目标。
-            panel.Show();
-            Hide();
-        }
+        if (panel == null) return;
+
+        // 二级面板互相切换：打开对方后只隐藏自己，不重新激活 returnTarget。
+        panel.gameObject.SetActive(true);
+        gameObject.SetActive(false);
     }
 
     /// <summary>

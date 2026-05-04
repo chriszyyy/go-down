@@ -80,12 +80,11 @@ public class ShopPanel : MonoBehaviour
         // Instance 只有在面板被 Awake 过后才会赋值；初始状态下 SettingsPanel 的 UIDocument 子节点
         // 是 inactive 的，Awake 从未运行，所以要同时在场景里查找包括 inactive 在内的面板。
         var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
-        if (panel != null)
-        {
-            // 不传 returnTarget：保留对方 Inspector 里设好的原始返回目标（一般是 StartMenu）。
-            panel.Show();
-            Hide();
-        }
+        if (panel == null) return;
+
+        // 二级面板互相切换：打开对方后只隐藏自己，不重新激活 returnTarget（否则 StartMenu 会被顺带开启）。
+        panel.gameObject.SetActive(true);
+        gameObject.SetActive(false);
     }
 
     private void SelectTab(bool ballsActive)

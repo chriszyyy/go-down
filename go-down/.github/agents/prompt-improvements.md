@@ -49,6 +49,12 @@
 - **症状**：Settings 点 nav-shop → `ShopPanel.Show(this.returnTarget)` 把 Shop 的 returnTarget 改成了"Settings 的 returnTarget"——结果链路混乱。
 - **应加规则**：定义"二级面板互相切换"时只调用 `Show()` 不传参，依赖各 panel 自己 Inspector 里 baked 的 returnTarget。
 
+### 8b. Hide() 的副作用：永远会激活 returnTarget
+
+- **症状**：Settings → Shop 切换时调 `Hide()`，但 `Hide()` 内部 `returnTarget.SetActive(true)` 把 StartMenu 也激活了，导致三层都 active，看到的是 StartMenu。这个跟 #8 是同一类 bug 的两个面：一边是"调用方传错参数"，一边是"Hide() 一刀切恢复 returnTarget"。
+- **应加规则**：写"模态面板"基类时区分两种关闭路径：`Back()` 关自己 + 激活 returnTarget；`SwapTo(other)` 只关自己、不动 returnTarget、由调用方负责打开下一个 panel。
+- **诊断信号**："看起来跳转了，但底下却出现了第三个面板" → 几乎一定是 Hide / Show 链激活了多个 GameObject。
+
 ### 9. 文件 watcher / VS Code 缓存
 
 - **症状**：磁盘上文件改了，VS Code 资源管理器看不见、Roslyn 报 `name does not exist in current context`。
