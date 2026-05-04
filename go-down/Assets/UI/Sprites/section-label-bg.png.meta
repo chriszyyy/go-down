@@ -43,13 +43,13 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 9
-  spritePivot: {x: 0.5019878, y: 0.5198786}
+  spritePivot: {x: 0.5054753, y: 0.52197105}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 28, y: 147, z: 25, w: 125}
+  spriteBorder: {x: 119, y: 187, z: 111, w: 169}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -121,7 +121,28 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: section-label-bg_0
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 145
+        width: 561
+        height: 140
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 97, y: 43, z: 93, w: 41}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d34ebb4330060b846ae746a55f4f51cc
+      internalID: 66278673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -132,7 +153,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      section-label-bg_0: 66278673
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
