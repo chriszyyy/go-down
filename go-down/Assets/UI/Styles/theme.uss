@@ -373,6 +373,10 @@
     padding: 22px;
     margin-bottom: 22px;
     margin-top: 5px;
+    padding-top: 26px;
+    padding-right: 26px;
+    padding-bottom: 26px;
+    padding-left: 26px;
 }
 
 .section-title {
@@ -454,7 +458,6 @@
     border-color: rgb(120, 180, 255);
 }
 
-/* 底部导航图标 */
 .nav-icon {
     width: 64px;
     height: 64px;

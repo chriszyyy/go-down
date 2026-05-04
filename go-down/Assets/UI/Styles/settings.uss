@@ -12,14 +12,31 @@
     flex-direction: row;
     align-items: center;
     height: 110px;
-    margin-top: 6px;
-    margin-bottom: 6px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding-left: 24px;
+    padding-right: 24px;
+    background-color: rgba(8, 14, 36, 0.85);
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.25);
+}
+
+.audio-label {
+    color: var(--color-text);
+    font-size: 26px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin-left: 4px;
+    margin-right: 18px;
+    width: 120px;
+    -unity-text-align: middle-left;
 }
 
 .audio-icon {
     width: 80px;
     height: 80px;
-    margin-right: 36px;
+    margin-right: 18px;
     -unity-background-scale-mode: scale-to-fit;
 }
 

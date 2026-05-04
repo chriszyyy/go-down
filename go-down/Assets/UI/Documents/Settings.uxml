@@ -10,15 +10,17 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:ScrollView name="settings-scroll" mode="Vertical" class="settings-scroll">
-            <ui:VisualElement class="section-card" style="height: 356px; margin-bottom: 30px;">
+            <ui:VisualElement class="section-card">
                 <ui:Label text="AUDIO" class="section-title" />
                 <ui:VisualElement class="audio-row">
                     <ui:VisualElement picking-mode="Ignore" class="audio-icon audio-icon--music" />
+                    <ui:Label text="MUSIC" class="audio-label" />
                     <ui:Slider name="music-slider" low-value="0" high-value="1" value="0.7" class="audio-slider" />
                     <ui:Toggle name="music-toggle" value="true" class="audio-toggle" />
                 </ui:VisualElement>
                 <ui:VisualElement class="audio-row">
                     <ui:VisualElement picking-mode="Ignore" class="audio-icon audio-icon--sfx" />
+                    <ui:Label text="SFX" class="audio-label" />
                     <ui:Slider name="sfx-slider" low-value="0" high-value="1" value="0.5" class="audio-slider" />
                     <ui:Toggle name="sfx-toggle" value="true" class="audio-toggle" />
                 </ui:VisualElement>
