@@ -120,14 +120,53 @@ Do **not** rely on documentation pasted into this prompt — read the actual fil
 
 ## Workflow
 
-### Plan First (todo list)
+### Plan First (todo list 是必选项)
 
-For any task with **>1 distinct step or >1 file**, immediately call the todo list tool with concrete, verifiable items.
+任何包含 **>1 distinct step 或 >1 file** 的任务，立刻调用 todo list tool。小于这个阈值的不要强迫用（重命名一个变量、改一个常量不需要）。
 
-- Mark exactly **one** item `in-progress` at a time.
-- Mark `completed` **immediately** after each item, before starting the next.
-- For trivial single edits (rename a variable, change one constant), skip the todo list.
-- Update the list as new sub-tasks emerge — don't silently expand scope.
+规则：
+
+- 完整走完一遍 todo 的所有 step，**一个都不能跳**。遇到外理则补加 step 不是跳过 step。
+- 同一时间最多 1 个 `in-progress`，完成后立即改 `completed` 再开下一个。
+- 发现新子任务→append 到列表，不要隐性扩大范围。
+- 任务状态机 / 跳转 / 生命周期类改动：同时列出**所有触发路径**（A→B、B→A、首次进入、返回、位于其它 panel 的交叉打开等）作为单独 todo 项，不要只覆盖“明显那一条”。
+
+### 调用子 agent 的场景
+
+在以下场景下使用 `agent/runSubagent`（选 `Explore` 主要用于这里）：
+
+- **探索未知代码**：在报状”某功能不生效“但还不知道哪里出问题 → 丢给子 agent 手集证据，不要在主会话中手动串联 5+ 个 search。
+- **独立可并行的事实查询**：一些需要走多个文件才能出结论的问题（“这个事件被哪些地方订阅”、“所有使用某 prefab 的场景”）。
+- **不适合丢给子 agent**：有状态依赖的修改任务、需要调用 Unity MCP 变更状态的任务、需要看到上下文才能判断的 bug 修复。
+
+### Verify Symptom Before Fix
+
+遇到 "bug 修复" 类任务时，动手改代码之前必须用 1–2 个 tool 检验用户描述的现象：
+
+- `read_console` 看运行时 error/log
+- `render_ui` / `manage_camera screenshot` 看实际画面
+- `read_file` 重读相关代码（代码可能被用户 / 格式化工具改过）
+
+不要从用户的一句话描述直接推导技术根因 → 他们描述的是现象，根因往往在其它层。
+
+### Devil's Advocate（提出方案前的自我批判）
+
+任何 **设计 / plan / solution / 重构方向** 在提交给用户前，必须先做一轮**对立面批判**——主动找自己方案的漏洞，而不是只论证它"为什么对"。
+
+至少回答这 4 个问题：
+
+1. **这个方案在什么情况下会坏？** 列出具体边缘场景（首次启动 / 切回页面 / 同时激活 / 网络中断 / 资源未加载等）。
+2. **有没有更简单的做法？** 当前方案是不是为了一个边缘需求引入了额外抽象 / 状态 / 文件？砍掉会怎样？
+3. **它和已有系统冲突吗？** 是否引入第二套机制（例如新 panel + 旧 panel 并存、新事件 + 旧事件、两层 cache）。
+4. **谁负责维护这个新增复杂度？** 占位代码、临时 hack、隐藏耦合是否会变成下一任开发者的坑？
+
+如果发现严重问题：调整方案再讲；如果是可接受的折中：在回复里**明确写出 trade-off**，让用户知道代价，而不是只展示亮点。
+
+适用范围：
+
+- ✅ 多文件改动 / 新增系统 / API 设计 / 架构调整
+- ✅ 用户问 "这样做行不行" / "你建议怎么做"
+- ❌ 单行改动、纯重命名、明显的 bug 修复（这些不需要正式的 devil's advocate 步骤）
 
 ### Read Before Edit
 
@@ -138,25 +177,36 @@ For any task with **>1 distinct step or >1 file**, immediately call the todo lis
 
 After **every** edit, before declaring success, run the appropriate validation:
 
-| Edit type                           | Required validation                                                                                                                     |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| C# script in `Assets/Scripts/**`    | `unitymcp/refresh_unity` (compile) → `unitymcp/read_console` (no errors) → `read/problems`                                              |
-| `.uxml` / `.uss`                    | `unitymcp/refresh_unity` (assets) → render check via `unitymcp/manage_ui render_ui` or `unitymcp/manage_camera screenshot` in Play mode |
-| Scene change (GameObject/component) | `unitymcp/manage_scene save` → re-query the hierarchy to confirm the change                                                             |
-| Asset import (PNG / sprite)         | `unitymcp/refresh_unity` (assets) → `unitymcp/manage_asset get_info` to confirm import                                                  |
-| Prefab edit                         | `unitymcp/manage_prefabs get_info` after save                                                                                           |
+| Edit type                           | Required validation                                                                                                                          |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| C# script in `Assets/Scripts/**`    | `unitymcp/refresh_unity` (compile) → `unitymcp/read_console` (no errors) → `read/problems`                                                   |
+| `.uxml` / `.uss`                    | `unitymcp/refresh_unity` (assets) → **必须进入 Play 模式**后 `unitymcp/manage_ui render_ui` 检验结果。不要只看 UI Builder 预览，那个不可信。 |
+| Scene change (GameObject/component) | `unitymcp/manage_scene save` → re-query the hierarchy to confirm the change                                                                  |
+| Asset import (PNG / sprite)         | `unitymcp/refresh_unity` (assets) → `unitymcp/manage_asset get_info` to confirm import                                                       |
+| Prefab edit                         | `unitymcp/manage_prefabs get_info` after save                                                                                                |
 
 **If validation fails, fix it before reporting back.** Never tell the user "done" while compile errors or unresolved warnings exist.
+
+### Source of Truth 优先级
+
+当 “代码看起来对 / 不对” 与 “实际表现” 冲突时，依次以这个顺序验证，不要跳级：
+
+1. **磁盘上的文件**（`read_file`）——原始事实
+2. **Unity MCP 返回的状态**（`get_hierarchy` / `read_console` / `editor_state`）
+3. **Play 模式下的 `render_ui` / screenshot**——运行时真实表现
+4. **编辑器实时预览**（UI Builder / Game View）——**不可信**，缓存、序列化迟后等问题都会骗人
+
+用户报 “你上一步改的东西又变回去了” 时，按这个顺序从上往下查，不要猜。
 
 ### Self-Evaluation Pass
 
 Before signaling task completion, ask yourself:
 
-1. **Did I actually verify the change works?** Compiling ≠ working. For UI/visual changes, capture a screenshot. For runtime logic, run Play mode if possible.
-2. **Did I introduce duplicate / orphan systems?** (e.g., new UI Toolkit panel + leftover uGUI panel still active in scene → both render). Search for older equivalents and disable / remove them.
+1. **Did I actually verify the change works?** Compiling ≠ working. UI/visual → 抳截图；运行时逻辑 → Play 模式看。
+2. **Did I introduce duplicate / orphan systems?** 在动手加新功能前先 `find_gameobjects` / `grep_search` 同名、同类型、同责任的实现；完成后检查 “旧的去哪了”，如果并存要按不授权刪除则主动禁用并告知用户。
 3. **Are there any hidden references I broke?** Run `search/usages` on renamed symbols.
 4. **Is the assembly graph still clean?** A new `using GoDown.Managers;` inside `GoDown.Core` is a hard fail.
-5. **Are placeholder values flagged?** If you used dummy paths/values to keep the user unblocked, surface them explicitly in the summary.
+5. **占位项是否显式标记？** 占位代码必须写 `// TODO: 接入 XXX` 注释；`task_complete` 总结末尾必须以 “占位项 / 待接入项” 清单点名。
 
 If any answer is "no" or "unsure", iterate before responding.
 
@@ -199,12 +249,20 @@ The Unity Editor is live and connected via Unity MCP. **Prefer MCP over manual i
 
 ## When You're Blocked
 
-If a tool fails twice the same way, stop and diagnose. Don't keep retrying. Common causes:
+同一个 tool / 修改连续失败 **2 次**：停下来诊断，不能再 retry。并且必须**切换策略**——不是 “同样的手法吐吃”：
+
+- 丟给 `agent/runSubagent` 让独立上下文重新探索
+- 改用静态分析（读代码 / `grep_search` / `unity_reflect`）代替运行时 tool
+- 向用户提问以缩小范围，别扫权重问
+- 接受 “这个环境不成” 并说明，不要靠猜写 “应该可以了” 这种未验证表述
+
+Common causes (快速 checklist):
 
 - Unity in Play mode → stop first
 - Asset not yet refreshed → `refresh_unity` + wait for ready
 - Property name wrong → use the error's `Available: [...]` hint or `unity_reflect`
 - GameObject path wrong → search by name first via `find_gameobjects`
+- VS Code / Roslyn 缓存不一致 → 让用户 reload window，不要反复改代码
 
 If still stuck, ask the user a focused question. Don't dump the entire error log — summarize.
 
