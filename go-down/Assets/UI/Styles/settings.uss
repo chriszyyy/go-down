@@ -38,12 +38,6 @@
     margin-right: 18px;
 }
 
-/* 滑块的 input 容器：去掉 Unity 默认的 padding，确保 tracker 和 dragger 都从 0 起算，
-   避免 knob 在最左/最右时与 tracker 边缘有半像素 offset。 */
-.audio-slider .unity-base-slider__input {
-    padding: 0;
-    margin: 0;
-}
 
 .audio-slider .unity-base-slider__tracker {
     background-color: rgba(0, 0, 0, 0);
