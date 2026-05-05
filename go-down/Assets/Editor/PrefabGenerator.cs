@@ -23,7 +23,91 @@ public class PrefabGenerator : EditorWindow
     // Block visual style (base + inset highlight)
     private const int BLOCK_SPRITE_PPU = 64;
     private const int BLOCK_HIGHLIGHT_INSET_PX = 6; // inset border thickness, purely visual
+    private const int BLOCK_CORNER_RADIUS_PX = 2;   // 外凸角圆角半径（像素），同时作用于 base 和 highlight
     private static readonly Color BLOCK_BASE_WHITE = Color.white;
+
+    /// <summary>
+    /// 判断在 [minX..maxX) × [minY..maxY) 矩形里，(x,y) 是否被 BB 角的圆角裁剪掉。
+    /// 适用于 Square / Line / 单个矩形分量；圆角只裁剪四个 BB 角象限。
+    /// </summary>
+    private static bool IsClippedByCornerRadius(int x, int y, int minX, int minY, int maxX, int maxY, int radius)
+    {
+        if (radius <= 0) return false;
+
+        int innerLeft = minX + radius;
+        int innerRight = maxX - 1 - radius;
+        int innerBottom = minY + radius;
+        int innerTop = maxY - 1 - radius;
+        int rSq = radius * radius;
+
+        // TL
+        if (x < innerLeft && y > innerTop)
+        {
+            int dx = innerLeft - x, dy = y - innerTop;
+            if (dx * dx + dy * dy > rSq) return true;
+        }
+        // TR
+        if (x > innerRight && y > innerTop)
+        {
+            int dx = x - innerRight, dy = y - innerTop;
+            if (dx * dx + dy * dy > rSq) return true;
+        }
+        // BL
+        if (x < innerLeft && y < innerBottom)
+        {
+            int dx = innerLeft - x, dy = innerBottom - y;
+            if (dx * dx + dy * dy > rSq) return true;
+        }
+        // BR
+        if (x > innerRight && y < innerBottom)
+        {
+            int dx = x - innerRight, dy = innerBottom - y;
+            if (dx * dx + dy * dy > rSq) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 多矩形组合形状（如 L）的圆角裁剪：仅当该 BB 角是 union 的真正外凸角时才裁剪。
+    /// 判定方法：检查该 BB 角的两条**直邻边**（横向 + 纵向）外侧是否都在 union 外。
+    /// 若任一直邻边在 union 内，说明这个 BB 角是被另一个 rect 接续的"接缝"或"凹角"，不裁剪。
+    /// </summary>
+    private static bool ShouldClipUnionCorner(int x, int y, int minX, int minY, int maxX, int maxY, int radius, System.Func<int, int, bool> inUnion)
+    {
+        if (radius <= 0) return false;
+
+        int innerLeft = minX + radius;
+        int innerRight = maxX - 1 - radius;
+        int innerBottom = minY + radius;
+        int innerTop = maxY - 1 - radius;
+        int rSq = radius * radius;
+
+        // TL：直邻 = 左侧 (minX-1, y) 和 上侧 (x, maxY)
+        if (x < innerLeft && y > innerTop)
+        {
+            int dx = innerLeft - x, dy = y - innerTop;
+            if (dx * dx + dy * dy > rSq && !inUnion(minX - 1, y) && !inUnion(x, maxY)) return true;
+        }
+        // TR：直邻 = 右侧 (maxX, y) 和 上侧 (x, maxY)
+        if (x > innerRight && y > innerTop)
+        {
+            int dx = x - innerRight, dy = y - innerTop;
+            if (dx * dx + dy * dy > rSq && !inUnion(maxX, y) && !inUnion(x, maxY)) return true;
+        }
+        // BL：直邻 = 左侧 (minX-1, y) 和 下侧 (x, minY-1)
+        if (x < innerLeft && y < innerBottom)
+        {
+            int dx = innerLeft - x, dy = innerBottom - y;
+            if (dx * dx + dy * dy > rSq && !inUnion(minX - 1, y) && !inUnion(x, minY - 1)) return true;
+        }
+        // BR：直邻 = 右侧 (maxX, y) 和 下侧 (x, minY-1)
+        if (x > innerRight && y < innerBottom)
+        {
+            int dx = x - innerRight, dy = innerBottom - y;
+            if (dx * dx + dy * dy > rSq && !inUnion(maxX, y) && !inUnion(x, minY - 1)) return true;
+        }
+        return false;
+    }
 
     private static Vector2 GridCellCenterOffset(float widthInCells, float heightInCells)
     {
@@ -496,6 +580,7 @@ public class PrefabGenerator : EditorWindow
         {
             for (int x = width; x < textureWidth; x++)
             {
+                if (IsClippedByCornerRadius(x, y, width, height, textureWidth, textureHeight, BLOCK_CORNER_RADIUS_PX)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
@@ -541,23 +626,34 @@ public class PrefabGenerator : EditorWindow
             pixels[i] = Color.clear;
         }
 
-        // 在右上角绘制L形：左边一列 + 底部一行
+        // 在右上角绘制L形：左边一列 + 底部一行。
+        // 列的 BB：x ∈ [originalWidth, originalWidth+size), y ∈ [originalHeight, textureHeight)
+        // 行的 BB：x ∈ [originalWidth, textureWidth),       y ∈ [originalHeight, originalHeight+size)
+        // 圆角仅裁剪外凸角；凹角保留。
+        int colMinX = originalWidth, colMaxX = originalWidth + size, colMinY = originalHeight, colMaxY = textureHeight;
+        int rowMinX = originalWidth, rowMaxX = textureWidth, rowMinY = originalHeight, rowMaxY = originalHeight + size;
 
-        // 左边一列（所有blocks层） - 从右上角的左侧开始
-        for (int y = originalHeight; y < textureHeight; y++)
+        System.Func<int, int, bool> inUnion = (x, y) =>
+            IsInsideRect(x, y, colMinX, colMinY, colMaxX, colMaxY) ||
+            IsInsideRect(x, y, rowMinX, rowMinY, rowMaxX, rowMaxY);
+
+        // 左边一列
+        for (int y = colMinY; y < colMaxY; y++)
         {
-            for (int x = originalWidth; x < originalWidth + size; x++)
+            for (int x = colMinX; x < colMaxX; x++)
             {
+                if (ShouldClipUnionCorner(x, y, colMinX, colMinY, colMaxX, colMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
 
-        // 底部一行（只在最底层） - 从右上角的底部开始
+        // 底部一行
         int bottomLayerStart = originalHeight;
-        for (int y = bottomLayerStart; y < bottomLayerStart + size; y++)
+        for (int y = rowMinY; y < rowMaxY; y++)
         {
-            for (int x = originalWidth; x < textureWidth; x++)
+            for (int x = rowMinX; x < rowMaxX; x++)
             {
+                if (ShouldClipUnionCorner(x, y, rowMinX, rowMinY, rowMaxX, rowMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
@@ -607,21 +703,31 @@ public class PrefabGenerator : EditorWindow
         }
 
         // 在右上角绘制正确等长L形：左边一列(3格高) + 底部水平一排(3格宽)
-        // 左边一列 (3格高) - 从右上角的左侧开始
-        for (int y = originalHeight; y < textureHeight; y++)
+        // 圆角仅裁剪外凸角；凹角保留。
+        int colMinX = originalWidth, colMaxX = originalWidth + size, colMinY = originalHeight, colMaxY = textureHeight;
+        int rowMinX = originalWidth, rowMaxX = textureWidth, rowMinY = originalHeight, rowMaxY = originalHeight + size;
+
+        System.Func<int, int, bool> inUnion = (x, y) =>
+            IsInsideRect(x, y, colMinX, colMinY, colMaxX, colMaxY) ||
+            IsInsideRect(x, y, rowMinX, rowMinY, rowMaxX, rowMaxY);
+
+        // 左边一列
+        for (int y = colMinY; y < colMaxY; y++)
         {
-            for (int x = originalWidth; x < originalWidth + size; x++)
+            for (int x = colMinX; x < colMaxX; x++)
             {
+                if (ShouldClipUnionCorner(x, y, colMinX, colMinY, colMaxX, colMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
 
-        // 底部水平一排(3格宽) - 从右上角的底部开始
+        // 底部水平一排
         int bottomLayerStart = originalHeight;
-        for (int y = bottomLayerStart; y < bottomLayerStart + size; y++)
+        for (int y = rowMinY; y < rowMaxY; y++)
         {
-            for (int x = originalWidth; x < textureWidth; x++)
+            for (int x = rowMinX; x < rowMaxX; x++)
             {
+                if (ShouldClipUnionCorner(x, y, rowMinX, rowMinY, rowMaxX, rowMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
@@ -675,6 +781,7 @@ public class PrefabGenerator : EditorWindow
         {
             for (int x = originalWidth; x < textureWidth; x++)
             {
+                if (IsClippedByCornerRadius(x, y, originalWidth, originalHeight, textureWidth, textureHeight, BLOCK_CORNER_RADIUS_PX)) continue;
                 pixels[y * textureWidth + x] = color;
             }
         }
@@ -857,6 +964,7 @@ public class PrefabGenerator : EditorWindow
         {
             for (int x = minX; x < maxX; x++)
             {
+                if (IsClippedByCornerRadius(x, y, minX, minY, maxX, maxY, BLOCK_CORNER_RADIUS_PX)) continue;
                 if (IsBorderPixel(x, y, minX, minY, maxX, maxY, BLOCK_HIGHLIGHT_INSET_PX))
                 {
                     pixels[y * textureWidth + x] = color;
@@ -908,11 +1016,19 @@ public class PrefabGenerator : EditorWindow
         int hMinY = originalHeight;
         int hMaxY = originalHeight + size;
 
+        System.Func<int, int, bool> inUnion = (x, y) =>
+            IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY) ||
+            IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+
         System.Func<int, int, bool> isFilled = (x, y) =>
         {
-            bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
-            bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
-            return inV || inH;
+            if (!inUnion(x, y)) return false;
+            // 在列内 且 BB 角被 union 外象限裁剪 → 删除。凹角依靠 inUnion 判定被保留。
+            if (IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY) &&
+                ShouldClipUnionCorner(x, y, vMinX, vMinY, vMaxX, vMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) return false;
+            if (IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY) &&
+                ShouldClipUnionCorner(x, y, hMinX, hMinY, hMaxX, hMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) return false;
+            return true;
         };
 
         string path = $"Assets/Sprites/L{blocks}Shape_Highlight.png";
@@ -940,11 +1056,18 @@ public class PrefabGenerator : EditorWindow
         int hMinY = originalHeight;
         int hMaxY = originalHeight + size;
 
+        System.Func<int, int, bool> inUnion = (x, y) =>
+            IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY) ||
+            IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
+
         System.Func<int, int, bool> isFilled = (x, y) =>
         {
-            bool inV = IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY);
-            bool inH = IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY);
-            return inV || inH;
+            if (!inUnion(x, y)) return false;
+            if (IsInsideRect(x, y, vMinX, vMinY, vMaxX, vMaxY) &&
+                ShouldClipUnionCorner(x, y, vMinX, vMinY, vMaxX, vMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) return false;
+            if (IsInsideRect(x, y, hMinX, hMinY, hMaxX, hMaxY) &&
+                ShouldClipUnionCorner(x, y, hMinX, hMinY, hMaxX, hMaxY, BLOCK_CORNER_RADIUS_PX, inUnion)) return false;
+            return true;
         };
 
         string path = "Assets/Sprites/L5Shape_Equal_Highlight.png";
@@ -973,6 +1096,7 @@ public class PrefabGenerator : EditorWindow
         {
             for (int x = minX; x < maxX; x++)
             {
+                if (IsClippedByCornerRadius(x, y, minX, minY, maxX, maxY, BLOCK_CORNER_RADIUS_PX)) continue;
                 if (IsBorderPixel(x, y, minX, minY, maxX, maxY, BLOCK_HIGHLIGHT_INSET_PX))
                 {
                     pixels[y * textureWidth + x] = color;

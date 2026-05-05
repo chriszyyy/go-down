@@ -29,13 +29,24 @@ public class BlockVisualStyle : MonoBehaviour
 
     private bool styleLocked;
 
+    // 5 组配色：每组 = (base 主色, highlight 描边色)。两个调色板按相同索引配对。
+    // hex 注释方便用户对照设计稿。
     private static readonly Color[] DefaultPalette = new Color[]
     {
-        new Color(0.20f, 0.62f, 1.00f, 1f), // blue
-        new Color(0.28f, 0.86f, 0.55f, 1f), // green
-        new Color(1.00f, 0.78f, 0.20f, 1f), // amber
-        new Color(0.95f, 0.36f, 0.47f, 1f), // coral
-        new Color(0.66f, 0.46f, 0.98f, 1f), // purple
+        new Color(0.012f, 0.388f, 0.941f, 1f), // #0363F0 deep blue
+        new Color(0.063f, 0.698f, 0.349f, 1f), // #10B259 green
+        new Color(0.498f, 0.169f, 0.945f, 1f), // #7F2BF1 purple
+        new Color(0.992f, 0.706f, 0.051f, 1f), // #FDB40D amber
+        new Color(0.933f, 0.169f, 0.396f, 1f), // #EE2B65 pink
+    };
+
+    private static readonly Color[] DefaultHighlightPalette = new Color[]
+    {
+        new Color(0.035f, 0.537f, 0.988f, 1f), // #0989FC bright blue
+        new Color(0.408f, 0.937f, 0.635f, 1f), // #68EFA2 bright green
+        new Color(0.733f, 0.447f, 0.984f, 1f), // #BB72FB bright purple
+        new Color(0.996f, 0.875f, 0.275f, 1f), // #FEDF46 bright yellow
+        new Color(0.996f, 0.431f, 0.608f, 1f), // #FE6E9B bright pink
     };
 
     private void Reset()
@@ -76,15 +87,21 @@ public class BlockVisualStyle : MonoBehaviour
     public void ApplyRandomStyle()
     {
         Color[] p = (palette != null && palette.Length > 0) ? palette : DefaultPalette;
+        Color[] hp = DefaultHighlightPalette;
 
         int seed = seedOverride != 0 ? seedOverride : GetInstanceID();
         var rng = new System.Random(seed);
-        Color baseColor = p[rng.Next(0, p.Length)];
+        int idx = rng.Next(0, p.Length);
+        Color baseColor = p[idx];
+        // 配对的 highlight：仅当索引在 highlight 调色板范围内时使用，否则回退到 lerp-to-white
+        Color? highlight = idx < hp.Length ? hp[idx] : (Color?)null;
 
-        ApplyStyle(baseColor);
+        ApplyStyle(baseColor, highlight);
     }
 
-    public void ApplyStyle(Color baseColor)
+    public void ApplyStyle(Color baseColor) => ApplyStyle(baseColor, null);
+
+    public void ApplyStyle(Color baseColor, Color? highlightOverride)
     {
         if (baseRenderer != null)
         {
@@ -93,7 +110,8 @@ public class BlockVisualStyle : MonoBehaviour
 
         if (highlightRenderer != null)
         {
-            Color highlight = Color.Lerp(baseColor, Color.white, Mathf.Clamp01(highlightToWhite));
+            Color highlight = highlightOverride
+                ?? Color.Lerp(baseColor, Color.white, Mathf.Clamp01(highlightToWhite));
             highlight.a *= Mathf.Clamp01(highlightAlpha);
             highlightRenderer.color = highlight;
         }
