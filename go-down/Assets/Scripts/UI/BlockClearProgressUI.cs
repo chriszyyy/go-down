@@ -356,6 +356,10 @@ public class BlockClearProgressUI : MonoBehaviour
         // Give some variation so it doesn't look too static.
         s_rainbowUIMaterial.SetFloat("_HueOffset", Random.value);
 
+        // 进度条整体被父节点旋转 90°，UV.y 在屏幕上变成了水平方向。
+        // 把 _AxisSwap 设为 1，让彩虹渐变沿 UV.x（即旋转后的竖直方向）流动。
+        s_rainbowUIMaterial.SetFloat("_AxisSwap", 1f);
+
         return s_rainbowUIMaterial;
     }
 

@@ -13,6 +13,9 @@ Shader "GoDown/RainbowGlowSprite"
         _Glow("Glow", Float) = 1.6
         _Additive("Additive", Float) = 0.9
         _PulseSpeed("Pulse Speed", Float) = 3.0
+        // 0 = gradient runs along UV.y (vertical in UV space). 1 = swap axes (gradient along UV.x).
+        // Useful when the renderer is rotated so the visual length axis differs from UV.y.
+        _AxisSwap("Axis Swap (0=Y, 1=X)", Float) = 0
 
         // Legacy sprite properties (kept for compatibility)
         [HideInInspector] _Color ("Tint", Color) = (1,1,1,1)
@@ -71,6 +74,7 @@ Shader "GoDown/RainbowGlowSprite"
             float _WaveAmp;
             float _Glow;
             float _PulseSpeed;
+            float _AxisSwap;
 
             Varyings UnlitVertex(Attributes v)
             {
@@ -96,8 +100,13 @@ Shader "GoDown/RainbowGlowSprite"
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 float alpha = mainTex.a;
 
-                float t = (_Time.y * _Speed) + (i.uv.y * _Scale);
-                t += sin((i.uv.x * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
+                // _AxisSwap=0 → gradient axis = uv.y, wave axis = uv.x.
+                // _AxisSwap=1 → gradient axis = uv.x, wave axis = uv.y (use when renderer is rotated 90°).
+                float gradAxis = lerp(i.uv.y, i.uv.x, _AxisSwap);
+                float waveAxis = lerp(i.uv.x, i.uv.y, _AxisSwap);
+
+                float t = (_Time.y * _Speed) + (gradAxis * _Scale);
+                t += sin((waveAxis * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
                 t = frac(t + _HueOffset);
 
                 float pulse = 0.65 + 0.35 * sin((_Time.y * _PulseSpeed) + (i.uv.x + i.uv.y) * 6.2831);
@@ -154,6 +163,7 @@ Shader "GoDown/RainbowGlowSprite"
             float _WaveAmp;
             float _Additive;
             float _PulseSpeed;
+            float _AxisSwap;
 
             Varyings UnlitVertex(Attributes v)
             {
@@ -179,8 +189,11 @@ Shader "GoDown/RainbowGlowSprite"
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 float alpha = mainTex.a;
 
-                float t = (_Time.y * _Speed) + (i.uv.y * _Scale);
-                t += sin((i.uv.x * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
+                float gradAxis = lerp(i.uv.y, i.uv.x, _AxisSwap);
+                float waveAxis = lerp(i.uv.x, i.uv.y, _AxisSwap);
+
+                float t = (_Time.y * _Speed) + (gradAxis * _Scale);
+                t += sin((waveAxis * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
                 t = frac(t + _HueOffset);
 
                 float pulse = 0.65 + 0.35 * sin((_Time.y * _PulseSpeed) + (i.uv.x + i.uv.y) * 6.2831);
@@ -238,6 +251,7 @@ Shader "GoDown/RainbowGlowSprite"
             float _WaveAmp;
             float _Glow;
             float _PulseSpeed;
+            float _AxisSwap;
 
             Varyings UnlitVertex(Attributes v)
             {
@@ -263,8 +277,11 @@ Shader "GoDown/RainbowGlowSprite"
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 float alpha = mainTex.a;
 
-                float t = (_Time.y * _Speed) + (i.uv.y * _Scale);
-                t += sin((i.uv.x * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
+                float gradAxis = lerp(i.uv.y, i.uv.x, _AxisSwap);
+                float waveAxis = lerp(i.uv.x, i.uv.y, _AxisSwap);
+
+                float t = (_Time.y * _Speed) + (gradAxis * _Scale);
+                t += sin((waveAxis * _WaveFreq) + (_Time.y * _Speed * 2.0)) * _WaveAmp;
                 t = frac(t + _HueOffset);
 
                 float pulse = 0.65 + 0.35 * sin((_Time.y * _PulseSpeed) + (i.uv.x + i.uv.y) * 6.2831);
