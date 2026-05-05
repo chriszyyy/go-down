@@ -205,10 +205,11 @@ public class SettingsPanel : MonoBehaviour
         }
     }
 
-    /// <summary>显示本面板。</summary>
+    /// <summary>显示本面板。returnTo = null 表示游戏内打开（关闭后不重新激活别的面板）。</summary>
     public void Show(GameObject returnTo = null)
     {
-        if (returnTo != null) returnTarget = returnTo;
+        // 总是覆盖 returnTarget，避免上次打开（StartMenu→Settings）的引用残留到这次（游戏内→Settings）。
+        returnTarget = returnTo;
         gameObject.SetActive(true);
     }
 

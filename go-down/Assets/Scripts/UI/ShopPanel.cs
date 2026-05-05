@@ -95,10 +95,11 @@ public class ShopPanel : MonoBehaviour
         Debug.Log($"[Shop] Tab: {(ballsActive ? "BALLS" : "BLOCKS")}");
     }
 
-    /// <summary>显示本面板，并记住关闭时要返回的对象。</summary>
+    /// <summary>显示本面板，并记住关闭时要返回的对象（null = 关闭后不重新激活任何面板，例如游戏内直接打开）。</summary>
     public void Show(GameObject returnTo = null)
     {
-        if (returnTo != null) returnTarget = returnTo;
+        // 总是覆盖 returnTarget，避免上次打开（StartMenu→Shop）的引用残留到这次（游戏内→Shop）。
+        returnTarget = returnTo;
         gameObject.SetActive(true);
     }
 
