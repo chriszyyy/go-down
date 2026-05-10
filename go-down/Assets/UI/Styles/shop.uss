@@ -165,3 +165,437 @@
     border-width: 3px;
     border-color: rgb(255, 255, 255);
 }
+
+/* ============================================================
+ * Tab content panels (BALLS / BLOCKS / ITEMS / COINS / NO ADS)
+ * ============================================================ */
+
+.tab-bar--five {
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.tab-btn--small {
+    width: 180px;
+    height: 70px;
+    font-size: 22px;
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+.tab-content {
+    display: flex;
+}
+
+.tab-content--hidden {
+    display: none;
+}
+
+.empty-tab__label {
+    color: var(--color-text-muted);
+    font-size: 32px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    margin-top: 100px;
+    letter-spacing: 4px;
+}
+
+.empty-tab__sub {
+    color: var(--color-text-muted);
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    margin-top: 24px;
+}
+
+.item-grid--two .item-card {
+    width: 47%;
+}
+
+.item-grid--three .item-card {
+    width: 31%;
+    height: 280px;
+}
+
+.item-card--tool {
+    height: 360px;
+    padding-top: 18px;
+}
+
+.item-card--coin {
+    height: 260px;
+}
+
+.item-card--plan {
+    height: 260px;
+    justify-content: flex-start;
+    padding-top: 26px;
+}
+
+.item-card--plan-best {
+    border-color: rgb(250, 188, 60);
+    border-width: 3px;
+}
+
+.item-card__title {
+    color: var(--color-text);
+    font-size: 24px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.item-card__sub {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.item-card__count {
+    color: rgb(120, 200, 255);
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.item-card__ribbon {
+    position: absolute;
+    top: -12px;
+    left: 16px;
+    right: 16px;
+    background-color: rgb(220, 60, 60);
+    color: rgb(255, 255, 255);
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    border-radius: 10px;
+    padding: 4px;
+    letter-spacing: 2px;
+}
+
+.item-card__price--money {
+    background-color: rgba(80, 140, 255, 0.85);
+    border-color: rgba(150, 200, 255, 0.7);
+}
+
+.item-thumb--tool-reset {
+    background-color: rgb(245, 195, 60);
+    border-radius: 24px;
+}
+
+.item-thumb--tool-rainbow {
+    background-color: rgb(160, 110, 230);
+    border-radius: 24px;
+}
+
+.item-thumb--coin-pack {
+    background-color: rgb(255, 200, 60);
+    border-radius: 24px;
+}
+
+.noads-hero {
+    align-items: center;
+    margin-top: 12px;
+    margin-bottom: 18px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    background-color: rgba(20, 30, 70, 0.65);
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.3);
+}
+
+.noads-hero__title {
+    color: rgb(250, 188, 60);
+    font-size: 44px;
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+}
+
+.noads-hero__subtitle {
+    color: var(--color-text-muted);
+    font-size: 22px;
+    margin-top: 6px;
+}
+
+.noads-section-title {
+    color: rgb(120, 180, 255);
+    font-size: 24px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    margin-top: 6px;
+}
+
+.restore-btn {
+    height: 80px;
+    margin-top: 18px;
+    background-color: rgba(20, 30, 70, 0.85);
+    border-radius: 18px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.5);
+    color: rgb(120, 180, 255);
+    font-size: 24px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+/* ============================================================
+ * Buy Modal
+ * ============================================================ */
+
+.buy-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    align-items: center;
+    justify-content: center;
+}
+
+.buy-modal--hidden {
+    display: none;
+}
+
+.buy-modal__panel {
+    width: 80%;
+    background-color: rgba(15, 22, 50, 0.97);
+    border-radius: 28px;
+    border-width: 3px;
+    border-color: rgb(80, 140, 255);
+    padding: 32px;
+    align-items: stretch;
+}
+
+.buy-modal__view {
+    display: flex;
+    align-items: center;
+}
+
+.buy-modal__view--hidden {
+    display: none;
+}
+
+.buy-modal__title {
+    color: rgb(240, 240, 245);
+    font-size: 38px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 4px;
+    margin-bottom: 18px;
+}
+
+.buy-modal__close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background-color: rgba(80, 140, 255, 0.3);
+    border-width: 0;
+    color: rgb(240, 240, 245);
+    font-size: 26px;
+    -unity-font-style: bold;
+    padding: 0;
+}
+
+.buy-modal__icon {
+    width: 130px;
+    height: 130px;
+    margin-bottom: 14px;
+}
+
+.buy-modal__item-name {
+    color: rgb(120, 180, 255);
+    font-size: 28px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+}
+
+.buy-modal__prompt {
+    color: rgb(180, 190, 215);
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    margin-bottom: 18px;
+}
+
+.buy-modal__qty-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
+.buy-modal__qty-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background-color: rgba(80, 140, 255, 0.5);
+    border-width: 0;
+    color: rgb(240, 240, 245);
+    font-size: 32px;
+    -unity-font-style: bold;
+    padding: 0;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.buy-modal__qty-value {
+    width: 100px;
+    color: rgb(240, 240, 245);
+    font-size: 32px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: rgba(20, 30, 70, 0.85);
+    border-radius: 12px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.5);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.buy-modal__qty-max {
+    width: 80px;
+    height: 64px;
+    border-radius: 14px;
+    background-color: rgba(80, 140, 255, 0.85);
+    border-width: 0;
+    color: rgb(240, 240, 245);
+    font-size: 22px;
+    -unity-font-style: bold;
+    padding: 0;
+    margin-left: 12px;
+}
+
+.buy-modal__total {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(80, 50, 160, 0.85);
+    border-radius: 14px;
+    height: 64px;
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-bottom: 18px;
+}
+
+.buy-modal__total-text {
+    color: rgb(240, 240, 245);
+    font-size: 28px;
+    -unity-font-style: bold;
+}
+
+.buy-modal__confirm {
+    width: 80%;
+    height: 84px;
+    border-radius: 18px;
+    background-color: rgb(250, 188, 60);
+    border-width: 0;
+    color: rgb(60, 35, 5);
+    font-size: 30px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+    padding: 0;
+}
+
+.buy-modal__confirm--ok {
+    background-color: rgb(80, 200, 100);
+    color: rgb(255, 255, 255);
+}
+
+.buy-modal__confirm:hover {
+    background-color: rgb(255, 215, 110);
+}
+
+/* ============================================================
+ * Shop top stat pills — 用 tab-btn 同款简单边框（不再用 sprite 9-slice）
+ * 三个 pill：最高分 / 当前分 / 金币
+ * ============================================================ */
+
+.top-bar {
+    margin-top: 12px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-pill {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 96px;
+    min-width: 220px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: center;
+    padding-left: 14px;
+    padding-right: 22px;
+    /* 跟 .tab-btn 一致：border + 圆角 + 半透明深蓝填充 */
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.4);
+    border-radius: 28px;
+    background-color: rgba(15, 22, 50, 0.7);
+}
+
+.stat-pill__value {
+    flex-grow: 0;
+    flex-shrink: 0;
+    color: rgb(240, 240, 245);
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    margin-left: 6px;
+    margin-right: 6px;
+    white-space: nowrap;
+}
+
+.stat-pill__icon {
+    width: 56px;
+    height: 56px;
+    margin-right: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.stat-pill__icon--flag {
+    background-image: url("project://database/Assets/UI/Sprites/game-top-bar-icon.png?fileID=-437439192&guid=937f9d3437a150a4b831fb186a9ebc04&type=3#highscore");
+}
+
+.stat-pill__icon--gem {
+    background-image: url("project://database/Assets/UI/Sprites/game-top-bar-icon.png?fileID=1239169367&guid=937f9d3437a150a4b831fb186a9ebc04&type=3#current-score");
+}
+
+.stat-pill__icon--coin {
+    background-image: url("project://database/Assets/UI/Sprites/game-top-bar-icon.png?fileID=542907808&guid=937f9d3437a150a4b831fb186a9ebc04&type=3#coin");
+}
+
+/* ============================================================
+ * 让 ITEMS 等内容较少的 tab 不强行拉伸到铺满 ScrollView，
+ * 否则 ScrollView 会把 contentContainer 拉到与视口等高，
+ * 看起来像“没什么内容也能滚”。
+ * ============================================================ */
+
+.shop-scroll {
+    flex-grow: 1;
+}
+
+.shop-scroll > .unity-scroll-view__content-and-vertical-scroll-container > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    flex-grow: 0;
+}
+
+.tab-content {
+    flex-shrink: 0;
+}

@@ -41,7 +41,7 @@ public class CoinAddButton : MonoBehaviour
             return;
         }
 
-        // 游戏内打开商店：returnTarget = null，关闭时不需要重新激活别的面板
-        panel.Show(null);
+        // 游戏内点击 + → 直接跳到商店的 COINS tab
+        panel.Show(null, ShopPanel.ShopTab.Coins);
     }
 }

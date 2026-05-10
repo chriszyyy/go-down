@@ -3,23 +3,75 @@ using UnityEngine.UIElements;
 
 /// <summary>
 /// 商店面板控制器（UI Toolkit）。
-/// 占位实现：所有点击都打 Debug.Log，等真实数据接入后再扩展。
-/// 可通过 <see cref="Show"/> / <see cref="Hide"/> 由起始菜单等其他面板触发。
+/// - 顶部 stat 绑定 ScoreManager / CoinManager（最高分 / 当前分 / 金币）。
+/// - 5 个 tab：BALLS / BLOCKS / ITEMS / COINS / NO ADS。
+/// - ITEMS：用 CoinManager + ToolUsageInventory 实际购买；点击卡片弹出"BUY ITEM"模态。
+/// - COINS / NO ADS：占位，TODO 接入 IAP。
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class ShopPanel : MonoBehaviour
 {
+    public enum ShopTab { Balls, Blocks, Items, Coins, NoAds }
+
     public static ShopPanel Instance { get; private set; }
 
-    /// <summary>关闭本面板时希望返回的目标 GameObject（一般是 StartMenu）。</summary>
-    [Tooltip("返回时激活的 GameObject（一般是 StartMenu）。")]
+    [Tooltip("返回时激活的 GameObject（一般是 StartMenu；游戏内打开 = null）。")]
     public GameObject returnTarget;
 
+    // —— 顶部 stat ——
+    private Label highScoreValue;
+    private Label scoreValue;
+    private Label coinValue;
+
+    // —— 标题/导航 ——
     private Button backButton;
-    private Button tabBalls;
-    private Button tabBlocks;
     private Button navShop;
     private Button navSettings;
+
+    // —— Tabs ——
+    private Button tabBalls;
+    private Button tabBlocks;
+    private Button tabItems;
+    private Button tabCoins;
+    private Button tabNoAds;
+    private VisualElement contentBalls;
+    private VisualElement contentBlocks;
+    private VisualElement contentItems;
+    private VisualElement contentCoins;
+    private VisualElement contentNoAds;
+
+    // —— ITEMS tab：工具卡片 ——
+    private Label itemResetCount;
+    private Label itemRainbowCount;
+
+    // —— Buy modal ——
+    private VisualElement buyModal;
+    private VisualElement buyView;
+    private VisualElement boughtView;
+    private VisualElement buyIcon;
+    private VisualElement boughtIcon;
+    private Label buyItemName;
+    private Label buyQtyValue;
+    private Label buyTotal;
+    private Label boughtSummary;
+    private Button buyClose;
+    private Button buyQtyMinus;
+    private Button buyQtyPlus;
+    private Button buyQtyMax;
+    private Button buyConfirm;
+    private Button buyOk;
+
+    // 当前购买中的工具
+    private string currentBuyToolId;       // "reset" / "rainbow"
+    private int currentBuyUnitPrice;
+    private int currentBuyQty = 1;
+
+    // 进入面板时希望默认聚焦的 tab；由调用方通过 Show(returnTo, tab) 指定
+    private ShopTab pendingTab = ShopTab.Balls;
+
+    // 工具单价（与原 ShopPanelUI 保持一致）
+    private const int RESET_PRICE = 100;
+    private const int RAINBOW_PRICE = 50;
 
     private void Awake()
     {
@@ -33,82 +85,310 @@ public class ShopPanel : MonoBehaviour
 
     private void OnEnable()
     {
-        UIPause.Acquire(); // 面板可见 → 暂停游戏
+        UIPause.Acquire();
 
         var root = GetComponent<UIDocument>().rootVisualElement;
         if (root == null) return;
 
-        backButton = root.Q<Button>("back-btn");
-        tabBalls = root.Q<Button>("tab-balls");
-        tabBlocks = root.Q<Button>("tab-blocks");
-        navShop = root.Q<Button>("nav-shop");
-        navSettings = root.Q<Button>("nav-settings");
+        QueryElements(root);
+        WireButtons();
+        SelectTab(pendingTab);
+        RefreshStats();
+        RefreshToolCounts();
 
-        if (backButton != null) backButton.clicked += OnBack;
-        if (tabBalls != null) tabBalls.clicked += () => SelectTab(true);
-        if (tabBlocks != null) tabBlocks.clicked += () => SelectTab(false);
-        if (navShop != null) navShop.clicked += () => Debug.Log("[Shop] nav: shop (already here)");
-        if (navSettings != null) navSettings.clicked += OnNavSettings;
-
-        // 商品按钮：批量绑定，点击时打日志（占位）
-        foreach (var card in root.Query<Button>(className: "item-card").ToList())
-        {
-            string id = card.name;
-            card.clicked += () => Debug.Log($"[Shop] item clicked: {id}");
-        }
+        ToolUsageInventory.OnUsesChanged += RefreshToolCounts;
+        if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged += HandleCoinsChanged;
     }
 
     private void OnDisable()
     {
         UIPause.Release();
 
-        if (backButton != null) backButton.clicked -= OnBack;
-        // tabBalls/tabBlocks/nav-* 用 lambda 不易精确解绑，
-        // 占位实现里依赖 OnEnable 重新查询不会重复绑定（每次 Q<> 拿到的是同一个元素，
-        // 但 lambda 是新实例 → 这里不主动解绑，关闭时 root 会被清掉）。
+        ToolUsageInventory.OnUsesChanged -= RefreshToolCounts;
+        if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged -= HandleCoinsChanged;
+
+        HideBuyModal();
     }
+
+    // ---------------- Public API ----------------
+
+    /// <summary>显示本面板。returnTo = null 表示从游戏内打开（关闭后不重新激活别的面板）。</summary>
+    public void Show(GameObject returnTo = null, ShopTab tab = ShopTab.Balls)
+    {
+        returnTarget = returnTo;
+        pendingTab = tab;
+
+        bool wasActive = gameObject.activeSelf;
+        gameObject.SetActive(true);
+
+        // 已经 active 时 OnEnable 不会再跑，需要手动应用 tab
+        if (wasActive) SelectTab(pendingTab);
+    }
+
+    public void Hide()
+    {
+        if (returnTarget != null) returnTarget.SetActive(true);
+        gameObject.SetActive(false);
+    }
+
+    // ---------------- 元素查找 + 绑定 ----------------
+
+    private void QueryElements(VisualElement root)
+    {
+        highScoreValue = root.Q<Label>("high-score-value");
+        scoreValue = root.Q<Label>("score-value");
+        coinValue = root.Q<Label>("coin-value");
+
+        backButton = root.Q<Button>("back-btn");
+        navShop = root.Q<Button>("nav-shop");
+        navSettings = root.Q<Button>("nav-settings");
+
+        tabBalls = root.Q<Button>("tab-balls");
+        tabBlocks = root.Q<Button>("tab-blocks");
+        tabItems = root.Q<Button>("tab-items");
+        tabCoins = root.Q<Button>("tab-coins");
+        tabNoAds = root.Q<Button>("tab-noads");
+
+        contentBalls = root.Q<VisualElement>("content-balls");
+        contentBlocks = root.Q<VisualElement>("content-blocks");
+        contentItems = root.Q<VisualElement>("content-items");
+        contentCoins = root.Q<VisualElement>("content-coins");
+        contentNoAds = root.Q<VisualElement>("content-noads");
+
+        itemResetCount = root.Q<Label>("item-reset-count");
+        itemRainbowCount = root.Q<Label>("item-rainbow-count");
+
+        buyModal = root.Q<VisualElement>("buy-modal");
+        buyView = root.Q<VisualElement>("buy-view");
+        boughtView = root.Q<VisualElement>("bought-view");
+        buyIcon = root.Q<VisualElement>("buy-icon");
+        boughtIcon = root.Q<VisualElement>("bought-icon");
+        buyItemName = root.Q<Label>("buy-item-name");
+        buyQtyValue = root.Q<Label>("buy-qty-value");
+        buyTotal = root.Q<Label>("buy-total");
+        boughtSummary = root.Q<Label>("bought-summary");
+        buyClose = root.Q<Button>("buy-close");
+        buyQtyMinus = root.Q<Button>("buy-qty-minus");
+        buyQtyPlus = root.Q<Button>("buy-qty-plus");
+        buyQtyMax = root.Q<Button>("buy-qty-max");
+        buyConfirm = root.Q<Button>("buy-confirm");
+        buyOk = root.Q<Button>("buy-ok");
+    }
+
+    private void WireButtons()
+    {
+        if (backButton != null) backButton.clicked += OnBack;
+
+        if (tabBalls != null) tabBalls.clicked += () => SelectTab(ShopTab.Balls);
+        if (tabBlocks != null) tabBlocks.clicked += () => SelectTab(ShopTab.Blocks);
+        if (tabItems != null) tabItems.clicked += () => SelectTab(ShopTab.Items);
+        if (tabCoins != null) tabCoins.clicked += () => SelectTab(ShopTab.Coins);
+        if (tabNoAds != null) tabNoAds.clicked += () => SelectTab(ShopTab.NoAds);
+
+        if (navShop != null) navShop.clicked += () => Debug.Log("[Shop] nav: shop (already here)");
+        if (navSettings != null) navSettings.clicked += OnNavSettings;
+
+        var root = GetComponent<UIDocument>().rootVisualElement;
+        foreach (var card in root.Query<Button>(className: "item-card").ToList())
+        {
+            string id = card.name;
+            if (string.IsNullOrEmpty(id)) continue;
+
+            if (id == "item-tool-reset")
+            {
+                card.clicked += () => OpenBuyModal("reset");
+                continue;
+            }
+            if (id == "item-tool-rainbow")
+            {
+                card.clicked += () => OpenBuyModal("rainbow");
+                continue;
+            }
+            if (id.StartsWith("coin-pack-"))
+            {
+                string packId = id;
+                // TODO: 接入 IAP，购买金币包
+                card.clicked += () => Debug.Log($"[Shop] TODO: 接入 IAP，购买金币包 {packId}");
+                continue;
+            }
+            if (id.StartsWith("noads-"))
+            {
+                string planId = id;
+                // TODO: 接入 IAP，订阅去广告
+                card.clicked += () => Debug.Log($"[Shop] TODO: 接入 IAP，购买/恢复 {planId}");
+                continue;
+            }
+
+            // BALLS / BLOCKS 占位
+            card.clicked += () => Debug.Log($"[Shop] item clicked: {id}");
+        }
+
+        if (buyClose != null) buyClose.clicked += HideBuyModal;
+        if (buyQtyMinus != null) buyQtyMinus.clicked += () => AdjustQty(-1);
+        if (buyQtyPlus != null) buyQtyPlus.clicked += () => AdjustQty(+1);
+        if (buyQtyMax != null) buyQtyMax.clicked += SetQtyToMax;
+        if (buyConfirm != null) buyConfirm.clicked += ConfirmPurchase;
+        if (buyOk != null) buyOk.clicked += HideBuyModal;
+    }
+
+    // ---------------- 顶部 stat 数据 ----------------
+
+    private void HandleCoinsChanged(int _)
+    {
+        RefreshStats();
+        UpdateBuyTotal(); // 余额变化时也刷新 CONFIRM 可用状态
+    }
+
+    private void RefreshStats()
+    {
+        if (highScoreValue != null)
+            highScoreValue.text = (ScoreManager.Instance != null ? ScoreManager.Instance.HighScore : 0).ToString();
+        if (scoreValue != null)
+            scoreValue.text = (ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0).ToString();
+        if (coinValue != null)
+            coinValue.text = (CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0).ToString();
+    }
+
+    private void RefreshToolCounts()
+    {
+        int reset = ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.ResetUses : 0;
+        int rainbow = ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.RainbowUses : 0;
+        if (itemResetCount != null) itemResetCount.text = "x" + reset;
+        if (itemRainbowCount != null) itemRainbowCount.text = "x" + rainbow;
+    }
+
+    // ---------------- Tab 切换 ----------------
+
+    private void SelectTab(ShopTab tab)
+    {
+        pendingTab = tab;
+
+        SetTabActive(tabBalls, tab == ShopTab.Balls);
+        SetTabActive(tabBlocks, tab == ShopTab.Blocks);
+        SetTabActive(tabItems, tab == ShopTab.Items);
+        SetTabActive(tabCoins, tab == ShopTab.Coins);
+        SetTabActive(tabNoAds, tab == ShopTab.NoAds);
+
+        SetContentVisible(contentBalls, tab == ShopTab.Balls);
+        SetContentVisible(contentBlocks, tab == ShopTab.Blocks);
+        SetContentVisible(contentItems, tab == ShopTab.Items);
+        SetContentVisible(contentCoins, tab == ShopTab.Coins);
+        SetContentVisible(contentNoAds, tab == ShopTab.NoAds);
+    }
+
+    private static void SetTabActive(Button btn, bool active)
+    {
+        if (btn == null) return;
+        btn.EnableInClassList("tab-btn--active", active);
+    }
+
+    private static void SetContentVisible(VisualElement el, bool visible)
+    {
+        if (el == null) return;
+        el.EnableInClassList("tab-content--hidden", !visible);
+        el.EnableInClassList("tab-content--active", visible);
+    }
+
+    // ---------------- Buy Modal ----------------
+
+    private void OpenBuyModal(string toolId)
+    {
+        currentBuyToolId = toolId;
+        currentBuyUnitPrice = (toolId == "reset") ? RESET_PRICE : RAINBOW_PRICE;
+        currentBuyQty = 1;
+
+        if (buyItemName != null) buyItemName.text = toolId == "reset" ? "RESET BALL" : "RANDOM BLOCK";
+
+        SwapIconClass(buyIcon, toolId);
+        SwapIconClass(boughtIcon, toolId);
+
+        if (buyView != null) buyView.RemoveFromClassList("buy-modal__view--hidden");
+        if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+
+        if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
+
+        UpdateBuyTotal();
+    }
+
+    private void HideBuyModal()
+    {
+        if (buyModal != null) buyModal.AddToClassList("buy-modal--hidden");
+    }
+
+    private void AdjustQty(int delta)
+    {
+        currentBuyQty = Mathf.Max(1, Mathf.Min(99, currentBuyQty + delta));
+        UpdateBuyTotal();
+    }
+
+    private void SetQtyToMax()
+    {
+        int coins = CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0;
+        int unit = Mathf.Max(1, currentBuyUnitPrice);
+        currentBuyQty = Mathf.Clamp(coins / unit, 1, 99);
+        UpdateBuyTotal();
+    }
+
+    private void UpdateBuyTotal()
+    {
+        if (buyQtyValue != null) buyQtyValue.text = "x" + currentBuyQty;
+        if (buyTotal != null) buyTotal.text = (currentBuyUnitPrice * currentBuyQty).ToString();
+
+        int coins = CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0;
+        bool canBuy = coins >= currentBuyUnitPrice * currentBuyQty;
+        if (buyConfirm != null) buyConfirm.SetEnabled(canBuy);
+    }
+
+    private void ConfirmPurchase()
+    {
+        int total = currentBuyUnitPrice * currentBuyQty;
+        if (CoinManager.Instance == null || !CoinManager.Instance.TrySpendCoins(total))
+        {
+            Debug.Log("[Shop] 金币不足，购买失败");
+            return;
+        }
+
+        if (ToolUsageInventory.Instance != null)
+        {
+            if (currentBuyToolId == "reset") ToolUsageInventory.Instance.AddResetUses(currentBuyQty);
+            else ToolUsageInventory.Instance.AddRainbowUses(currentBuyQty);
+        }
+
+        int newCount = currentBuyToolId == "reset"
+            ? (ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.ResetUses : 0)
+            : (ToolUsageInventory.Instance != null ? ToolUsageInventory.Instance.RainbowUses : 0);
+
+        if (boughtSummary != null) boughtSummary.text = $"You now have {newCount}";
+        if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
+        if (boughtView != null) boughtView.RemoveFromClassList("buy-modal__view--hidden");
+    }
+
+    private static readonly string[] s_iconClasses = new[]
+    {
+        "item-thumb--tool-reset",
+        "item-thumb--tool-rainbow",
+    };
+
+    private static void SwapIconClass(VisualElement icon, string toolId)
+    {
+        if (icon == null) return;
+        foreach (var c in s_iconClasses) icon.RemoveFromClassList(c);
+        icon.AddToClassList(toolId == "reset" ? "item-thumb--tool-reset" : "item-thumb--tool-rainbow");
+    }
+
+    // ---------------- Back / Nav ----------------
 
     private void OnBack()
     {
-        Debug.Log("[Shop] Back clicked");
         Hide();
     }
 
     private void OnNavSettings()
     {
-        Debug.Log("[Shop] nav: settings");
-        // Instance 只有在面板被 Awake 过后才会赋值；初始状态下 SettingsPanel 的 UIDocument 子节点
-        // 是 inactive 的，Awake 从未运行，所以要同时在场景里查找包括 inactive 在内的面板。
         var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
         if (panel == null) return;
 
-        // 二级面板互相切换：传递当前面板的 returnTarget，避免设置面板上一次开启时
-        // 残留的 StartMenu 引用覆盖当前“游戏内打开”的 null。
         panel.Show(returnTarget);
-        gameObject.SetActive(false);
-    }
-
-    private void SelectTab(bool ballsActive)
-    {
-        if (tabBalls == null || tabBlocks == null) return;
-        tabBalls.EnableInClassList("tab-btn--active", ballsActive);
-        tabBlocks.EnableInClassList("tab-btn--active", !ballsActive);
-        Debug.Log($"[Shop] Tab: {(ballsActive ? "BALLS" : "BLOCKS")}");
-    }
-
-    /// <summary>显示本面板，并记住关闭时要返回的对象（null = 关闭后不重新激活任何面板，例如游戏内直接打开）。</summary>
-    public void Show(GameObject returnTo = null)
-    {
-        // 总是覆盖 returnTarget，避免上次打开（StartMenu→Shop）的引用残留到这次（游戏内→Shop）。
-        returnTarget = returnTo;
-        gameObject.SetActive(true);
-    }
-
-    /// <summary>隐藏本面板，激活返回目标。</summary>
-    public void Hide()
-    {
-        // 先打开返回目标再隐藏自己，保证 UIPause refcount 始终 >= 1。
-        if (returnTarget != null) returnTarget.SetActive(true);
         gameObject.SetActive(false);
     }
 }
