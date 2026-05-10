@@ -25,6 +25,9 @@ public class GameOverModalUI : MonoBehaviour
     [Tooltip("可选：StartMenuUI 引用；为空则运行时自动查找。")]
     public StartMenuUI startMenuUI;
 
+    // 记录当前是否持有 UIPause refcount，避免 Show/Hide 不配对造成 refcount 错位。
+    private bool _heldUIPause;
+
     [Header("Copy")]
     [Tooltip("scoreValueText 的格式，{0}=得分数字")]
     public string scoreValueFormat = "{0}";
@@ -98,6 +101,14 @@ public class GameOverModalUI : MonoBehaviour
     {
         if (modalRoot != null) modalRoot.SetActive(true);
 
+        // 获取一次 UIPause，这样在 GameOver 面板上叠加子面板（如 Settings）后，
+        // 子面板关闭时 refcount 仍为 1，timeScale 保持 0，不会提前息复游戏。
+        if (!_heldUIPause)
+        {
+            UIPause.Acquire();
+            _heldUIPause = true;
+        }
+
         int score = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
         int high = ScoreManager.Instance != null ? ScoreManager.Instance.HighScore : 0;
 
@@ -124,6 +135,12 @@ public class GameOverModalUI : MonoBehaviour
     public void Hide()
     {
         if (modalRoot != null) modalRoot.SetActive(false);
+
+        if (_heldUIPause)
+        {
+            UIPause.Release();
+            _heldUIPause = false;
+        }
 
         SetHudVisibility(true);
     }
@@ -161,20 +178,16 @@ public class GameOverModalUI : MonoBehaviour
 
     public void OpenSettingsMenu()
     {
-        if (startMenuUI == null)
+        // 不走旧的 StartMenuUI，直接打开 UI Toolkit 的 SettingsPanel。
+        // 不隐藏 GameOver：让 SettingsPanel 叠在上面，Back 后仍是 GameOver 状态。
+        var panel = SettingsPanel.Instance ?? FindObjectOfType<SettingsPanel>(includeInactive: true);
+        if (panel == null)
         {
-            startMenuUI = FindObjectOfType<StartMenuUI>(includeInactive: true);
+            Debug.LogWarning("GameOverModalUI: SettingsPanel not found in scene.");
+            return;
         }
 
-        Hide();
-
-        if (startMenuUI != null)
-        {
-            startMenuUI.OpenMenuFromExternal();
-        }
-        else
-        {
-            Debug.LogWarning("GameOverModalUI: StartMenuUI not found. Cannot open settings menu.");
-        }
+        // returnTarget = null：Settings 关闭时不重新激活别的面板；GameOver 本身从未被关闭。
+        panel.Show(null);
     }
 }
