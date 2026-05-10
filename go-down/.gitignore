@@ -19,8 +19,10 @@
 # Rider / VSCode
 .idea/
 .vscode/
+*.psd
 
 # Cache
 UserSettings/
 
 /Assets/Screenshots/
+

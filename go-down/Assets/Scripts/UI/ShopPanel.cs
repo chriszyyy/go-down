@@ -82,8 +82,9 @@ public class ShopPanel : MonoBehaviour
         var panel = SettingsPanel.Instance ?? FindFirstObjectByType<SettingsPanel>(FindObjectsInactive.Include);
         if (panel == null) return;
 
-        // 二级面板互相切换：打开对方后只隐藏自己，不重新激活 returnTarget（否则 StartMenu 会被顺带开启）。
-        panel.gameObject.SetActive(true);
+        // 二级面板互相切换：传递当前面板的 returnTarget，避免设置面板上一次开启时
+        // 残留的 StartMenu 引用覆盖当前“游戏内打开”的 null。
+        panel.Show(returnTarget);
         gameObject.SetActive(false);
     }
 
