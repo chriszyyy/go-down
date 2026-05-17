@@ -182,34 +182,37 @@
             <ui:VisualElement name="content-noads" class="tab-content tab-content--hidden">
                 <ui:VisualElement class="noads-hero">
                     <ui:Label text="REMOVE ADS" class="noads-hero__title" />
-                    <ui:Label text="Enjoy Go Down without interruptions!" class="noads-hero__subtitle" />
+                    <ui:Label text="Enjoy the game without interruptions!" class="noads-hero__subtitle" />
+                    <ui:VisualElement picking-mode="Ignore" class="noads-hero__image" />
                 </ui:VisualElement>
-                <ui:Label text="CHOOSE YOUR PLAN" class="noads-section-title" />
-                <ui:VisualElement class="item-grid item-grid--three">
-                    <ui:Button name="noads-monthly" class="item-card item-card--plan">
-                        <ui:Label text="1 MONTH" class="item-card__title" />
-                        <ui:Label text="30 days" class="item-card__sub" />
-                        <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$2.99" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                    <ui:Button name="noads-yearly" class="item-card item-card--plan item-card--plan-best">
-                        <ui:Label text="BEST VALUE" class="item-card__ribbon" />
-                        <ui:Label text="1 YEAR" class="item-card__title" />
-                        <ui:Label text="365 days · save 44%" class="item-card__sub" />
-                        <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$19.99" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                    <ui:Button name="noads-lifetime" class="item-card item-card--plan">
-                        <ui:Label text="LIFETIME" class="item-card__title" />
-                        <ui:Label text="One-time" class="item-card__sub" />
-                        <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$39.99" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
+                <ui:VisualElement class="noads-features">
+                    <ui:VisualElement class="noads-feature">
+                        <ui:VisualElement picking-mode="Ignore" class="noads-feature__icon noads-feature__icon--shield" />
+                        <ui:Label text="No Banner Ads" class="noads-feature__label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="noads-feature">
+                        <ui:VisualElement picking-mode="Ignore" class="noads-feature__icon noads-feature__icon--playback" />
+                        <ui:Label text="No Interstitial Ads" class="noads-feature__label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="noads-feature">
+                        <ui:VisualElement picking-mode="Ignore" class="noads-feature__icon noads-feature__icon--rocket" />
+                        <ui:Label text="Faster Experience" class="noads-feature__label" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Button name="noads-restore" text="RESTORE PURCHASES" class="restore-btn" />
+                <ui:VisualElement class="noads-lifetime-card">
+                    <ui:Label text="LIFETIME ACCESS" class="noads-lifetime-card__title" />
+                    <ui:Label text="One-time payment" class="noads-lifetime-card__sub" />
+                    <ui:VisualElement picking-mode="Ignore" class="noads-lifetime-card__icon" />
+                    <ui:Label text="Pay once, enjoy forever!" class="noads-lifetime-card__tagline" />
+                    <ui:Button name="noads-lifetime" text="$2.99" class="noads-price-btn" />
+                </ui:VisualElement>
+                <ui:Button name="noads-restore" class="noads-restore-card">
+                    <ui:VisualElement picking-mode="Ignore" class="noads-restore-card__icon" />
+                    <ui:VisualElement class="noads-restore-card__text">
+                        <ui:Label text="RESTORE PURCHASES" class="noads-restore-card__title" />
+                        <ui:Label text="Already purchased? Restore your purchase." class="noads-restore-card__sub" />
+                    </ui:VisualElement>
+                </ui:Button>
             </ui:VisualElement>
         </ui:ScrollView>
         <ui:VisualElement class="bottom-nav">

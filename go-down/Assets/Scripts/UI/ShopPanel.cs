@@ -211,16 +211,23 @@ public class ShopPanel : MonoBehaviour
                 card.clicked += () => Debug.Log($"[Shop] TODO: 接入 IAP，购买金币包 {packId}");
                 continue;
             }
-            if (id.StartsWith("noads-"))
-            {
-                string planId = id;
-                // TODO: 接入 IAP，订阅去广告
-                card.clicked += () => Debug.Log($"[Shop] TODO: 接入 IAP，购买/恢复 {planId}");
-                continue;
-            }
 
             // BALLS / BLOCKS 占位
             card.clicked += () => Debug.Log($"[Shop] item clicked: {id}");
+        }
+
+        // NO ADS 区域按钮 (不属于 .item-card)
+        var noAdsLifetime = root.Q<Button>("noads-lifetime");
+        if (noAdsLifetime != null)
+        {
+            // TODO: 接入 IAP，购买终身去广告
+            noAdsLifetime.clicked += () => Debug.Log("[Shop] TODO: 接入 IAP，购买终身去广告");
+        }
+        var noAdsRestore = root.Q<Button>("noads-restore");
+        if (noAdsRestore != null)
+        {
+            // TODO: 接入 IAP，恢复购买
+            noAdsRestore.clicked += () => Debug.Log("[Shop] TODO: 接入 IAP，恢复购买");
         }
 
         if (buyClose != null) buyClose.clicked += HideBuyModal;

@@ -227,17 +227,6 @@
     height: 260px;
 }
 
-.item-card--plan {
-    height: 260px;
-    justify-content: flex-start;
-    padding-top: 26px;
-}
-
-.item-card--plan-best {
-    border-color: rgb(250, 188, 60);
-    border-width: 3px;
-}
-
 .item-card__title {
     color: var(--color-text);
     font-size: 24px;
@@ -264,18 +253,7 @@
 }
 
 .item-card__ribbon {
-    position: absolute;
-    top: -12px;
-    left: 16px;
-    right: 16px;
-    background-color: rgb(220, 60, 60);
-    color: rgb(255, 255, 255);
-    font-size: 18px;
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    border-radius: 10px;
-    padding: 4px;
-    letter-spacing: 2px;
+    display: none;
 }
 
 .item-card__price--money {
@@ -300,50 +278,178 @@
 
 .noads-hero {
     align-items: center;
-    margin-top: 12px;
+    margin-top: 4px;
     margin-bottom: 18px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    background-color: rgba(20, 30, 70, 0.65);
-    border-radius: 22px;
-    border-width: 2px;
-    border-color: rgba(80, 140, 255, 0.3);
+    padding-top: 14px;
+    padding-bottom: 6px;
 }
 
 .noads-hero__title {
     color: rgb(250, 188, 60);
-    font-size: 44px;
+    font-size: 56px;
     -unity-font-style: bold;
     letter-spacing: 3px;
 }
 
 .noads-hero__subtitle {
-    color: var(--color-text-muted);
+    color: var(--color-text);
     font-size: 22px;
-    margin-top: 6px;
+    margin-top: 4px;
 }
 
-.noads-section-title {
-    color: rgb(120, 180, 255);
-    font-size: 24px;
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    letter-spacing: 4px;
+.noads-hero__image {
+    width: 460px;
+    height: 360px;
+    margin-top: 8px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/no-ads-main.png?fileID=21300000&guid=fab63623444519f4eacc851bc7254c0e&type=3#no-ads-main");
+}
+
+.noads-features {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin-top: 4px;
+    margin-bottom: 22px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.noads-feature {
+    align-items: center;
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.noads-feature__icon {
+    width: 92px;
+    height: 92px;
     margin-bottom: 10px;
-    margin-top: 6px;
+    -unity-background-scale-mode: scale-to-fit;
 }
 
-.restore-btn {
-    height: 80px;
-    margin-top: 18px;
-    background-color: rgba(20, 30, 70, 0.85);
-    border-radius: 18px;
+.noads-feature__icon--shield {
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/sheild.png?fileID=21300000&guid=6490a9ef4ec8eee43bb7d983c7bb0c8a&type=3#sheild");
+}
+
+.noads-feature__icon--playback {
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/playback.png?fileID=21300000&guid=7be85e38d01c6354d9d95df0733a4b81&type=3#playback");
+}
+
+.noads-feature__icon--rocket {
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/rocket.png?fileID=21300000&guid=93d1b78d6569c204a8fe387615503c60&type=3#rocket");
+}
+
+.noads-feature__label {
+    color: var(--color-text);
+    font-size: 20px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.noads-lifetime-card {
+    align-items: center;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    margin-bottom: 18px;
+    background-color: rgba(15, 22, 50, 0.7);
+    border-radius: 22px;
     border-width: 2px;
-    border-color: rgba(80, 140, 255, 0.5);
-    color: rgb(120, 180, 255);
-    font-size: 24px;
+    border-color: rgba(80, 140, 255, 0.4);
+}
+
+.noads-lifetime-card__title {
+    color: var(--color-text);
+    font-size: 30px;
     -unity-font-style: bold;
     letter-spacing: 2px;
+}
+
+.noads-lifetime-card__sub {
+    color: var(--color-text-muted);
+    font-size: 20px;
+    margin-top: 4px;
+}
+
+.noads-lifetime-card__icon {
+    width: 210px;
+    height: 140px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/infinite.png?fileID=21300000&guid=44a5b8e3bd06ed44a80ded78e8b1bb9a&type=3#infinite");
+}
+
+.noads-lifetime-card__tagline {
+    color: rgb(120, 200, 255);
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    margin-bottom: 16px;
+}
+
+.noads-price-btn {
+    width: 80%;
+    height: 110px;
+    color: rgb(60, 40, 10);
+    font-size: 38px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-slice-left: 13;
+    -unity-slice-top: 12;
+    -unity-slice-right: 13;
+    -unity-slice-bottom: 12;
+    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnPlay.png?fileID=21300000&guid=7833687fafc2db8459430f4826771224&type=3#StartMenu_BtnPlay");
+}
+
+.noads-price-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.noads-price-btn:active {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.noads-restore-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 18px;
+    margin-bottom: 8px;
+    background-color: rgba(15, 22, 50, 0.6);
+    border-radius: 20px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.3);
+}
+
+.noads-restore-card__icon {
+    width: 60px;
+    height: 60px;
+    margin-right: 18px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/refresh.png?fileID=21300000&guid=5259d766b9f4d304b8d4299b09eeb256&type=3#refresh");
+}
+
+.noads-restore-card__text {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.noads-restore-card__title {
+    color: var(--color-text);
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.noads-restore-card__sub {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    margin-top: 2px;
 }
 
 /* ============================================================
