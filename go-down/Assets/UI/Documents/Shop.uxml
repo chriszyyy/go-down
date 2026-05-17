@@ -25,7 +25,6 @@
         </ui:VisualElement>
         <ui:VisualElement class="tab-bar tab-bar--five">
             <ui:Button name="tab-balls" text="BALLS" class="tab-btn tab-btn--small tab-btn--active" />
-            <ui:Button name="tab-blocks" text="BLOCKS" class="tab-btn tab-btn--small" />
             <ui:Button name="tab-items" text="ITEMS" class="tab-btn tab-btn--small" />
             <ui:Button name="tab-coins" text="COINS" class="tab-btn tab-btn--small" />
             <ui:Button name="tab-noads" text="NO ADS" class="tab-btn tab-btn--small" />
@@ -110,9 +109,6 @@
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="content-blocks" class="tab-content tab-content--hidden">
-                <ui:Label text="COMING SOON" class="empty-tab__label" />
             </ui:VisualElement>
             <ui:VisualElement name="content-items" class="tab-content tab-content--hidden">
                 <ui:VisualElement class="section-divider">

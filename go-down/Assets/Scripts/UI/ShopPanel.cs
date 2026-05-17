@@ -4,14 +4,14 @@ using UnityEngine.UIElements;
 /// <summary>
 /// 商店面板控制器（UI Toolkit）。
 /// - 顶部 stat 绑定 ScoreManager / CoinManager（最高分 / 当前分 / 金币）。
-/// - 5 个 tab：BALLS / BLOCKS / ITEMS / COINS / NO ADS。
+/// - 4 个 tab：BALLS / ITEMS / COINS / NO ADS。
 /// - ITEMS：用 CoinManager + ToolUsageInventory 实际购买；点击卡片弹出"BUY ITEM"模态。
 /// - COINS / NO ADS：占位，TODO 接入 IAP。
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class ShopPanel : MonoBehaviour
 {
-    public enum ShopTab { Balls, Blocks, Items, Coins, NoAds }
+    public enum ShopTab { Balls, Items, Coins, NoAds }
 
     public static ShopPanel Instance { get; private set; }
 
@@ -30,12 +30,10 @@ public class ShopPanel : MonoBehaviour
 
     // —— Tabs ——
     private Button tabBalls;
-    private Button tabBlocks;
     private Button tabItems;
     private Button tabCoins;
     private Button tabNoAds;
     private VisualElement contentBalls;
-    private VisualElement contentBlocks;
     private VisualElement contentItems;
     private VisualElement contentCoins;
     private VisualElement contentNoAds;
@@ -144,13 +142,11 @@ public class ShopPanel : MonoBehaviour
         navSettings = root.Q<Button>("nav-settings");
 
         tabBalls = root.Q<Button>("tab-balls");
-        tabBlocks = root.Q<Button>("tab-blocks");
         tabItems = root.Q<Button>("tab-items");
         tabCoins = root.Q<Button>("tab-coins");
         tabNoAds = root.Q<Button>("tab-noads");
 
         contentBalls = root.Q<VisualElement>("content-balls");
-        contentBlocks = root.Q<VisualElement>("content-blocks");
         contentItems = root.Q<VisualElement>("content-items");
         contentCoins = root.Q<VisualElement>("content-coins");
         contentNoAds = root.Q<VisualElement>("content-noads");
@@ -180,7 +176,6 @@ public class ShopPanel : MonoBehaviour
         if (backButton != null) backButton.clicked += OnBack;
 
         if (tabBalls != null) tabBalls.clicked += () => SelectTab(ShopTab.Balls);
-        if (tabBlocks != null) tabBlocks.clicked += () => SelectTab(ShopTab.Blocks);
         if (tabItems != null) tabItems.clicked += () => SelectTab(ShopTab.Items);
         if (tabCoins != null) tabCoins.clicked += () => SelectTab(ShopTab.Coins);
         if (tabNoAds != null) tabNoAds.clicked += () => SelectTab(ShopTab.NoAds);
@@ -212,7 +207,7 @@ public class ShopPanel : MonoBehaviour
                 continue;
             }
 
-            // BALLS / BLOCKS 占位
+            // BALLS 占位
             card.clicked += () => Debug.Log($"[Shop] item clicked: {id}");
         }
 
@@ -271,13 +266,11 @@ public class ShopPanel : MonoBehaviour
         pendingTab = tab;
 
         SetTabActive(tabBalls, tab == ShopTab.Balls);
-        SetTabActive(tabBlocks, tab == ShopTab.Blocks);
         SetTabActive(tabItems, tab == ShopTab.Items);
         SetTabActive(tabCoins, tab == ShopTab.Coins);
         SetTabActive(tabNoAds, tab == ShopTab.NoAds);
 
         SetContentVisible(contentBalls, tab == ShopTab.Balls);
-        SetContentVisible(contentBlocks, tab == ShopTab.Blocks);
         SetContentVisible(contentItems, tab == ShopTab.Items);
         SetContentVisible(contentCoins, tab == ShopTab.Coins);
         SetContentVisible(contentNoAds, tab == ShopTab.NoAds);
