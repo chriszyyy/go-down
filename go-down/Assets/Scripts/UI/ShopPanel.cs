@@ -70,6 +70,25 @@ public class ShopPanel : MonoBehaviour
     private readonly Dictionary<string, Button> hexSkinCards = new Dictionary<string, Button>();
     private string currentSkinId; // 当前在 skin-view 中待解锁的 skin id
 
+    // —— IAP (coin pack) ——
+    private VisualElement iapView;
+    private Label iapTitle;
+    private Label iapPrompt;
+    private Label iapPrice;
+    private Button iapClose;
+    private Button iapCancel;
+    private Button iapConfirm;
+    private int currentIapCoins; // 当前 IAP 待发放金币数
+
+    // 金币包定义：id 后缀 → (coin amount, price text)
+    private static readonly Dictionary<string, (int coins, string price)> s_coinPacks = new Dictionary<string, (int, string)>
+    {
+        { "coin-pack-100",  (100,  "$0.99") },
+        { "coin-pack-500",  (500,  "$3.99") },
+        { "coin-pack-1200", (1200, "$7.99") },
+        { "coin-pack-2500", (2500, "$13.99") },
+    };
+
     // 当前购买中的工具
     private string currentBuyToolId;       // "reset" / "rainbow"
     private int currentBuyUnitPrice;
@@ -190,6 +209,14 @@ public class ShopPanel : MonoBehaviour
         skinClose = root.Q<Button>("skin-close");
         skinCancel = root.Q<Button>("skin-cancel");
         skinConfirm = root.Q<Button>("skin-confirm");
+
+        iapView = root.Q<VisualElement>("iap-view");
+        iapTitle = root.Q<Label>("iap-title");
+        iapPrompt = root.Q<Label>("iap-prompt");
+        iapPrice = root.Q<Label>("iap-price");
+        iapClose = root.Q<Button>("iap-close");
+        iapCancel = root.Q<Button>("iap-cancel");
+        iapConfirm = root.Q<Button>("iap-confirm");
     }
 
     private void WireButtons()
@@ -232,8 +259,7 @@ public class ShopPanel : MonoBehaviour
             if (id.StartsWith("coin-pack-"))
             {
                 string packId = id;
-                // TODO: 接入 IAP，购买金币包
-                card.clicked += () => Debug.Log($"[Shop] TODO: 接入 IAP，购买金币包 {packId}");
+                card.clicked += () => OpenIapModal(packId);
                 continue;
             }
 
@@ -265,6 +291,10 @@ public class ShopPanel : MonoBehaviour
         if (skinClose != null) skinClose.clicked += HideBuyModal;
         if (skinCancel != null) skinCancel.clicked += HideBuyModal;
         if (skinConfirm != null) skinConfirm.clicked += ConfirmSkinPurchase;
+
+        if (iapClose != null) iapClose.clicked += HideBuyModal;
+        if (iapCancel != null) iapCancel.clicked += HideBuyModal;
+        if (iapConfirm != null) iapConfirm.clicked += ConfirmIapPurchase;
     }
 
     // ---------------- 顶部 stat 数据 ----------------
@@ -339,6 +369,7 @@ public class ShopPanel : MonoBehaviour
         if (buyView != null) buyView.RemoveFromClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
         if (skinView != null) skinView.AddToClassList("buy-modal__view--hidden");
+        if (iapView != null) iapView.AddToClassList("buy-modal__view--hidden");
 
         if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
 
@@ -441,6 +472,7 @@ public class ShopPanel : MonoBehaviour
 
         if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+        if (iapView != null) iapView.AddToClassList("buy-modal__view--hidden");
         if (skinView != null) skinView.RemoveFromClassList("buy-modal__view--hidden");
 
         if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
@@ -498,6 +530,42 @@ public class ShopPanel : MonoBehaviour
         if (icon == null) return;
         foreach (var c in s_hexIconClasses) icon.RemoveFromClassList(c);
         icon.AddToClassList("item-thumb--hex-" + skinId);
+    }
+
+    // ---------------- IAP (coin packs) ----------------
+
+    private void OpenIapModal(string packId)
+    {
+        if (!s_coinPacks.TryGetValue(packId, out var pack))
+        {
+            Debug.LogWarning($"[Shop] 未知 coin pack: {packId}");
+            return;
+        }
+
+        currentIapCoins = pack.coins;
+        if (iapTitle != null) iapTitle.text = $"BUY {pack.coins} COINS";
+        if (iapPrompt != null) iapPrompt.text = $"Purchase {pack.coins} coins?";
+        if (iapPrice != null) iapPrice.text = pack.price;
+
+        if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
+        if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+        if (skinView != null) skinView.AddToClassList("buy-modal__view--hidden");
+        if (iapView != null) iapView.RemoveFromClassList("buy-modal__view--hidden");
+
+        if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
+    }
+
+    private void ConfirmIapPurchase()
+    {
+        // TODO: 接入真实 IAP（Google Play / App Store）。
+        // 本地开发模式：默认购买成功，直接发金币，方便测试其它购买流程。
+        if (currentIapCoins > 0 && CoinManager.Instance != null)
+        {
+            CoinManager.Instance.AddCoins(currentIapCoins);
+            Debug.Log($"[Shop] (Dev) IAP succeeded: +{currentIapCoins} coins");
+        }
+
+        HideBuyModal();
     }
 
     // ---------------- Back / Nav ----------------

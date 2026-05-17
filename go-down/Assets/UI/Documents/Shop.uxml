@@ -219,6 +219,20 @@
                         <ui:Button name="skin-confirm" text="CONFIRM" class="buy-modal__confirm" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement name="iap-view" class="buy-modal__view buy-modal__view--hidden">
+                    <ui:Label name="iap-title" text="BUY COINS" class="buy-modal__title" />
+                    <ui:Button name="iap-close" text="X" class="buy-modal__close" />
+                    <ui:VisualElement name="iap-icon" picking-mode="Ignore" class="buy-modal__icon item-thumb--coin-pack" />
+                    <ui:Label name="iap-prompt" text="Purchase this coin pack?" class="buy-modal__prompt" />
+                    <ui:VisualElement class="buy-modal__total">
+                        <ui:Label name="iap-price" text="$0.99" class="buy-modal__total-text" />
+                    </ui:VisualElement>
+                    <ui:Label text="Dev mode: purchase succeeds locally." class="buy-modal__dev-note" />
+                    <ui:VisualElement class="buy-modal__skin-actions">
+                        <ui:Button name="iap-cancel" text="CANCEL" class="buy-modal__cancel" />
+                        <ui:Button name="iap-confirm" text="CONFIRM" class="buy-modal__confirm" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
                 <ui:VisualElement name="bought-view" class="buy-modal__view buy-modal__view--hidden">
                     <ui:Label text="PURCHASED!" class="buy-modal__title" />
                     <ui:VisualElement name="bought-icon" picking-mode="Ignore" class="buy-modal__icon item-thumb--tool-reset" />

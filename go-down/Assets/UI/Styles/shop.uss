@@ -774,3 +774,13 @@
 .buy-modal__cancel:hover {
     background-color: rgb(210, 110, 110);
 }
+
+
+/* IAP modal 本地开发模式提示 */
+.buy-modal__dev-note {
+    color: rgb(255, 200, 80);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+    -unity-font-style: italic;
+}
