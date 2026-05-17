@@ -711,3 +711,66 @@
 #content-noads {
     flex-grow: 1;
 }
+
+
+/* ============================================================
+ * Hexagon ball skins (BALLS tab)
+ * ============================================================ */
+
+/* check 默认隐藏，只有 --selected 卡片才显示 */
+.item-card__check {
+    display: none;
+}
+.item-card--selected .item-card__check {
+    display: flex;
+}
+/* 已选中卡片不再显示价格 */
+.item-card--selected .item-card__price {
+    display: none;
+}
+.item-card__price--hidden {
+    display: none;
+}
+
+/* hex 通用：透明背景 + 整张 sprite 充满 */
+.item-thumb--hex {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    width: 170px;
+    height: 170px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/gold-hexagone.png?fileID=21300000&guid=4ce32de3a576b7643a3c86a3376391ea&type=3#gold-hexagone"); }
+.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/blue-hexagone.png?fileID=21300000&guid=cee9848c9a954c34bb21ae251fb633e4&type=3#blue-hexagone"); }
+.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/Hexagons/green-hexagone.png?fileID=21300000&guid=2894a84d219f8324f9374be44dc643ff&type=3#green-hexagone"); }
+.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/Hexagons/purple-hexagone.png?fileID=21300000&guid=2928729c6bac41c4ea287fc78ad51901&type=3#purple-hexagone"); }
+.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/Hexagons/red-hexagone.png?fileID=21300000&guid=e17661c0cd3c7fa4daac1f5cbe923888&type=3#red-hexagone"); }
+
+/* skin-view 内的 confirm + cancel 并排按钮 */
+.buy-modal__skin-actions {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 92%;
+}
+.buy-modal__skin-actions > .buy-modal__confirm,
+.buy-modal__skin-actions > .buy-modal__cancel {
+    flex-grow: 1;
+    width: auto;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+.buy-modal__cancel {
+    height: 84px;
+    border-radius: 18px;
+    background-color: rgb(180, 80, 80);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+    font-size: 30px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+    padding: 0;
+}
+.buy-modal__cancel:hover {
+    background-color: rgb(210, 110, 110);
+}

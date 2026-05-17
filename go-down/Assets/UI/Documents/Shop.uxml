@@ -32,80 +32,44 @@
         <ui:ScrollView name="shop-scroll" mode="Vertical" class="shop-scroll">
             <ui:VisualElement name="content-balls" class="tab-content tab-content--active">
                 <ui:VisualElement class="item-grid">
-                    <ui:Button name="item-classic" class="item-card item-card--selected">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--classic" />
-                        <ui:Label text="CLASSIC" class="item-card__name" />
+                    <ui:Button name="item-hex-gold" class="item-card">
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-gold" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
+                        <ui:VisualElement class="item-card__price item-card__price--hidden">
+                            <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
+                            <ui:Label text="500" class="item-card__price-text" />
+                        </ui:VisualElement>
                     </ui:Button>
-                    <ui:Button name="item-blue" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--blue" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
+                    <ui:Button name="item-hex-blue" class="item-card">
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-blue" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
-                    <ui:Button name="item-purple" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--purple" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
+                    <ui:Button name="item-hex-green" class="item-card">
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-green" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="800" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
-                    <ui:Button name="item-green" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--green" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
+                    <ui:Button name="item-hex-purple" class="item-card">
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-purple" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1000" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
-                    <ui:Button name="item-red" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--red" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
+                    <ui:Button name="item-hex-red" class="item-card">
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-red" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1200" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                    <ui:Button name="item-rainbow" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--rainbow" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
-                        <ui:VisualElement class="item-card__price">
-                            <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1500" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                </ui:VisualElement>
-                <ui:VisualElement class="section-divider">
-                    <ui:VisualElement picking-mode="Ignore" class="section-divider__line" />
-                    <ui:Label text="SPECIAL" class="section-divider__text" />
-                    <ui:VisualElement picking-mode="Ignore" class="section-divider__line" />
-                </ui:VisualElement>
-                <ui:VisualElement class="item-grid">
-                    <ui:Button name="item-soccer" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--soccer" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
-                        <ui:VisualElement class="item-card__price">
-                            <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="2000" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                    <ui:Button name="item-basket" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--basket" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
-                        <ui:VisualElement class="item-card__price">
-                            <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="2000" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
-                    <ui:Button name="item-planet" class="item-card item-card--locked">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--planet" />
-                        <ui:VisualElement picking-mode="Ignore" class="item-card__lock" />
-                        <ui:VisualElement class="item-card__price">
-                            <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="2500" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>
@@ -240,6 +204,20 @@
                         <ui:Label name="buy-total" text="500" class="buy-modal__total-text" />
                     </ui:VisualElement>
                     <ui:Button name="buy-confirm" text="CONFIRM" class="buy-modal__confirm" />
+                </ui:VisualElement>
+                <ui:VisualElement name="skin-view" class="buy-modal__view buy-modal__view--hidden">
+                    <ui:Label text="UNLOCK SKIN" class="buy-modal__title" />
+                    <ui:Button name="skin-close" text="X" class="buy-modal__close" />
+                    <ui:VisualElement name="skin-icon" picking-mode="Ignore" class="buy-modal__icon item-thumb--hex item-thumb--hex-blue" />
+                    <ui:Label name="skin-prompt" text="Unlock this hexagon skin for 500 coins?" class="buy-modal__prompt" />
+                    <ui:VisualElement class="buy-modal__total">
+                        <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
+                        <ui:Label text="500" class="buy-modal__total-text" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="buy-modal__skin-actions">
+                        <ui:Button name="skin-cancel" text="CANCEL" class="buy-modal__cancel" />
+                        <ui:Button name="skin-confirm" text="CONFIRM" class="buy-modal__confirm" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="bought-view" class="buy-modal__view buy-modal__view--hidden">
                     <ui:Label text="PURCHASED!" class="buy-modal__title" />

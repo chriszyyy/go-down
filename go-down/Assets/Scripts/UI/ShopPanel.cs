@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -59,6 +60,16 @@ public class ShopPanel : MonoBehaviour
     private Button buyConfirm;
     private Button buyOk;
 
+    // —— Skin (hex) ——
+    private VisualElement skinView;
+    private VisualElement skinIcon;
+    private Label skinPrompt;
+    private Button skinClose;
+    private Button skinCancel;
+    private Button skinConfirm;
+    private readonly Dictionary<string, Button> hexSkinCards = new Dictionary<string, Button>();
+    private string currentSkinId; // 当前在 skin-view 中待解锁的 skin id
+
     // 当前购买中的工具
     private string currentBuyToolId;       // "reset" / "rainbow"
     private int currentBuyUnitPrice;
@@ -96,6 +107,8 @@ public class ShopPanel : MonoBehaviour
 
         ToolUsageInventory.OnUsesChanged += RefreshToolCounts;
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged += HandleCoinsChanged;
+        HexagonSkinManager.OnChanged += RefreshSkinCards;
+        RefreshSkinCards();
     }
 
     private void OnDisable()
@@ -104,6 +117,7 @@ public class ShopPanel : MonoBehaviour
 
         ToolUsageInventory.OnUsesChanged -= RefreshToolCounts;
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged -= HandleCoinsChanged;
+        HexagonSkinManager.OnChanged -= RefreshSkinCards;
 
         HideBuyModal();
     }
@@ -169,6 +183,13 @@ public class ShopPanel : MonoBehaviour
         buyQtyMax = root.Q<Button>("buy-qty-max");
         buyConfirm = root.Q<Button>("buy-confirm");
         buyOk = root.Q<Button>("buy-ok");
+
+        skinView = root.Q<VisualElement>("skin-view");
+        skinIcon = root.Q<VisualElement>("skin-icon");
+        skinPrompt = root.Q<Label>("skin-prompt");
+        skinClose = root.Q<Button>("skin-close");
+        skinCancel = root.Q<Button>("skin-cancel");
+        skinConfirm = root.Q<Button>("skin-confirm");
     }
 
     private void WireButtons()
@@ -184,10 +205,19 @@ public class ShopPanel : MonoBehaviour
         if (navSettings != null) navSettings.clicked += OnNavSettings;
 
         var root = GetComponent<UIDocument>().rootVisualElement;
+        hexSkinCards.Clear();
         foreach (var card in root.Query<Button>(className: "item-card").ToList())
         {
             string id = card.name;
             if (string.IsNullOrEmpty(id)) continue;
+
+            if (id.StartsWith("item-hex-"))
+            {
+                string skinId = id.Substring("item-hex-".Length);
+                hexSkinCards[skinId] = card;
+                card.clicked += () => OnHexSkinCardClicked(skinId);
+                continue;
+            }
 
             if (id == "item-tool-reset")
             {
@@ -231,6 +261,10 @@ public class ShopPanel : MonoBehaviour
         if (buyQtyMax != null) buyQtyMax.clicked += SetQtyToMax;
         if (buyConfirm != null) buyConfirm.clicked += ConfirmPurchase;
         if (buyOk != null) buyOk.clicked += HideBuyModal;
+
+        if (skinClose != null) skinClose.clicked += HideBuyModal;
+        if (skinCancel != null) skinCancel.clicked += HideBuyModal;
+        if (skinConfirm != null) skinConfirm.clicked += ConfirmSkinPurchase;
     }
 
     // ---------------- 顶部 stat 数据 ----------------
@@ -304,6 +338,7 @@ public class ShopPanel : MonoBehaviour
 
         if (buyView != null) buyView.RemoveFromClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+        if (skinView != null) skinView.AddToClassList("buy-modal__view--hidden");
 
         if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
 
@@ -374,6 +409,95 @@ public class ShopPanel : MonoBehaviour
         if (icon == null) return;
         foreach (var c in s_iconClasses) icon.RemoveFromClassList(c);
         icon.AddToClassList(toolId == "reset" ? "item-thumb--tool-reset" : "item-thumb--tool-rainbow");
+    }
+
+    // ---------------- Skin (hex) ----------------
+
+    private void OnHexSkinCardClicked(string skinId)
+    {
+        var mgr = HexagonSkinManager.Instance;
+        if (mgr == null) return;
+
+        if (mgr.IsUnlocked(skinId))
+        {
+            mgr.TrySelect(skinId);
+        }
+        else
+        {
+            OpenSkinModal(skinId);
+        }
+    }
+
+    private void OpenSkinModal(string skinId)
+    {
+        currentSkinId = skinId;
+
+        SwapHexIconClass(skinIcon, skinId);
+        if (skinPrompt != null)
+            skinPrompt.text = $"Unlock this hexagon skin for {HexagonSkinManager.UNLOCK_PRICE} coins?";
+
+        int coins = CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0;
+        if (skinConfirm != null) skinConfirm.SetEnabled(coins >= HexagonSkinManager.UNLOCK_PRICE);
+
+        if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
+        if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+        if (skinView != null) skinView.RemoveFromClassList("buy-modal__view--hidden");
+
+        if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
+    }
+
+    private void ConfirmSkinPurchase()
+    {
+        if (string.IsNullOrEmpty(currentSkinId)) return;
+        if (CoinManager.Instance == null || !CoinManager.Instance.TrySpendCoins(HexagonSkinManager.UNLOCK_PRICE))
+        {
+            Debug.Log("[Shop] 金币不足，皮肤解锁失败");
+            return;
+        }
+
+        var mgr = HexagonSkinManager.Instance;
+        if (mgr != null)
+        {
+            mgr.Unlock(currentSkinId);
+            mgr.TrySelect(currentSkinId);
+        }
+
+        HideBuyModal();
+    }
+
+    private void RefreshSkinCards()
+    {
+        var mgr = HexagonSkinManager.Instance;
+        if (mgr == null) return;
+
+        foreach (var kvp in hexSkinCards)
+        {
+            string skinId = kvp.Key;
+            var card = kvp.Value;
+            if (card == null) continue;
+
+            bool unlocked = mgr.IsUnlocked(skinId);
+            bool selected = unlocked && mgr.SelectedSkinId == skinId;
+
+            card.EnableInClassList("item-card--selected", selected);
+            card.EnableInClassList("item-card--locked", !unlocked);
+        }
+    }
+
+    private static readonly string[] s_hexIconClasses = new[]
+    {
+        "item-thumb--hex-gold",
+        "item-thumb--hex-blue",
+        "item-thumb--hex-green",
+        "item-thumb--hex-purple",
+        "item-thumb--hex-red",
+    };
+
+    private static void SwapHexIconClass(VisualElement icon, string skinId)
+    {
+        if (icon == null) return;
+        foreach (var c in s_hexIconClasses) icon.RemoveFromClassList(c);
+        icon.AddToClassList("item-thumb--hex-" + skinId);
     }
 
     // ---------------- Back / Nav ----------------
