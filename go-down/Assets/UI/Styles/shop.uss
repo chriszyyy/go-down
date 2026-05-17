@@ -278,10 +278,13 @@
 
 .noads-hero {
     align-items: center;
+    justify-content: flex-start;
+    flex-grow: 1;
+    flex-shrink: 1;
     margin-top: 4px;
-    margin-bottom: 18px;
-    padding-top: 14px;
-    padding-bottom: 6px;
+    margin-bottom: 12px;
+    padding-top: 8px;
+    padding-bottom: 4px;
 }
 
 .noads-hero__title {
@@ -295,12 +298,14 @@
     color: var(--color-text);
     font-size: 22px;
     margin-top: 4px;
+    margin-bottom: 8px;
 }
 
 .noads-hero__image {
-    width: 460px;
-    height: 360px;
-    margin-top: 8px;
+    width: 100%;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 360px;
     -unity-background-scale-mode: scale-to-fit;
     background-image: url("project://database/Assets/UI/Sprites/NoAds/no-ads-main.png?fileID=21300000&guid=fab63623444519f4eacc851bc7254c0e&type=3#no-ads-main");
 }
@@ -309,10 +314,10 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: flex-start;
-    margin-top: 4px;
-    margin-bottom: 22px;
-    padding-left: 12px;
-    padding-right: 12px;
+    margin-top: 8px;
+    margin-bottom: 18px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .noads-feature {
@@ -322,9 +327,9 @@
 }
 
 .noads-feature__icon {
-    width: 92px;
-    height: 92px;
-    margin-bottom: 10px;
+    width: 150px;
+    height: 150px;
+    margin-bottom: 12px;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -342,7 +347,7 @@
 
 .noads-feature__label {
     color: var(--color-text);
-    font-size: 20px;
+    font-size: 22px;
     -unity-text-align: middle-center;
     white-space: normal;
 }
@@ -350,7 +355,7 @@
 .noads-lifetime-card {
     align-items: center;
     padding-top: 24px;
-    padding-bottom: 24px;
+    padding-bottom: 28px;
     padding-left: 24px;
     padding-right: 24px;
     margin-bottom: 18px;
@@ -362,57 +367,54 @@
 
 .noads-lifetime-card__title {
     color: var(--color-text);
-    font-size: 30px;
+    font-size: 34px;
     -unity-font-style: bold;
     letter-spacing: 2px;
 }
 
 .noads-lifetime-card__sub {
     color: var(--color-text-muted);
-    font-size: 20px;
+    font-size: 22px;
     margin-top: 4px;
 }
 
 .noads-lifetime-card__icon {
-    width: 210px;
-    height: 140px;
-    margin-top: 8px;
-    margin-bottom: 4px;
+    width: 320px;
+    height: 180px;
+    margin-top: 14px;
+    margin-bottom: 8px;
     -unity-background-scale-mode: scale-to-fit;
     background-image: url("project://database/Assets/UI/Sprites/NoAds/infinite.png?fileID=21300000&guid=44a5b8e3bd06ed44a80ded78e8b1bb9a&type=3#infinite");
 }
 
 .noads-lifetime-card__tagline {
     color: rgb(120, 200, 255);
-    font-size: 22px;
+    font-size: 24px;
     -unity-text-align: middle-center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .noads-price-btn {
-    width: 80%;
-    height: 110px;
+    width: 95%;
+    height: 140px;
     color: rgb(60, 40, 10);
-    font-size: 38px;
+    font-size: 46px;
     -unity-font-style: bold;
     letter-spacing: 2px;
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    border-radius: 0;
-    -unity-background-scale-mode: stretch-to-fill;
-    -unity-slice-left: 13;
-    -unity-slice-top: 12;
-    -unity-slice-right: 13;
-    -unity-slice-bottom: 12;
-    background-image: url("project://database/Assets/UI/Sprites/StartMenu_BtnPlay.png?fileID=21300000&guid=7833687fafc2db8459430f4826771224&type=3#StartMenu_BtnPlay");
+    background-color: rgb(250, 188, 60);
+    border-width: 3px;
+    border-color: rgb(180, 110, 20);
+    border-radius: 32px;
+    background-image: none;
 }
 
 .noads-price-btn:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgb(255, 205, 90);
 }
 
 .noads-price-btn:active {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgb(225, 165, 40);
+    scale: 0.98 0.98;
 }
 
 .noads-restore-card {
@@ -699,9 +701,13 @@
 }
 
 .shop-scroll > .unity-scroll-view__content-and-vertical-scroll-container > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
-    flex-grow: 0;
+    flex-grow: 1;
 }
 
 .tab-content {
     flex-shrink: 0;
+}
+
+#content-noads {
+    flex-grow: 1;
 }

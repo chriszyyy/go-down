@@ -345,7 +345,7 @@
 
 .banner {
     flex-grow: 1;
-    height: 160px;
+    height: 135px;
     background-image: url("project://database/Assets/UI/Sprites/section-label-bg.png?fileID=66278673&guid=5f28f2ea8227fcc4c87b2b1f3ba96ebc&type=3#section-label-bg_0");
     -unity-background-scale-mode: stretch-to-fill;
     background-color: rgba(0, 0, 0, 0);
