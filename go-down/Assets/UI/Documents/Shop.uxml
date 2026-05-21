@@ -24,18 +24,19 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="tab-bar tab-bar--five">
-            <ui:Button name="tab-balls" text="BALLS" class="tab-btn tab-btn--small tab-btn--active" />
-            <ui:Button name="tab-items" text="ITEMS" class="tab-btn tab-btn--small" />
+            <ui:Button name="tab-balls" text="BALLS" class="tab-btn tab-btn--small" style="display: none;" />
+            <ui:Button name="tab-items" text="ITEMS" class="tab-btn tab-btn--small tab-btn--active" />
             <ui:Button name="tab-coins" text="COINS" class="tab-btn tab-btn--small" />
             <ui:Button name="tab-noads" text="NO ADS" class="tab-btn tab-btn--small" />
         </ui:VisualElement>
         <ui:ScrollView name="shop-scroll" mode="Vertical" class="shop-scroll">
-            <ui:VisualElement name="content-balls" class="tab-content tab-content--active">
+            <ui:VisualElement name="content-balls" class="tab-content tab-content--hidden" style="display: none;">
                 <ui:VisualElement class="item-grid">
                     <ui:Button name="item-hex-gold" class="item-card">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-gold" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
-                        <ui:VisualElement class="item-card__price item-card__price--hidden">
+                        <ui:Label text="GOLD" class="item-card__name" />
+                        <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
@@ -43,6 +44,7 @@
                     <ui:Button name="item-hex-blue" class="item-card">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-blue" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
+                        <ui:Label text="BLUE" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
@@ -51,6 +53,7 @@
                     <ui:Button name="item-hex-green" class="item-card">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-green" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
+                        <ui:Label text="GREEN" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
@@ -59,6 +62,7 @@
                     <ui:Button name="item-hex-purple" class="item-card">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-purple" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
+                        <ui:Label text="PURPLE" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
@@ -67,6 +71,7 @@
                     <ui:Button name="item-hex-red" class="item-card">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--hex item-thumb--hex-red" />
                         <ui:VisualElement picking-mode="Ignore" class="item-card__check" />
+                        <ui:Label text="RED" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
                             <ui:Label text="500" class="item-card__price-text" />
@@ -74,7 +79,7 @@
                     </ui:Button>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="content-items" class="tab-content tab-content--hidden">
+            <ui:VisualElement name="content-items" class="tab-content tab-content--active">
                 <ui:VisualElement class="section-divider">
                     <ui:VisualElement picking-mode="Ignore" class="section-divider__line" />
                     <ui:Label text="TOOLS" class="section-divider__text" />

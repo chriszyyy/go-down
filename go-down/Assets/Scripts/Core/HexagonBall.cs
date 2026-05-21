@@ -64,38 +64,8 @@ public class HexagonBall : MonoBehaviour
         // 设置层级
         gameObject.layer = LayerMask.NameToLayer("HexagonBall");
 
-        ApplySelectedSkin();
-    }
-
-    private void OnEnable()
-    {
-        HexagonSkinManager.OnChanged += ApplySelectedSkin;
-    }
-
-    private void OnDisable()
-    {
-        HexagonSkinManager.OnChanged -= ApplySelectedSkin;
-    }
-
-    /// <summary>
-    /// 根据 HexagonSkinManager 当前选中的皮肤刷新 sprite。
-    /// 未找到 sprite 时回落到原 hexagonColor 着色（旧灰白 sprite）。
-    /// </summary>
-    private void ApplySelectedSkin()
-    {
-        if (spriteRenderer == null) return;
-
-        string skinId = HexagonSkinManager.Instance != null
-            ? HexagonSkinManager.Instance.SelectedSkinId
-            : HexagonSkinManager.DefaultSkinId;
-
-        var sprite = Resources.Load<Sprite>("HexSkins/" + skinId + "-hexagone");
-        if (sprite != null)
-        {
-            spriteRenderer.sprite = sprite;
-            spriteRenderer.color = Color.white; // 皮肤 sprite 自带色彩，去掉 tint
-        }
-        else
+        // 设置颜色
+        if (spriteRenderer != null)
         {
             spriteRenderer.color = hexagonColor;
         }

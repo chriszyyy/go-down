@@ -95,7 +95,7 @@ public class ShopPanel : MonoBehaviour
     private int currentBuyQty = 1;
 
     // 进入面板时希望默认聚焦的 tab；由调用方通过 Show(returnTo, tab) 指定
-    private ShopTab pendingTab = ShopTab.Balls;
+    private ShopTab pendingTab = ShopTab.Items;
 
     // 工具单价（与原 ShopPanelUI 保持一致）
     private const int RESET_PRICE = 100;
@@ -144,7 +144,7 @@ public class ShopPanel : MonoBehaviour
     // ---------------- Public API ----------------
 
     /// <summary>显示本面板。returnTo = null 表示从游戏内打开（关闭后不重新激活别的面板）。</summary>
-    public void Show(GameObject returnTo = null, ShopTab tab = ShopTab.Balls)
+    public void Show(GameObject returnTo = null, ShopTab tab = ShopTab.Items)
     {
         returnTarget = returnTo;
         pendingTab = tab;
@@ -513,6 +513,14 @@ public class ShopPanel : MonoBehaviour
 
             card.EnableInClassList("item-card--selected", selected);
             card.EnableInClassList("item-card--locked", !unlocked);
+
+            // 直接控制内部元素显示（USS 同名规则有重复，cascade 不稳定，改用 inline style 保证生效）
+            var name = card.Q<Label>(null, "item-card__name");
+            var price = card.Q<VisualElement>(null, "item-card__price");
+            var check = card.Q<VisualElement>(null, "item-card__check");
+            if (name != null) name.style.display = unlocked ? DisplayStyle.Flex : DisplayStyle.None;
+            if (price != null) price.style.display = unlocked ? DisplayStyle.None : DisplayStyle.Flex;
+            if (check != null) check.style.display = selected ? DisplayStyle.Flex : DisplayStyle.None;
         }
     }
 

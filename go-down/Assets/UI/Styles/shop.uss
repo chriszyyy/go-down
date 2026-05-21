@@ -724,8 +724,18 @@
 .item-card--selected .item-card__check {
     display: flex;
 }
-/* 已选中卡片不再显示价格 */
-.item-card--selected .item-card__price {
+/* 价格只在 locked（未购买）时显示；已购买/已选中均隐藏 */
+.item-card__price {
+    display: none;
+}
+.item-card--locked .item-card__price {
+    display: flex;
+}
+/* 名字默认显示（已购买/已选中）；locked 时让位给价格 */
+.item-card__name {
+    display: flex;
+}
+.item-card--locked .item-card__name {
     display: none;
 }
 .item-card__price--hidden {
@@ -740,11 +750,11 @@
     height: 170px;
     -unity-background-scale-mode: scale-to-fit;
 }
-.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/gold-hexagone.png?fileID=21300000&guid=4ce32de3a576b7643a3c86a3376391ea&type=3#gold-hexagone"); }
-.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/blue-hexagone.png?fileID=21300000&guid=cee9848c9a954c34bb21ae251fb633e4&type=3#blue-hexagone"); }
-.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/Hexagons/green-hexagone.png?fileID=21300000&guid=2894a84d219f8324f9374be44dc643ff&type=3#green-hexagone"); }
-.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/Hexagons/purple-hexagone.png?fileID=21300000&guid=2928729c6bac41c4ea287fc78ad51901&type=3#purple-hexagone"); }
-.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/Hexagons/red-hexagone.png?fileID=21300000&guid=e17661c0cd3c7fa4daac1f5cbe923888&type=3#red-hexagone"); }
+.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/gold-hexagone.png?fileID=-1684458480&guid=4ce32de3a576b7643a3c86a3376391ea&type=3#gold-hexagone_0"); }
+.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/blue-hexagone.png?fileID=-841337993&guid=cee9848c9a954c34bb21ae251fb633e4&type=3#blue-hexagone_0"); }
+.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/Hexagons/green-hexagone.png?fileID=1616045908&guid=2894a84d219f8324f9374be44dc643ff&type=3#green-hexagone_0"); }
+.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/Hexagons/purple-hexagone.png?fileID=-988968859&guid=2928729c6bac41c4ea287fc78ad51901&type=3#purple-hexagone_0"); }
+.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/Hexagons/red-hexagone.png?fileID=-1688721910&guid=e17661c0cd3c7fa4daac1f5cbe923888&type=3#red-hexagone_0"); }
 
 /* skin-view 内的 confirm + cancel 并排按钮 */
 .buy-modal__skin-actions {
