@@ -96,7 +96,7 @@
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="item-tool-rainbow" class="item-card item-card--tool">
-                        <ui:Label text="RANDOM BLOCK" class="item-card__title" />
+                        <ui:Label text="RAINBOW BLOCK" class="item-card__title" />
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--tool-rainbow" />
                         <ui:Label name="item-rainbow-count" text="x0" class="item-card__count" />
                         <ui:VisualElement class="item-card__price">

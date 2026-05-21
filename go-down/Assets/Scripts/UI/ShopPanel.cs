@@ -361,7 +361,7 @@ public class ShopPanel : MonoBehaviour
         currentBuyUnitPrice = (toolId == "reset") ? RESET_PRICE : RAINBOW_PRICE;
         currentBuyQty = 1;
 
-        if (buyItemName != null) buyItemName.text = toolId == "reset" ? "RESET BALL" : "RANDOM BLOCK";
+        if (buyItemName != null) buyItemName.text = toolId == "reset" ? "RESET BALL" : "RAINBOW BLOCK";
 
         SwapIconClass(buyIcon, toolId);
         SwapIconClass(boughtIcon, toolId);

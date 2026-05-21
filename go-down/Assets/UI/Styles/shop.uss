@@ -262,13 +262,15 @@
 }
 
 .item-thumb--tool-reset {
-    background-color: rgb(245, 195, 60);
-    border-radius: 24px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    background-image: url("project://database/Assets/UI/Sprites/consumerable-tools-icon.png?fileID=1067267833&guid=6b872fd416140944aa457983704c4bfd&type=3#reset-position");
 }
 
 .item-thumb--tool-rainbow {
-    background-color: rgb(160, 110, 230);
-    border-radius: 24px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    background-image: url("project://database/Assets/UI/Sprites/consumerable-tools-icon.png?fileID=1695473942&guid=6b872fd416140944aa457983704c4bfd&type=3#add-rainbow");
 }
 
 .item-thumb--coin-pack {
