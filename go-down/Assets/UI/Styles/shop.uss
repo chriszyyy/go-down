@@ -287,7 +287,6 @@
 .noads-hero {
     align-items: center;
     justify-content: flex-start;
-    flex-grow: 1;
     flex-shrink: 1;
     margin-top: 4px;
     margin-bottom: 12px;
@@ -311,11 +310,15 @@
 
 .noads-hero__image {
     width: 100%;
-    flex-grow: 1;
     flex-shrink: 1;
-    min-height: 360px;
+    min-height: 540px;
     -unity-background-scale-mode: scale-to-fit;
     background-image: url("project://database/Assets/UI/Sprites/NoAds/no-ads-main.png?fileID=21300000&guid=fab63623444519f4eacc851bc7254c0e&type=3#no-ads-main");
+}
+
+.noads-spacer {
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .noads-features {
@@ -940,12 +943,14 @@
     color: rgb(100, 220, 130);
     font-size: 22px;
     -unity-font-style: bold;
+    -unity-text-align: middle-center;
     letter-spacing: 2px;
 }
 
 .noads-active-card__sub {
     color: var(--color-text-muted);
     font-size: 18px;
+    -unity-text-align: middle-center;
     margin-top: 2px;
     white-space: normal;
 }

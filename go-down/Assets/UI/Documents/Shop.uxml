@@ -175,6 +175,7 @@
                         <ui:Label text="Faster Experience" class="noads-feature__label" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement picking-mode="Ignore" class="noads-spacer" />
                 <ui:VisualElement name="noads-lifetime-card" class="noads-lifetime-card">
                     <ui:Label text="LIFETIME ACCESS" class="noads-lifetime-card__title" />
                     <ui:Label text="One-time payment" class="noads-lifetime-card__sub" />
