@@ -72,6 +72,7 @@ public class ShopPanel : MonoBehaviour
 
     // —— IAP (coin pack) ——
     private VisualElement iapView;
+    private VisualElement iapIcon;
     private Label iapTitle;
     private Label iapPrompt;
     private Label iapPrice;
@@ -211,6 +212,7 @@ public class ShopPanel : MonoBehaviour
         skinConfirm = root.Q<Button>("skin-confirm");
 
         iapView = root.Q<VisualElement>("iap-view");
+        iapIcon = root.Q<VisualElement>("iap-icon");
         iapTitle = root.Q<Label>("iap-title");
         iapPrompt = root.Q<Label>("iap-prompt");
         iapPrice = root.Q<Label>("iap-price");
@@ -435,6 +437,14 @@ public class ShopPanel : MonoBehaviour
         "item-thumb--tool-rainbow",
     };
 
+    private static readonly string[] s_coinPackIconClasses = new[]
+    {
+        "item-thumb--coin-pack-100",
+        "item-thumb--coin-pack-500",
+        "item-thumb--coin-pack-1200",
+        "item-thumb--coin-pack-2500",
+    };
+
     private static void SwapIconClass(VisualElement icon, string toolId)
     {
         if (icon == null) return;
@@ -554,6 +564,13 @@ public class ShopPanel : MonoBehaviour
         if (iapTitle != null) iapTitle.text = $"BUY {pack.coins} COINS";
         if (iapPrompt != null) iapPrompt.text = $"Purchase {pack.coins} coins?";
         if (iapPrice != null) iapPrice.text = pack.price;
+
+        // 切换金币包图标
+        if (iapIcon != null)
+        {
+            foreach (var c in s_coinPackIconClasses) iapIcon.RemoveFromClassList(c);
+            iapIcon.AddToClassList("item-thumb--" + packId); // packId 形如 "coin-pack-100"
+        }
 
         if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");

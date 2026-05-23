@@ -115,28 +115,28 @@
             <ui:VisualElement name="content-coins" class="tab-content tab-content--hidden">
                 <ui:VisualElement class="item-grid item-grid--two">
                     <ui:Button name="coin-pack-100" class="item-card item-card--coin">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack item-thumb--coin-pack-100" />
                         <ui:Label text="100" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
                             <ui:Label text="$0.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="coin-pack-500" class="item-card item-card--coin">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack item-thumb--coin-pack-500" />
                         <ui:Label text="500 (+65%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
                             <ui:Label text="$2.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="coin-pack-1200" class="item-card item-card--coin">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack item-thumb--coin-pack-1200" />
                         <ui:Label text="1200 (+100%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
                             <ui:Label text="$5.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="coin-pack-2500" class="item-card item-card--coin">
-                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
+                        <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack item-thumb--coin-pack-2500" />
                         <ui:Label text="2500 (+150%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
                             <ui:Label text="$9.99" class="item-card__price-text" />

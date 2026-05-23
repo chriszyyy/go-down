@@ -274,9 +274,15 @@
 }
 
 .item-thumb--coin-pack {
-    background-color: rgb(255, 200, 60);
-    border-radius: 24px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    -unity-background-scale-mode: scale-to-fit;
 }
+
+.item-thumb--coin-pack-100  { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin100.png"); }
+.item-thumb--coin-pack-500  { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin500.png"); }
+.item-thumb--coin-pack-1200 { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin1200.png"); }
+.item-thumb--coin-pack-2500 { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin2500.png"); }
 
 .noads-hero {
     align-items: center;
