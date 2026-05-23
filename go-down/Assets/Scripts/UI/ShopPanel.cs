@@ -103,6 +103,16 @@ public class ShopPanel : MonoBehaviour
     private const int RESET_PRICE = 50;
     private const int RAINBOW_PRICE = 35;
 
+    // —— Watch Ad (free coins) ——
+    private const int WATCH_AD_REWARD = 100;
+    private const int WATCH_AD_COOLDOWN_SECONDS = 12 * 60 * 60; // 12 小时
+    private const string KEY_WATCH_AD_LAST = "WatchAd_LastUtc";
+
+    private Button watchAdBtn;
+    private VisualElement watchAdBtnWrap;
+    private Label watchAdBadge;
+    private float watchAdTickAccumulator;
+
     private void Awake()
     {
         Instance = this;
@@ -130,6 +140,19 @@ public class ShopPanel : MonoBehaviour
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged += HandleCoinsChanged;
         HexagonSkinManager.OnChanged += RefreshSkinCards;
         RefreshSkinCards();
+        RefreshWatchAdState();
+    }
+
+    private void Update()
+    {
+        if (watchAdBtn == null) return;
+        // 冷却中每秒刷新一次倒计时文字
+        watchAdTickAccumulator += Time.unscaledDeltaTime;
+        if (watchAdTickAccumulator >= 1f)
+        {
+            watchAdTickAccumulator = 0f;
+            RefreshWatchAdState();
+        }
     }
 
     private void OnDisable()
@@ -220,6 +243,10 @@ public class ShopPanel : MonoBehaviour
         iapClose = root.Q<Button>("iap-close");
         iapCancel = root.Q<Button>("iap-cancel");
         iapConfirm = root.Q<Button>("iap-confirm");
+
+        watchAdBtn = root.Q<Button>("watch-ad-btn");
+        watchAdBtnWrap = root.Q<VisualElement>("watch-ad-btn-wrap");
+        watchAdBadge = watchAdBtnWrap != null ? watchAdBtnWrap.Q<Label>(null, "watch-ad-btn__badge") : null;
     }
 
     private void WireButtons()
@@ -297,6 +324,8 @@ public class ShopPanel : MonoBehaviour
         if (iapClose != null) iapClose.clicked += HideBuyModal;
         if (iapCancel != null) iapCancel.clicked += HideBuyModal;
         if (iapConfirm != null) iapConfirm.clicked += ConfirmIapPurchase;
+
+        if (watchAdBtn != null) watchAdBtn.clicked += OnWatchAdClicked;
     }
 
     // ---------------- 顶部 stat 数据 ----------------
@@ -624,6 +653,78 @@ public class ShopPanel : MonoBehaviour
         }
 
         HideBuyModal();
+    }
+
+    // ---------------- Watch Ad (free coins) ----------------
+
+    private static long NowUtcSeconds()
+    {
+        return (long)(System.DateTime.UtcNow - new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+    }
+
+    private static long GetWatchAdLastUtc()
+    {
+        string s = PlayerPrefs.GetString(KEY_WATCH_AD_LAST, "0");
+        return long.TryParse(s, out var v) ? v : 0L;
+    }
+
+    private static void SetWatchAdLastUtc(long utc)
+    {
+        PlayerPrefs.SetString(KEY_WATCH_AD_LAST, utc.ToString());
+        PlayerPrefs.Save();
+    }
+
+    private void OnWatchAdClicked()
+    {
+        int remaining = GetWatchAdRemainingSeconds();
+        if (remaining > 0) return; // 冷却中点击应被 disabled 阻挡，这里二次保护
+
+        // TODO: 接入广告 SDK；本地开发模式：直接奖励金币 + 启动冷却
+        if (CoinManager.Instance != null)
+        {
+            CoinManager.Instance.AddCoins(WATCH_AD_REWARD);
+            Debug.Log($"[Shop] (Dev) Watch ad reward granted: +{WATCH_AD_REWARD} coins");
+        }
+        SetWatchAdLastUtc(NowUtcSeconds());
+        RefreshWatchAdState();
+    }
+
+    private static int GetWatchAdRemainingSeconds()
+    {
+        long last = GetWatchAdLastUtc();
+        if (last <= 0) return 0;
+        long elapsed = NowUtcSeconds() - last;
+        if (elapsed >= WATCH_AD_COOLDOWN_SECONDS) return 0;
+        return (int)(WATCH_AD_COOLDOWN_SECONDS - elapsed);
+    }
+
+    private void RefreshWatchAdState()
+    {
+        if (watchAdBtn == null) return;
+        int remaining = GetWatchAdRemainingSeconds();
+        bool cooling = remaining > 0;
+
+        watchAdBtn.SetEnabled(!cooling);
+        watchAdBtn.EnableInClassList("watch-ad-btn--cooldown", cooling);
+        if (watchAdBtnWrap != null)
+            watchAdBtnWrap.EnableInClassList("watch-ad-btn-wrap--cooldown", cooling);
+        if (watchAdBadge != null)
+            watchAdBadge.style.display = cooling ? DisplayStyle.None : DisplayStyle.Flex;
+
+        if (cooling)
+        {
+            int h = remaining / 3600;
+            int m = (remaining % 3600) / 60;
+            int s = remaining % 60;
+            // 12 小时内冷却，最多两位时位
+            watchAdBtn.text = h > 0
+                ? string.Format("{0:D2}:{1:D2}:{2:D2}", h, m, s)
+                : string.Format("{0:D2}:{1:D2}", m, s);
+        }
+        else
+        {
+            watchAdBtn.text = "FREE";
+        }
     }
 
     // ---------------- Back / Nav ----------------

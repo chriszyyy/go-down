@@ -143,6 +143,17 @@
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>
+                <ui:VisualElement class="watch-ad-card">
+                    <ui:VisualElement picking-mode="Ignore" class="watch-ad-card__icon" />
+                    <ui:VisualElement class="watch-ad-card__text">
+                        <ui:Label text="WATCH AD" class="watch-ad-card__title" />
+                        <ui:Label text="Get free coins" class="watch-ad-card__sub" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="watch-ad-btn-wrap" class="watch-ad-btn-wrap">
+                        <ui:Button name="watch-ad-btn" text="FREE" class="watch-ad-btn" />
+                        <ui:Label text="AD" picking-mode="Ignore" class="watch-ad-btn__badge" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="content-noads" class="tab-content tab-content--hidden">
                 <ui:VisualElement class="noads-hero">

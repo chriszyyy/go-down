@@ -802,3 +802,106 @@
     margin-bottom: 12px;
     -unity-font-style: italic;
 }
+
+
+/* ============================================================
+ * WATCH AD card (COINS tab) — 看广告免费拿金币
+ * ============================================================ */
+
+.watch-ad-card {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(20, 30, 70, 0.85);
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: rgba(80, 140, 255, 0.35);
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 30px;
+    padding-right: 34px;
+    margin-top: 10px;
+}
+
+.watch-ad-card__icon {
+    width: 200px;
+    height: 200px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/UI/Sprites/CoinPacks/watch-ads.png?fileID=21300000&guid=6433054cdb57beb46bcc57110fcddaf5&type=3#watch-ads");
+    margin-right: 24px;
+}
+
+.watch-ad-card__text {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.watch-ad-card__title {
+    color: var(--color-text);
+    font-size: 36px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.watch-ad-card__sub {
+    color: rgba(200, 210, 240, 0.85);
+    font-size: 24px;
+    margin-top: 4px;
+}
+
+/* 按钮 + AD 角标使用 wrap 容器，避免角标被按钮裁剪 */
+.watch-ad-btn-wrap {
+    position: relative;
+    overflow: visible;
+    margin-left: 8px;
+    /* 顶部留出 AD 角标外凸高度 */
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+.watch-ad-btn {
+    height: 110px;
+    min-width: 210px;
+    border-radius: 22px;
+    background-color: rgb(80, 200, 100);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+    font-size: 36px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    padding-left: 22px;
+    padding-right: 22px;
+}
+
+.watch-ad-btn:hover {
+    background-color: rgb(110, 220, 130);
+}
+
+.watch-ad-btn:disabled {
+    background-color: rgba(110, 130, 150, 0.6);
+    color: rgba(220, 220, 230, 0.8);
+}
+
+/* AD 红色小标：放在按钮右上角外侧，跟设计图一致 */
+.watch-ad-btn__badge {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 54px;
+    height: 32px;
+    background-color: rgb(230, 70, 80);
+    color: rgb(255, 255, 255);
+    border-radius: 8px;
+    font-size: 20px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+}
+
+.watch-ad-btn--cooldown {
+    background-color: rgba(110, 130, 150, 0.6);
+}
+
+.watch-ad-btn-wrap--cooldown .watch-ad-btn__badge {
+    display: none;
+}
