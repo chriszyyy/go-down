@@ -80,6 +80,7 @@ public class ShopPanel : MonoBehaviour
     private Button iapCancel;
     private Button iapConfirm;
     private int currentIapCoins; // 当前 IAP 待发放金币数
+    private bool currentIapIsAds; // 当前 IAP 是否为“去广告”购买（true 时不发币）
 
     // 金币包定义：id 后缀 → (coin amount, price text)
     private static readonly Dictionary<string, (int coins, string price)> s_coinPacks = new Dictionary<string, (int, string)>
@@ -273,8 +274,7 @@ public class ShopPanel : MonoBehaviour
         var noAdsLifetime = root.Q<Button>("noads-lifetime");
         if (noAdsLifetime != null)
         {
-            // TODO: 接入 IAP，购买终身去广告
-            noAdsLifetime.clicked += () => Debug.Log("[Shop] TODO: 接入 IAP，购买终身去广告");
+            noAdsLifetime.clicked += () => OpenAdsModal("$2.99");
         }
         var noAdsRestore = root.Q<Button>("noads-restore");
         if (noAdsRestore != null)
@@ -561,6 +561,7 @@ public class ShopPanel : MonoBehaviour
         }
 
         currentIapCoins = pack.coins;
+        currentIapIsAds = false;
         if (iapTitle != null) iapTitle.text = $"BUY {pack.coins} COINS";
         if (iapPrompt != null) iapPrompt.text = $"Purchase {pack.coins} coins?";
         if (iapPrice != null) iapPrice.text = pack.price;
@@ -569,7 +570,34 @@ public class ShopPanel : MonoBehaviour
         if (iapIcon != null)
         {
             foreach (var c in s_coinPackIconClasses) iapIcon.RemoveFromClassList(c);
+            iapIcon.RemoveFromClassList("noads-feature__icon--shield");
             iapIcon.AddToClassList("item-thumb--" + packId); // packId 形如 "coin-pack-100"
+        }
+
+        if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
+        if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
+        if (skinView != null) skinView.AddToClassList("buy-modal__view--hidden");
+        if (iapView != null) iapView.RemoveFromClassList("buy-modal__view--hidden");
+
+        if (buyModal != null) buyModal.RemoveFromClassList("buy-modal--hidden");
+    }
+
+    /// <summary>
+    /// 复用 IAP 弹窗确认 “终身去广告” 购买。
+    /// </summary>
+    private void OpenAdsModal(string priceText)
+    {
+        currentIapCoins = 0;
+        currentIapIsAds = true;
+        if (iapTitle != null) iapTitle.text = "REMOVE ADS";
+        if (iapPrompt != null) iapPrompt.text = "Remove all ads forever?";
+        if (iapPrice != null) iapPrice.text = priceText;
+
+        // 切到盾牌图标
+        if (iapIcon != null)
+        {
+            foreach (var c in s_coinPackIconClasses) iapIcon.RemoveFromClassList(c);
+            iapIcon.AddToClassList("noads-feature__icon--shield");
         }
 
         if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
@@ -583,8 +611,13 @@ public class ShopPanel : MonoBehaviour
     private void ConfirmIapPurchase()
     {
         // TODO: 接入真实 IAP（Google Play / App Store）。
-        // 本地开发模式：默认购买成功，直接发金币，方便测试其它购买流程。
-        if (currentIapCoins > 0 && CoinManager.Instance != null)
+        // 本地开发模式：默认购买成功，直接发金币 / 标记去广告，方便测试其它流程。
+        if (currentIapIsAds)
+        {
+            // TODO: 标记 PlayerPrefs / 关闭广告 SDK。
+            Debug.Log("[Shop] (Dev) Ads removal purchase succeeded");
+        }
+        else if (currentIapCoins > 0 && CoinManager.Instance != null)
         {
             CoinManager.Instance.AddCoins(currentIapCoins);
             Debug.Log($"[Shop] (Dev) IAP succeeded: +{currentIapCoins} coins");
