@@ -113,6 +113,12 @@ public class ShopPanel : MonoBehaviour
     private Label watchAdBadge;
     private float watchAdTickAccumulator;
 
+    // —— No Ads (lifetime purchase) ——
+    private const string KEY_NO_ADS_REMOVED = "NoAds_Removed";
+
+    private VisualElement noadsLifetimeCard;
+    private VisualElement noadsActiveCard;
+
     private void Awake()
     {
         Instance = this;
@@ -141,6 +147,7 @@ public class ShopPanel : MonoBehaviour
         HexagonSkinManager.OnChanged += RefreshSkinCards;
         RefreshSkinCards();
         RefreshWatchAdState();
+        RefreshNoAdsState();
     }
 
     private void Update()
@@ -247,6 +254,9 @@ public class ShopPanel : MonoBehaviour
         watchAdBtn = root.Q<Button>("watch-ad-btn");
         watchAdBtnWrap = root.Q<VisualElement>("watch-ad-btn-wrap");
         watchAdBadge = watchAdBtnWrap != null ? watchAdBtnWrap.Q<Label>(null, "watch-ad-btn__badge") : null;
+
+        noadsLifetimeCard = root.Q<VisualElement>("noads-lifetime-card");
+        noadsActiveCard = root.Q<VisualElement>("noads-active-card");
     }
 
     private void WireButtons()
@@ -616,6 +626,9 @@ public class ShopPanel : MonoBehaviour
     /// </summary>
     private void OpenAdsModal(string priceText)
     {
+        // 已购买 = 不再弹窗
+        if (IsNoAdsRemoved()) return;
+
         currentIapCoins = 0;
         currentIapIsAds = true;
         if (iapTitle != null) iapTitle.text = "REMOVE ADS";
@@ -643,7 +656,9 @@ public class ShopPanel : MonoBehaviour
         // 本地开发模式：默认购买成功，直接发金币 / 标记去广告，方便测试其它流程。
         if (currentIapIsAds)
         {
-            // TODO: 标记 PlayerPrefs / 关闭广告 SDK。
+            // TODO: 调用广告 SDK 禁用广告。本地记一个 PlayerPrefs flag。
+            SetNoAdsRemoved(true);
+            RefreshNoAdsState();
             Debug.Log("[Shop] (Dev) Ads removal purchase succeeded");
         }
         else if (currentIapCoins > 0 && CoinManager.Instance != null)
@@ -653,6 +668,29 @@ public class ShopPanel : MonoBehaviour
         }
 
         HideBuyModal();
+    }
+
+    // ---------------- No Ads (state toggle) ----------------
+
+    public static bool IsNoAdsRemoved()
+    {
+        return PlayerPrefs.GetInt(KEY_NO_ADS_REMOVED, 0) == 1;
+    }
+
+    public static void SetNoAdsRemoved(bool removed)
+    {
+        PlayerPrefs.SetInt(KEY_NO_ADS_REMOVED, removed ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    private void RefreshNoAdsState()
+    {
+        bool active = IsNoAdsRemoved();
+
+        if (noadsLifetimeCard != null)
+            noadsLifetimeCard.style.display = active ? DisplayStyle.None : DisplayStyle.Flex;
+        if (noadsActiveCard != null)
+            noadsActiveCard.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     // ---------------- Watch Ad (free coins) ----------------

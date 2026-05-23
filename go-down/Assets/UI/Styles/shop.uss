@@ -905,3 +905,47 @@
 .watch-ad-btn-wrap--cooldown .watch-ad-btn__badge {
     display: none;
 }
+
+
+/* ============================================================
+ * NO ADS - 已购买成功状态（只显示下方绿框通知条，与 RESTORE 同样滑）
+ * ============================================================ */
+
+.noads-active-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 18px;
+    margin-bottom: 8px;
+    background-color: rgba(15, 22, 50, 0.6);
+    border-radius: 20px;
+    border-width: 2px;
+    border-color: rgb(100, 220, 130);
+}
+
+.noads-active-card__icon {
+    width: 60px;
+    height: 60px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/green-check-mark.png?fileID=21300000&guid=d62cbf191e529114d8146a841857a860&type=3#green-check-mark");
+    margin-right: 18px;
+}
+
+.noads-active-card__text {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.noads-active-card__title {
+    color: rgb(100, 220, 130);
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.noads-active-card__sub {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    margin-top: 2px;
+    white-space: normal;
+}

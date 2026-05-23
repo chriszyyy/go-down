@@ -157,9 +157,9 @@
             </ui:VisualElement>
             <ui:VisualElement name="content-noads" class="tab-content tab-content--hidden">
                 <ui:VisualElement class="noads-hero">
-                    <ui:Label text="REMOVE ADS" class="noads-hero__title" />
+                    <ui:Label name="noads-hero-title" text="REMOVE ADS" class="noads-hero__title" />
                     <ui:Label text="Enjoy the game without interruptions!" class="noads-hero__subtitle" />
-                    <ui:VisualElement picking-mode="Ignore" class="noads-hero__image" />
+                    <ui:VisualElement name="noads-hero-image" picking-mode="Ignore" class="noads-hero__image" />
                 </ui:VisualElement>
                 <ui:VisualElement class="noads-features">
                     <ui:VisualElement class="noads-feature">
@@ -175,12 +175,19 @@
                         <ui:Label text="Faster Experience" class="noads-feature__label" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement class="noads-lifetime-card">
+                <ui:VisualElement name="noads-lifetime-card" class="noads-lifetime-card">
                     <ui:Label text="LIFETIME ACCESS" class="noads-lifetime-card__title" />
                     <ui:Label text="One-time payment" class="noads-lifetime-card__sub" />
                     <ui:VisualElement picking-mode="Ignore" class="noads-lifetime-card__icon" />
                     <ui:Label text="Pay once, enjoy forever!" class="noads-lifetime-card__tagline" />
                     <ui:Button name="noads-lifetime" text="$2.99" class="noads-price-btn" />
+                </ui:VisualElement>
+                <ui:VisualElement name="noads-active-card" class="noads-active-card" style="display: none;">
+                    <ui:VisualElement picking-mode="Ignore" class="noads-active-card__icon" />
+                    <ui:VisualElement class="noads-active-card__text">
+                        <ui:Label text="NO ADS - ACTIVE" class="noads-active-card__title" />
+                        <ui:Label text="Thank you for supporting the game!" class="noads-active-card__sub" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:Button name="noads-restore" class="noads-restore-card">
                     <ui:VisualElement picking-mode="Ignore" class="noads-restore-card__icon" />
