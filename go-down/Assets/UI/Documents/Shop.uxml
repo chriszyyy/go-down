@@ -92,7 +92,7 @@
                         <ui:Label name="item-reset-count" text="x0" class="item-card__count" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="500" class="item-card__price-text" />
+                            <ui:Label text="50" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="item-tool-rainbow" class="item-card item-card--tool">
@@ -101,7 +101,7 @@
                         <ui:Label name="item-rainbow-count" text="x0" class="item-card__count" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="500" class="item-card__price-text" />
+                            <ui:Label text="35" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>
@@ -123,23 +123,23 @@
                     </ui:Button>
                     <ui:Button name="coin-pack-500" class="item-card item-card--coin">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
-                        <ui:Label text="500 (+20%)" class="item-card__title" />
+                        <ui:Label text="500 (+65%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$3.99" class="item-card__price-text" />
+                            <ui:Label text="$2.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="coin-pack-1200" class="item-card item-card--coin">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
-                        <ui:Label text="1200 (+25%)" class="item-card__title" />
+                        <ui:Label text="1200 (+100%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$7.99" class="item-card__price-text" />
+                            <ui:Label text="$5.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="coin-pack-2500" class="item-card item-card--coin">
                         <ui:VisualElement picking-mode="Ignore" class="item-thumb item-thumb--coin-pack" />
-                        <ui:Label text="2500 (+30%)" class="item-card__title" />
+                        <ui:Label text="2500 (+150%)" class="item-card__title" />
                         <ui:VisualElement class="item-card__price item-card__price--money">
-                            <ui:Label text="$13.99" class="item-card__price-text" />
+                            <ui:Label text="$9.99" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>

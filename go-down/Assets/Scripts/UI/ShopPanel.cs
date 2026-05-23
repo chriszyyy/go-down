@@ -84,9 +84,9 @@ public class ShopPanel : MonoBehaviour
     private static readonly Dictionary<string, (int coins, string price)> s_coinPacks = new Dictionary<string, (int, string)>
     {
         { "coin-pack-100",  (100,  "$0.99") },
-        { "coin-pack-500",  (500,  "$3.99") },
-        { "coin-pack-1200", (1200, "$7.99") },
-        { "coin-pack-2500", (2500, "$13.99") },
+        { "coin-pack-500",  (500,  "$2.99") },
+        { "coin-pack-1200", (1200, "$5.99") },
+        { "coin-pack-2500", (2500, "$9.99") },
     };
 
     // 当前购买中的工具
@@ -98,8 +98,8 @@ public class ShopPanel : MonoBehaviour
     private ShopTab pendingTab = ShopTab.Items;
 
     // 工具单价（与原 ShopPanelUI 保持一致）
-    private const int RESET_PRICE = 100;
-    private const int RAINBOW_PRICE = 50;
+    private const int RESET_PRICE = 50;
+    private const int RAINBOW_PRICE = 35;
 
     private void Awake()
     {
