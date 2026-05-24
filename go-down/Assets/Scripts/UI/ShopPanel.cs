@@ -717,11 +717,26 @@ public class ShopPanel : MonoBehaviour
         int remaining = GetWatchAdRemainingSeconds();
         if (remaining > 0) return; // 冷却中点击应被 disabled 阻挡，这里二次保护
 
-        // TODO: 接入广告 SDK；本地开发模式：直接奖励金币 + 启动冷却
+        // 调 AdsService.ShowRewarded：
+        // - ADMOB_ENABLED 未定义时，AdsService 走 dev stub 立即回调 onReward
+        // - 启用后是真广告：用户跳过/失败不消耗冷却、不发金币
+        if (AdsService.Instance == null)
+        {
+            Debug.LogWarning("[Shop] AdsService missing; falling back to dev reward");
+            GrantWatchAdReward();
+            return;
+        }
+        AdsService.Instance.ShowRewarded(
+            onReward: GrantWatchAdReward,
+            onFail: () => Debug.Log("[Shop] Watch ad skipped / failed — cooldown not consumed"));
+    }
+
+    private void GrantWatchAdReward()
+    {
         if (CoinManager.Instance != null)
         {
             CoinManager.Instance.AddCoins(WATCH_AD_REWARD);
-            Debug.Log($"[Shop] (Dev) Watch ad reward granted: +{WATCH_AD_REWARD} coins");
+            Debug.Log($"[Shop] Watch ad reward granted: +{WATCH_AD_REWARD} coins");
         }
         SetWatchAdLastUtc(NowUtcSeconds());
         RefreshWatchAdState();
