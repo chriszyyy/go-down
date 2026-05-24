@@ -17,6 +17,13 @@ using GoogleMobileAds.Api;
 ///   4. AdMob console 设置 App ID + Ad Units（Rewarded, Interstitial 各一组 Android/iOS）
 ///   5. iOS 发版前 verify Info.plist 含 SKAdNetworkIdentifier 列表 + ATT 描述
 ///
+/// TODO before release:
+/// - iOS ATT: use ATTrackingStatusBinding.RequestAuthorizationTracking() before ad requests.
+/// - UMP / GDPR: use GoogleMobileAds.Ump.Api consent flow for EU/UK users.
+/// - NoAds purchase sync: real IAP must query Google Play Billing / StoreKit entitlements on startup,
+///   then write PlayerPrefs key "NoAds_Removed".
+/// - Monitor AdMob policy / dashboard frequency warnings after launch; adjust interstitial caps if needed.
+///
 /// 当前实现：
 /// - Rewarded：点击「WATCH AD」→ 看广告 → 回调发放金币
 /// - Interstitial：监听 GameStateManager.OnGameOver；按频率策略弹窗
@@ -36,10 +43,10 @@ public class AdsService : MonoBehaviour
     private const string TEST_IOS_INTERSTITIAL = "ca-app-pub-3940256099942544/4411468910";
 
     // TODO: 上线前换成真实 Ad Unit ID
-    private const string PROD_ANDROID_REWARDED = "";
-    private const string PROD_IOS_REWARDED = "";
-    private const string PROD_ANDROID_INTERSTITIAL = "";
-    private const string PROD_IOS_INTERSTITIAL = "";
+    private const string PROD_ANDROID_REWARDED = "ca-app-pub-9908007989063237/1261783807";
+    private const string PROD_IOS_REWARDED = "ca-app-pub-9908007989063237/7360288295";
+    private const string PROD_ANDROID_INTERSTITIAL = "ca-app-pub-9908007989063237/1344024374";
+    private const string PROD_IOS_INTERSTITIAL = "ca-app-pub-9908007989063237/6047206620";
 
     // 是否始终使用测试 ID（开发期保持 true；上线前改 false 走 PROD_*）
     private const bool USE_TEST_ADS = true;
@@ -48,10 +55,10 @@ public class AdsService : MonoBehaviour
     // 插屏频率策略
     // ============================================================
     [Tooltip("启动后前 N 局不显示插屏（让新用户先适应）")]
-    public int interstitialSkipFirstGames = 2;
+    public int interstitialSkipFirstGames = 4;
 
     [Tooltip("每 N 局触发一次插屏检查")]
-    public int interstitialEveryNGames = 2;
+    public int interstitialEveryNGames = 8;
 
     [Tooltip("两次插屏之间最小时间间隔（秒）")]
     public float interstitialMinIntervalSeconds = 60f;
