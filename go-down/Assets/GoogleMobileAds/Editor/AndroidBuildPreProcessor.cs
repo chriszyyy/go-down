@@ -50,7 +50,10 @@ namespace GoogleMobileAds.Editor
         private static string NextGenSpec => NextGenLibrary + ":" + NextGenVersion;
 
         private const string CurrentLibrary = "com.google.android.gms:play-services-ads";
-        private const string CurrentVersion = "25.2.0";
+        // Unity 2022.3.30f1c1 uses compileSdk 32 with the built-in Android SDK.
+        // GMA Android SDK 25.x pulls AndroidX dependencies that require compileSdk 33/34,
+        // so keep the current (non-NextGen) dependency pinned to 22.6.0 for this project.
+        private const string CurrentVersion = "22.6.0";
         private const string CurrentSpec = CurrentLibrary + ":" + CurrentVersion;
 
         private static readonly string NextGenRegex = Regex.Escape(NextGenLibrary) + @":[\d\.]+[-a-zA-Z0-9]*";
@@ -72,7 +75,7 @@ namespace GoogleMobileAds.Editor
         {
             UpdateGmaDependency();
 
-            if(!GoogleMobileAdsSettings.LoadInstance().EnableGradleBuildPreProcessor)
+            if (!GoogleMobileAdsSettings.LoadInstance().EnableGradleBuildPreProcessor)
             {
                 return;
             }
@@ -120,7 +123,7 @@ namespace GoogleMobileAds.Editor
             // Ensure Custom Gradle Properties Templates.
             EnsureGradleFileExists(CustomGradlePropertiesTemplatesFileName);
 
-            #if ANDROID_GRADLE_BUILD_JETIFIER_ENTRY_ENABLED
+#if ANDROID_GRADLE_BUILD_JETIFIER_ENTRY_ENABLED
             string customGradlePropertiesTemplatesFilePath = Path.Combine(
                 Application.dataPath,
                 "Plugins", "Android",
@@ -145,7 +148,7 @@ namespace GoogleMobileAds.Editor
             {
                 Debug.LogError("Failed to add Jetifier Entry.");
             }
-            #endif
+#endif
 
             Debug.Log("Resolving Android Gradle dependencies.");
             PlayServicesResolver.ResolveSync(true);
@@ -207,9 +210,9 @@ namespace GoogleMobileAds.Editor
             if (!File.Exists(sourceFileName))
             {
                 throw new BuildFailedException(
-                    "Android Build Pre-Processor failed. "+
+                    "Android Build Pre-Processor failed. " +
                     $"Unable to find source {sourceFileName}. Is your file system read-only?" +
-                    "If this issue persists, contact Google Mobile Ads Support "+
+                    "If this issue persists, contact Google Mobile Ads Support " +
                     "at https://developers.google.com/admob/support");
             }
             File.Copy(sourceFileName, targetPath);
