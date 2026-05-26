@@ -36,6 +36,42 @@ public class GameStateManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        EnforceGameOverPause();
+    }
+
+    private void LateUpdate()
+    {
+        EnforceGameOverPause();
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (!pause)
+        {
+            EnforceGameOverPause();
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+        {
+            EnforceGameOverPause();
+        }
+    }
+
+    private void EnforceGameOverPause()
+    {
+        // GameOver 是游戏暂停的最高优先级状态。
+        // Android 全屏广告关闭/返回 Unity 时可能恢复 timeScale；只要还没重开，就强制维持暂停。
+        if (IsGameOver && pauseTimeOnGameOver && Time.timeScale != 0f)
+        {
+            Time.timeScale = 0f;
+        }
+    }
+
     public void GameOver(string reason)
     {
         if (IsGameOver) return;
