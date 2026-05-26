@@ -55,13 +55,13 @@ public class AdsService : MonoBehaviour
     // 插屏频率策略
     // ============================================================
     [Tooltip("启动后前 N 局不显示插屏（让新用户先适应）")]
-    public int interstitialSkipFirstGames = 4;
+    public int interstitialSkipFirstGames = 0;
 
     [Tooltip("每 N 局触发一次插屏检查")]
-    public int interstitialEveryNGames = 8;
+    public int interstitialEveryNGames = 1;
 
     [Tooltip("两次插屏之间最小时间间隔（秒）")]
-    public float interstitialMinIntervalSeconds = 60f;
+    public float interstitialMinIntervalSeconds = 0f;
 
     // 运行时状态
     private int gameOverCountThisSession;
@@ -134,6 +134,7 @@ public class AdsService : MonoBehaviour
     public void ShowRewarded(Action onReward, Action onFail = null)
     {
 #if ADMOB_ENABLED
+        Debug.Log($"[Ads] ShowRewarded requested. ready={(rewardedAd != null && rewardedAd.CanShowAd())}");
         if (rewardedAd != null && rewardedAd.CanShowAd())
         {
             rewardedAd.Show(reward =>
@@ -146,7 +147,7 @@ public class AdsService : MonoBehaviour
             rewardedAd.OnAdFullScreenContentFailed += _ => { LoadRewarded(); onFail?.Invoke(); };
             return;
         }
-        Debug.Log("[Ads] Rewarded not ready");
+        Debug.LogWarning("[Ads] Rewarded not ready. On Huawei devices without Google Play Services, AdMob ads usually cannot load.");
         onFail?.Invoke();
         LoadRewarded();
 #else
@@ -163,26 +164,46 @@ public class AdsService : MonoBehaviour
     {
         if (IsNoAdsPurchased())
         {
+            Debug.Log("[Ads] Interstitial skipped: NoAds purchased.");
             return;
         }
 
         // 频率：跳过前 N 局
-        if (gameOverCountThisSession <= interstitialSkipFirstGames) return;
-        // 频率：每 N 局
-        if (gameOverCountThisSession % interstitialEveryNGames != 0) return;
-        // 频率：最小间隔
-        if (Time.realtimeSinceStartup - lastInterstitialTime < interstitialMinIntervalSeconds) return;
-
-#if ADMOB_ENABLED
-        if (interstitialAd != null && interstitialAd.CanShowAd())
+        if (gameOverCountThisSession <= interstitialSkipFirstGames)
         {
-            interstitialAd.Show();
-            lastInterstitialTime = Time.realtimeSinceStartup;
-            interstitialAd.OnAdFullScreenContentClosed += () => LoadInterstitial();
-            interstitialAd.OnAdFullScreenContentFailed += _ => LoadInterstitial();
+            Debug.Log($"[Ads] Interstitial skipped: first-games guard ({gameOverCountThisSession}/{interstitialSkipFirstGames}).");
             return;
         }
-        Debug.Log("[Ads] Interstitial not ready");
+        // 频率：每 N 局
+        if (gameOverCountThisSession % interstitialEveryNGames != 0)
+        {
+            Debug.Log($"[Ads] Interstitial skipped: game interval guard. gameOverCount={gameOverCountThisSession}, every={interstitialEveryNGames}.");
+            return;
+        }
+        // 频率：最小间隔
+        if (Time.realtimeSinceStartup - lastInterstitialTime < interstitialMinIntervalSeconds)
+        {
+            Debug.Log($"[Ads] Interstitial skipped: time guard. elapsed={Time.realtimeSinceStartup - lastInterstitialTime:0.0}s, min={interstitialMinIntervalSeconds:0.0}s.");
+            return;
+        }
+
+#if ADMOB_ENABLED
+        Debug.Log($"[Ads] ShowInterstitial requested. ready={(interstitialAd != null && interstitialAd.CanShowAd())}");
+        if (interstitialAd != null && interstitialAd.CanShowAd())
+        {
+            lastInterstitialTime = Time.realtimeSinceStartup;
+            interstitialAd.OnAdFullScreenContentClosed += () =>
+            {
+                LoadInterstitial();
+            };
+            interstitialAd.OnAdFullScreenContentFailed += _ =>
+            {
+                LoadInterstitial();
+            };
+            interstitialAd.Show();
+            return;
+        }
+        Debug.LogWarning("[Ads] Interstitial not ready. On Huawei devices without Google Play Services, AdMob ads usually cannot load.");
         LoadInterstitial();
 #else
         Debug.Log("[Ads] (Dev) Interstitial would show now (skipped — AdMob not enabled)");
@@ -279,6 +300,7 @@ public class AdsService : MonoBehaviour
     private void HandleGameOver(string reason)
     {
         gameOverCountThisSession++;
+        Debug.Log($"[Ads] GameOver received: reason={reason}, count={gameOverCountThisSession}");
         ShowInterstitial();
     }
 
