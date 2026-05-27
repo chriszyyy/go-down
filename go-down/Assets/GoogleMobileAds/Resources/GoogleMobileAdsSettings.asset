@@ -15,10 +15,7 @@ MonoBehaviour:
   adMobAndroidAppId: ca-app-pub-9908007989063237~2177382440
   adMobIOSAppId: ca-app-pub-9908007989063237~7368027157
   enableKotlinXCoroutinesPackagingOption: 1
-  enableGradleBuildPreProcessor: 1
-  disableOptimizeInitialization: 0
-  disableOptimizeAdLoading: 0
+  optimizeInitialization: 0
+  optimizeAdLoading: 0
   userTrackingUsageDescription: 
-  userLanguage: en
-  overrideDefaultGmaAndroidSdk: 0
-  selectedGmaAndroidSdk: 0
+  validateGradleDependencies: 0

@@ -74,6 +74,11 @@ public class AdsService : MonoBehaviour
     private RewardedAd rewardedAd;
     private InterstitialAd interstitialAd;
     private bool sdkInitialized;
+    private bool sdkInitializeStarted;
+    private bool sdkInitializeTimeoutLogged;
+    private float sdkInitializeStartedAt;
+    private bool rewardedLoading;
+    private bool interstitialLoading;
 #endif
 
     private const string KEY_NO_ADS = "NoAds_Removed";
@@ -105,15 +110,34 @@ public class AdsService : MonoBehaviour
         GameStateManager.OnGameOver -= HandleGameOver;
     }
 
+    private void Update()
+    {
+#if ADMOB_ENABLED
+        if (sdkInitializeStarted && !sdkInitialized && !sdkInitializeTimeoutLogged &&
+            Time.realtimeSinceStartup - sdkInitializeStartedAt > 10f)
+        {
+            sdkInitializeTimeoutLogged = true;
+            Debug.LogWarning("[Ads] AdMob initialize callback not received after 10s. " +
+                             "If this is a Huawei / non-certified GMS device, AdMob may never become ready. " +
+                             "Check Google Play Services availability log above and logcat for DynamiteModule / GooglePlayServices errors.");
+        }
+#endif
+    }
+
     // ============================================================
     // 初始化
     // ============================================================
     private void InitializeSdk()
     {
 #if ADMOB_ENABLED
+        Debug.Log($"[Ads] Initializing AdMob. platform={Application.platform}, useTestAds={USE_TEST_ADS}, rewardedUnit={GetRewardedAdUnitId()}, interstitialUnit={GetInterstitialAdUnitId()}");
+        LogGooglePlayServicesAvailability();
+        sdkInitializeStarted = true;
+        sdkInitializeStartedAt = Time.realtimeSinceStartup;
         MobileAds.Initialize(status =>
         {
             sdkInitialized = true;
+            sdkInitializeTimeoutLogged = false;
             Debug.Log("[Ads] AdMob SDK initialized");
             LoadRewarded();
             LoadInterstitial();
@@ -230,18 +254,23 @@ public class AdsService : MonoBehaviour
     private void LoadRewarded()
     {
         if (!sdkInitialized) return;
+        if (rewardedLoading) return;
+
         rewardedAd?.Destroy();
         rewardedAd = null;
 
         string adUnit = GetRewardedAdUnitId();
         if (string.IsNullOrEmpty(adUnit)) { Debug.LogWarning("[Ads] Rewarded ad unit ID empty"); return; }
 
+        rewardedLoading = true;
+        Debug.Log($"[Ads] Loading rewarded ad. unit={adUnit}, useTestAds={USE_TEST_ADS}");
         var request = new AdRequest();
         RewardedAd.Load(adUnit, request, (ad, error) =>
         {
+            rewardedLoading = false;
             if (error != null || ad == null)
             {
-                Debug.LogWarning($"[Ads] Rewarded load failed: {error}");
+                Debug.LogWarning($"[Ads] Rewarded load failed: {FormatLoadError(error)}");
                 return;
             }
             rewardedAd = ad;
@@ -252,23 +281,34 @@ public class AdsService : MonoBehaviour
     private void LoadInterstitial()
     {
         if (!sdkInitialized) return;
+        if (interstitialLoading) return;
+
         interstitialAd?.Destroy();
         interstitialAd = null;
 
         string adUnit = GetInterstitialAdUnitId();
         if (string.IsNullOrEmpty(adUnit)) { Debug.LogWarning("[Ads] Interstitial ad unit ID empty"); return; }
 
+        interstitialLoading = true;
+        Debug.Log($"[Ads] Loading interstitial ad. unit={adUnit}, useTestAds={USE_TEST_ADS}");
         var request = new AdRequest();
         InterstitialAd.Load(adUnit, request, (ad, error) =>
         {
+            interstitialLoading = false;
             if (error != null || ad == null)
             {
-                Debug.LogWarning($"[Ads] Interstitial load failed: {error}");
+                Debug.LogWarning($"[Ads] Interstitial load failed: {FormatLoadError(error)}");
                 return;
             }
             interstitialAd = ad;
             Debug.Log("[Ads] Interstitial loaded");
         });
+    }
+
+    private static string FormatLoadError(LoadAdError error)
+    {
+        if (error == null) return "null error";
+        return $"code={error.GetCode()}, domain={error.GetDomain()}, message={error.GetMessage()}, raw={error}";
     }
 #endif
 
@@ -293,6 +333,32 @@ public class AdsService : MonoBehaviour
         return USE_TEST_ADS ? TEST_ANDROID_INTERSTITIAL : PROD_ANDROID_INTERSTITIAL;
 #endif
     }
+
+#if ADMOB_ENABLED && UNITY_ANDROID
+    private static void LogGooglePlayServicesAvailability()
+    {
+        try
+        {
+            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
+            using (var apiAvailability = new AndroidJavaClass("com.google.android.gms.common.GoogleApiAvailability"))
+            using (var api = apiAvailability.CallStatic<AndroidJavaObject>("getInstance"))
+            {
+                int code = api.Call<int>("isGooglePlayServicesAvailable", activity);
+                string message = api.Call<string>("getErrorString", code);
+                Debug.Log($"[Ads] Google Play Services availability: code={code}, message={message}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Ads] Could not check Google Play Services availability: {e.GetType().Name}: {e.Message}");
+        }
+    }
+#else
+    private static void LogGooglePlayServicesAvailability()
+    {
+    }
+#endif
 
     // ============================================================
     // 事件钩子
