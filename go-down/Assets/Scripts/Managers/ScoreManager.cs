@@ -147,6 +147,15 @@ public class ScoreManager : MonoBehaviour
         OnScoreChanged?.Invoke(CurrentScore);
     }
 
+    /// <summary>调试：清零最高分（持久化 + 通知 UI）。</summary>
+    public void ResetHighScore()
+    {
+        HighScore = 0;
+        PlayerPrefs.SetInt(HIGH_SCORE_KEY, 0);
+        PlayerPrefs.Save();
+        OnHighScoreChanged?.Invoke(HighScore);
+    }
+
     private bool TrySetHighScore(int score)
     {
         if (score <= HighScore) return false;

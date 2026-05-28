@@ -54,9 +54,16 @@ public class BlockDestroyVibration : MonoBehaviour
         }
     }
 
+    // 全局关闭：方块销毁震动功能整体禁用。
+    // 即使 GameUserSettings.VibrationEnabled = true，也不会触发震动。
+    private const bool VIBRATION_FEATURE_ENABLED = false;
+
     private void HandleBlockDestroyed(TowerBlock block)
     {
+#pragma warning disable CS0162 // 全局 feature flag 关闭时下方代码确实不可达
+        if (!VIBRATION_FEATURE_ENABLED) return;
         if (!GameUserSettings.VibrationEnabled) return;
+#pragma warning restore CS0162
 
         float now = Time.unscaledTime;
         if (now - lastVibrateTime < Mathf.Max(0f, minIntervalSeconds)) return;

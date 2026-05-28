@@ -88,4 +88,18 @@ public class HexagonSkinManager : MonoBehaviour
         // 保险：若存档里的皮肤未解锁，回退到 gold
         SelectedSkinId = IsUnlocked(saved) ? saved : DefaultSkinId;
     }
+
+    /// <summary>调试：清除所有解锁皮肤，并把选中皮肤重置为默认（gold）。</summary>
+    public void ResetAllUnlocks()
+    {
+        foreach (var skinId in AllSkinIds)
+        {
+            if (skinId == DefaultSkinId) continue;
+            PlayerPrefs.DeleteKey(KEY_UNLOCKED_PREFIX + skinId);
+        }
+        SelectedSkinId = DefaultSkinId;
+        PlayerPrefs.SetString(KEY_SELECTED, DefaultSkinId);
+        PlayerPrefs.Save();
+        OnChanged?.Invoke();
+    }
 }

@@ -254,16 +254,14 @@ public class RightToolbarUI : MonoBehaviour
             rainbowUsesText.text = string.Format(usesLabelFormat, rainbowUses);
         }
 
-        bool unlimited = ToolUsageInventory.Instance != null && ToolUsageInventory.Instance.unlimitedUses;
-
         if (resetButton != null)
         {
-            resetButton.interactable = unlimited || resetUses > 0;
+            resetButton.interactable = resetUses > 0;
         }
 
         if (rainbowButton != null)
         {
-            rainbowButton.interactable = unlimited || rainbowUses > 0;
+            rainbowButton.interactable = rainbowUses > 0;
         }
     }
 }
