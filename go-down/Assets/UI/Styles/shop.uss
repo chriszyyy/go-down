@@ -287,7 +287,8 @@
 .noads-hero {
     align-items: center;
     justify-content: flex-start;
-    flex-shrink: 1;
+    flex-shrink: 3;
+    min-height: 0;
     margin-top: 4px;
     margin-bottom: 12px;
     padding-top: 8px;
@@ -310,22 +311,25 @@
 
 .noads-hero__image {
     width: 100%;
-    flex-shrink: 1;
-    min-height: 540px;
+    flex-shrink: 3;
+    flex-basis: 540px;
+    min-height: 0;
     -unity-background-scale-mode: scale-to-fit;
     background-image: url("project://database/Assets/UI/Sprites/NoAds/no-ads-main.png?fileID=21300000&guid=fab63623444519f4eacc851bc7254c0e&type=3#no-ads-main");
 }
 
 .noads-spacer {
-    /* flex-grow: 1;
-    flex-shrink: 1; */
     height: 32px;
+    flex-shrink: 1;
+    min-height: 0;
 }
 
 .noads-features {
     flex-direction: row;
     justify-content: space-around;
     align-items: flex-start;
+    flex-shrink: 2;
+    min-height: 0;
     margin-top: 8px;
     margin-bottom: 18px;
     padding-left: 8px;
@@ -366,6 +370,8 @@
 
 .noads-lifetime-card {
     align-items: center;
+    flex-shrink: 2;
+    min-height: 0;
     padding-top: 24px;
     padding-bottom: 28px;
     padding-left: 24px;
@@ -393,6 +399,8 @@
 .noads-lifetime-card__icon {
     width: 320px;
     height: 180px;
+    flex-shrink: 2;
+    min-height: 0;
     margin-top: 14px;
     margin-bottom: 8px;
     -unity-background-scale-mode: scale-to-fit;
@@ -409,6 +417,8 @@
 .noads-price-btn {
     width: 95%;
     height: 140px;
+    flex-shrink: 1;
+    min-height: 0;
     color: rgb(60, 40, 10);
     font-size: 46px;
     -unity-font-style: bold;
@@ -432,6 +442,8 @@
 .noads-restore-card {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 1;
+    min-height: 0;
     padding: 18px;
     margin-bottom: 8px;
     background-color: rgba(15, 22, 50, 0.6);
@@ -722,6 +734,12 @@
 
 #content-noads {
     flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    /* 关键：让 ScrollView 把可用高度全部分给 #content-noads，
+       并允许内部子元素按 flex-shrink 比例缩小，避免出现滚动条。 */
+    max-height: 100%;
+    overflow: hidden;
 }
 
 
