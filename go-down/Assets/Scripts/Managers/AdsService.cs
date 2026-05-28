@@ -211,12 +211,22 @@ public class AdsService : MonoBehaviour
             ad.OnAdFullScreenContentClosed += () =>
             {
                 Debug.Log($"[Ads] Rewarded closed. earned={rewardEarned}, granted={rewardGranted}, failed={failed}");
-                if (rewardEarned) GrantOnce("close");
-                else if (!failed) FailOnce("close without reward");
+                // AdMob (Android) 上 reward 回调有时会晚于 close 派发；如果在这里立刻销毁广告，
+                // 晚到的 reward 回调会丢失。延迟 2 帧再做"判定 + 销毁 + 重载"，给 SDK 时间补派 reward。
+                StartCoroutine(FinalizeAfterClose());
+            };
+
+            IEnumerator FinalizeAfterClose()
+            {
+                yield return null;
+                yield return null;
+
+                if (rewardEarned) GrantOnce("close (deferred)");
+                else if (!failed) FailOnce("close without reward (deferred)");
 
                 ad.Destroy();
                 LoadRewarded();
-            };
+            }
             ad.OnAdFullScreenContentFailed += error =>
             {
                 failed = true;
