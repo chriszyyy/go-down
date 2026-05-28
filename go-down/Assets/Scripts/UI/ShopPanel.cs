@@ -145,6 +145,7 @@ public class ShopPanel : MonoBehaviour
         ToolUsageInventory.OnUsesChanged += RefreshToolCounts;
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged += HandleCoinsChanged;
         HexagonSkinManager.OnChanged += RefreshSkinCards;
+        AdsService.RewardedStateChanged += RefreshWatchAdState;
         RefreshSkinCards();
         RefreshWatchAdState();
         RefreshNoAdsState();
@@ -169,6 +170,7 @@ public class ShopPanel : MonoBehaviour
         ToolUsageInventory.OnUsesChanged -= RefreshToolCounts;
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged -= HandleCoinsChanged;
         HexagonSkinManager.OnChanged -= RefreshSkinCards;
+        AdsService.RewardedStateChanged -= RefreshWatchAdState;
 
         HideBuyModal();
     }
@@ -717,18 +719,27 @@ public class ShopPanel : MonoBehaviour
         int remaining = GetWatchAdRemainingSeconds();
         if (remaining > 0) return; // 冷却中点击应被 disabled 阻挡，这里二次保护
 
-        // 调 AdsService.ShowRewarded：
-        // - ADMOB_ENABLED 未定义时，AdsService 走 dev stub 立即回调 onReward
-        // - 启用后是真广告：用户跳过/失败不消耗冷却、不发金币
         if (AdsService.Instance == null)
         {
             Debug.LogWarning("[Shop] AdsService missing; falling back to dev reward");
             GrantWatchAdReward();
             return;
         }
+
+        if (!AdsService.Instance.IsRewardedReady && AdsService.Instance.IsRewardedLoading)
+        {
+            Debug.Log("[Shop] Watch ad clicked before rewarded is ready");
+            RefreshWatchAdState();
+            return;
+        }
+
         AdsService.Instance.ShowRewarded(
             onReward: GrantWatchAdReward,
-            onFail: () => Debug.Log("[Shop] Watch ad skipped / failed — cooldown not consumed"));
+            onFail: () =>
+            {
+                Debug.Log("[Shop] Watch ad skipped / failed — cooldown not consumed");
+                RefreshWatchAdState();
+            });
     }
 
     private void GrantWatchAdReward()
@@ -739,6 +750,7 @@ public class ShopPanel : MonoBehaviour
             Debug.Log($"[Shop] Watch ad reward granted: +{WATCH_AD_REWARD} coins");
         }
         SetWatchAdLastUtc(NowUtcSeconds());
+        RefreshStats();
         RefreshWatchAdState();
     }
 
@@ -756,13 +768,16 @@ public class ShopPanel : MonoBehaviour
         if (watchAdBtn == null) return;
         int remaining = GetWatchAdRemainingSeconds();
         bool cooling = remaining > 0;
+        bool adReady = AdsService.Instance == null || AdsService.Instance.IsRewardedReady;
+        bool adLoading = AdsService.Instance != null && AdsService.Instance.IsRewardedLoading;
+        bool canWatch = !cooling && (adReady || !adLoading);
 
-        watchAdBtn.SetEnabled(!cooling);
+        watchAdBtn.SetEnabled(canWatch);
         watchAdBtn.EnableInClassList("watch-ad-btn--cooldown", cooling);
         if (watchAdBtnWrap != null)
             watchAdBtnWrap.EnableInClassList("watch-ad-btn-wrap--cooldown", cooling);
         if (watchAdBadge != null)
-            watchAdBadge.style.display = cooling ? DisplayStyle.None : DisplayStyle.Flex;
+            watchAdBadge.style.display = (cooling || !adReady) ? DisplayStyle.None : DisplayStyle.Flex;
 
         if (cooling)
         {
@@ -773,6 +788,14 @@ public class ShopPanel : MonoBehaviour
             watchAdBtn.text = h > 0
                 ? string.Format("{0:D2}:{1:D2}:{2:D2}", h, m, s)
                 : string.Format("{0:D2}:{1:D2}", m, s);
+        }
+        else if (adLoading)
+        {
+            watchAdBtn.text = "LOADING";
+        }
+        else if (!adReady)
+        {
+            watchAdBtn.text = "RETRY";
         }
         else
         {

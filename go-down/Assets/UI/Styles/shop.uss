@@ -317,8 +317,9 @@
 }
 
 .noads-spacer {
-    flex-grow: 1;
-    flex-shrink: 1;
+    /* flex-grow: 1;
+    flex-shrink: 1; */
+    height: 32px;
 }
 
 .noads-features {

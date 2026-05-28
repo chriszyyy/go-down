@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 #if ADMOB_ENABLED
@@ -32,6 +34,7 @@ using GoogleMobileAds.Api;
 public class AdsService : MonoBehaviour
 {
     public static AdsService Instance { get; private set; }
+    public static event Action RewardedStateChanged;
 
     // ============================================================
     // Ad Unit IDs（TODO: 拿到真实 ID 后替换；测试 ID 永远显示测试广告，开发期安全）
@@ -50,6 +53,7 @@ public class AdsService : MonoBehaviour
 
     // 是否始终使用测试 ID（开发期保持 true；上线前改 false 走 PROD_*）
     private const bool USE_TEST_ADS = true;
+    private const float SDK_INITIALIZE_DELAY_SECONDS = 1.5f;
 
     // ============================================================
     // 插屏频率策略
@@ -66,6 +70,7 @@ public class AdsService : MonoBehaviour
     // 运行时状态
     private int gameOverCountThisSession;
     private float lastInterstitialTime = -999f;
+    private readonly Queue<Action> mainThreadActions = new Queue<Action>();
 
     // ============================================================
     // AdMob 实例（仅在 ADMOB_ENABLED 时生效）
@@ -102,7 +107,7 @@ public class AdsService : MonoBehaviour
     private void Start()
     {
         GameStateManager.OnGameOver += HandleGameOver;
-        InitializeSdk();
+        StartCoroutine(InitializeSdkDelayed());
     }
 
     private void OnDestroy()
@@ -112,6 +117,8 @@ public class AdsService : MonoBehaviour
 
     private void Update()
     {
+        FlushMainThreadActions();
+
 #if ADMOB_ENABLED
         if (sdkInitializeStarted && !sdkInitialized && !sdkInitializeTimeoutLogged &&
             Time.realtimeSinceStartup - sdkInitializeStartedAt > 10f)
@@ -127,23 +134,35 @@ public class AdsService : MonoBehaviour
     // ============================================================
     // 初始化
     // ============================================================
+    private IEnumerator InitializeSdkDelayed()
+    {
+        yield return null;
+        yield return new WaitForSecondsRealtime(SDK_INITIALIZE_DELAY_SECONDS);
+        InitializeSdk();
+    }
+
     private void InitializeSdk()
     {
 #if ADMOB_ENABLED
+        if (sdkInitializeStarted) return;
+
         Debug.Log($"[Ads] Initializing AdMob. platform={Application.platform}, useTestAds={USE_TEST_ADS}, rewardedUnit={GetRewardedAdUnitId()}, interstitialUnit={GetInterstitialAdUnitId()}");
         LogGooglePlayServicesAvailability();
         sdkInitializeStarted = true;
         sdkInitializeStartedAt = Time.realtimeSinceStartup;
+        NotifyRewardedStateChanged();
         MobileAds.Initialize(status =>
         {
             sdkInitialized = true;
             sdkInitializeTimeoutLogged = false;
             Debug.Log("[Ads] AdMob SDK initialized");
+            NotifyRewardedStateChanged();
             LoadRewarded();
             LoadInterstitial();
         });
 #else
         Debug.Log("[Ads] Dev mode — AdMob 未启用，广告调用将直接成功（define ADMOB_ENABLED 启用 SDK）");
+        NotifyRewardedStateChanged();
 #endif
     }
 
@@ -161,23 +180,67 @@ public class AdsService : MonoBehaviour
         Debug.Log($"[Ads] ShowRewarded requested. ready={(rewardedAd != null && rewardedAd.CanShowAd())}");
         if (rewardedAd != null && rewardedAd.CanShowAd())
         {
-            rewardedAd.Show(reward =>
+            var ad = rewardedAd;
+            rewardedAd = null;
+
+            bool rewardEarned = false;
+            bool rewardGranted = false;
+            bool failed = false;
+
+            void GrantOnce(string source)
             {
+                if (rewardGranted) return;
+                rewardGranted = true;
+                RunOnMainThread(() =>
+                {
+                    Debug.Log($"[Ads] Rewarded grant dispatched from {source}");
+                    onReward?.Invoke();
+                });
+            }
+
+            void FailOnce(string source)
+            {
+                RunOnMainThread(() =>
+                {
+                    Debug.Log($"[Ads] Rewarded failed / skipped from {source}");
+                    onFail?.Invoke();
+                });
+            }
+
+            ad.OnAdFullScreenContentClosed += () =>
+            {
+                Debug.Log($"[Ads] Rewarded closed. earned={rewardEarned}, granted={rewardGranted}, failed={failed}");
+                if (rewardEarned) GrantOnce("close");
+                else if (!failed) FailOnce("close without reward");
+
+                ad.Destroy();
+                LoadRewarded();
+            };
+            ad.OnAdFullScreenContentFailed += error =>
+            {
+                failed = true;
+                Debug.LogWarning($"[Ads] Rewarded show failed: {error}");
+                ad.Destroy();
+                LoadRewarded();
+                FailOnce("show failed");
+            };
+
+            NotifyRewardedStateChanged();
+            ad.Show(reward =>
+            {
+                rewardEarned = true;
                 Debug.Log($"[Ads] Rewarded earned: {reward.Type} x{reward.Amount}");
-                onReward?.Invoke();
+                GrantOnce("reward callback");
             });
-            // Show 后该实例失效，预加载下一条
-            rewardedAd.OnAdFullScreenContentClosed += () => LoadRewarded();
-            rewardedAd.OnAdFullScreenContentFailed += _ => { LoadRewarded(); onFail?.Invoke(); };
             return;
         }
         Debug.LogWarning("[Ads] Rewarded not ready. On Huawei devices without Google Play Services, AdMob ads usually cannot load.");
-        onFail?.Invoke();
+        RunOnMainThread(() => onFail?.Invoke());
         LoadRewarded();
 #else
         // Dev：模拟看完
         Debug.Log("[Ads] (Dev) Rewarded auto-success");
-        onReward?.Invoke();
+        RunOnMainThread(() => onReward?.Invoke());
 #endif
     }
 
@@ -247,6 +310,18 @@ public class AdsService : MonoBehaviour
         }
     }
 
+    public bool IsRewardedLoading
+    {
+        get
+        {
+#if ADMOB_ENABLED
+            return !sdkInitialized || rewardedLoading;
+#else
+            return false;
+#endif
+        }
+    }
+
     // ============================================================
     // 内部：加载广告
     // ============================================================
@@ -263,6 +338,7 @@ public class AdsService : MonoBehaviour
         if (string.IsNullOrEmpty(adUnit)) { Debug.LogWarning("[Ads] Rewarded ad unit ID empty"); return; }
 
         rewardedLoading = true;
+        NotifyRewardedStateChanged();
         Debug.Log($"[Ads] Loading rewarded ad. unit={adUnit}, useTestAds={USE_TEST_ADS}");
         var request = new AdRequest();
         RewardedAd.Load(adUnit, request, (ad, error) =>
@@ -271,10 +347,12 @@ public class AdsService : MonoBehaviour
             if (error != null || ad == null)
             {
                 Debug.LogWarning($"[Ads] Rewarded load failed: {FormatLoadError(error)}");
+                NotifyRewardedStateChanged();
                 return;
             }
             rewardedAd = ad;
             Debug.Log("[Ads] Rewarded loaded");
+            NotifyRewardedStateChanged();
         });
     }
 
@@ -376,5 +454,42 @@ public class AdsService : MonoBehaviour
     public static bool IsNoAdsPurchased()
     {
         return PlayerPrefs.GetInt(KEY_NO_ADS, 0) == 1;
+    }
+
+    private static void NotifyRewardedStateChanged()
+    {
+        var instance = Instance;
+        if (instance == null)
+        {
+            RewardedStateChanged?.Invoke();
+            return;
+        }
+
+        instance.RunOnMainThread(() => RewardedStateChanged?.Invoke());
+    }
+
+    private void RunOnMainThread(Action action)
+    {
+        if (action == null) return;
+
+        lock (mainThreadActions)
+        {
+            mainThreadActions.Enqueue(action);
+        }
+    }
+
+    private void FlushMainThreadActions()
+    {
+        while (true)
+        {
+            Action action;
+            lock (mainThreadActions)
+            {
+                if (mainThreadActions.Count == 0) return;
+                action = mainThreadActions.Dequeue();
+            }
+
+            action?.Invoke();
+        }
     }
 }
