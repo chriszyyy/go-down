@@ -59,16 +59,17 @@ public class AdsService : MonoBehaviour
     // 插屏频率策略
     // ============================================================
     [Tooltip("启动后前 N 局不显示插屏（让新用户先适应）")]
-    public int interstitialSkipFirstGames = 0;
+    public int interstitialSkipFirstGames = 4;
 
-    [Tooltip("每 N 局触发一次插屏检查")]
-    public int interstitialEveryNGames = 1;
+    [Tooltip("两次插屏之间至少间隔 N 局。满足后还需要同时满足 minInterval 才会真正播放")]
+    public int interstitialEveryNGames = 8;
 
     [Tooltip("两次插屏之间最小时间间隔（秒）")]
-    public float interstitialMinIntervalSeconds = 0f;
+    public float interstitialMinIntervalSeconds = 120f;
 
     // 运行时状态
     private int gameOverCountThisSession;
+    private int lastInterstitialGameCount; // 上一次真正播放插屏时的局数，初始 0
     private float lastInterstitialTime = -999f;
     private readonly Queue<Action> mainThreadActions = new Queue<Action>();
 
@@ -261,13 +262,14 @@ public class AdsService : MonoBehaviour
             Debug.Log($"[Ads] Interstitial skipped: first-games guard ({gameOverCountThisSession}/{interstitialSkipFirstGames}).");
             return;
         }
-        // 频率：每 N 局
-        if (gameOverCountThisSession % interstitialEveryNGames != 0)
+        // 频率：跟上次插屏至少间隔 N 局
+        int gamesSinceLast = gameOverCountThisSession - lastInterstitialGameCount;
+        if (gamesSinceLast < interstitialEveryNGames)
         {
-            Debug.Log($"[Ads] Interstitial skipped: game interval guard. gameOverCount={gameOverCountThisSession}, every={interstitialEveryNGames}.");
+            Debug.Log($"[Ads] Interstitial skipped: game interval guard. gamesSinceLast={gamesSinceLast}, need={interstitialEveryNGames}.");
             return;
         }
-        // 频率：最小间隔
+        // 频率：最小时间间隔（不满足不更新 lastInterstitialGameCount，下局会继续检查）
         if (Time.realtimeSinceStartup - lastInterstitialTime < interstitialMinIntervalSeconds)
         {
             Debug.Log($"[Ads] Interstitial skipped: time guard. elapsed={Time.realtimeSinceStartup - lastInterstitialTime:0.0}s, min={interstitialMinIntervalSeconds:0.0}s.");
@@ -279,6 +281,7 @@ public class AdsService : MonoBehaviour
         if (interstitialAd != null && interstitialAd.CanShowAd())
         {
             lastInterstitialTime = Time.realtimeSinceStartup;
+            lastInterstitialGameCount = gameOverCountThisSession;
             interstitialAd.OnAdFullScreenContentClosed += () =>
             {
                 LoadInterstitial();
@@ -295,6 +298,7 @@ public class AdsService : MonoBehaviour
 #else
         Debug.Log("[Ads] (Dev) Interstitial would show now (skipped — AdMob not enabled)");
         lastInterstitialTime = Time.realtimeSinceStartup;
+        lastInterstitialGameCount = gameOverCountThisSession;
 #endif
     }
 
