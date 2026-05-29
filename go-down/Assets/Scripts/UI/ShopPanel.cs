@@ -79,17 +79,22 @@ public class ShopPanel : MonoBehaviour
     private Button iapClose;
     private Button iapCancel;
     private Button iapConfirm;
-    private int currentIapCoins; // 当前 IAP 待发放金币数
-    private bool currentIapIsAds; // 当前 IAP 是否为“去广告”购买（true 时不发币）
+    private int currentIapCoins; // 当前 IAP 待发放金币数（仅用于「购买成功」文案展示）
+    private string currentIapProductId; // 当前弹窗对应的 IAPService 产品 ID
 
-    // 金币包定义：id 后缀 → (coin amount, price text)
-    private static readonly Dictionary<string, (int coins, string price)> s_coinPacks = new Dictionary<string, (int, string)>
+    // 金币包定义：UI 卡片 id 后缀 → (coin amount, 默认价格文案, IAP 产品 ID)
+    // 价格文案仅在 IAPService 未就绪时作为占位；就绪后用 GetLocalizedPrice() 覆盖
+    private static readonly Dictionary<string, (int coins, string price, string productId)> s_coinPacks =
+        new Dictionary<string, (int, string, string)>
     {
-        { "coin-pack-100",  (100,  "$0.99") },
-        { "coin-pack-500",  (500,  "$2.99") },
-        { "coin-pack-1200", (1200, "$5.99") },
-        { "coin-pack-2500", (2500, "$9.99") },
+        { "coin-pack-100",  (100,  "$0.99", IAPService.PRODUCT_COIN_100) },
+        { "coin-pack-500",  (500,  "$2.99", IAPService.PRODUCT_COIN_500) },
+        { "coin-pack-1200", (1200, "$5.99", IAPService.PRODUCT_COIN_1200) },
+        { "coin-pack-2500", (2500, "$9.99", IAPService.PRODUCT_COIN_2500) },
     };
+
+    // 终身去广告默认价格文案（IAPService 就绪后用商店真实价格覆盖）
+    private const string NO_ADS_DEFAULT_PRICE = "$2.99";
 
     // 当前购买中的工具
     private string currentBuyToolId;       // "reset" / "rainbow"
@@ -146,6 +151,9 @@ public class ShopPanel : MonoBehaviour
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged += HandleCoinsChanged;
         HexagonSkinManager.OnChanged += RefreshSkinCards;
         AdsService.RewardedStateChanged += RefreshWatchAdState;
+        IAPService.PurchaseCompleted += HandleIapCompleted;
+        IAPService.PurchaseFailed += HandleIapFailed;
+        IAPService.InitializeStateChanged += HandleIapInitialized;
         RefreshSkinCards();
         RefreshWatchAdState();
         RefreshNoAdsState();
@@ -171,6 +179,9 @@ public class ShopPanel : MonoBehaviour
         if (CoinManager.Instance != null) CoinManager.Instance.OnCoinsChanged -= HandleCoinsChanged;
         HexagonSkinManager.OnChanged -= RefreshSkinCards;
         AdsService.RewardedStateChanged -= RefreshWatchAdState;
+        IAPService.PurchaseCompleted -= HandleIapCompleted;
+        IAPService.PurchaseFailed -= HandleIapFailed;
+        IAPService.InitializeStateChanged -= HandleIapInitialized;
 
         HideBuyModal();
     }
@@ -323,8 +334,11 @@ public class ShopPanel : MonoBehaviour
         var noAdsRestore = root.Q<Button>("noads-restore");
         if (noAdsRestore != null)
         {
-            // TODO: 接入 IAP，恢复购买
-            noAdsRestore.clicked += () => Debug.Log("[Shop] TODO: 接入 IAP，恢复购买");
+            noAdsRestore.clicked += () =>
+            {
+                Debug.Log("[Shop] Restore purchases requested");
+                if (IAPService.Instance != null) IAPService.Instance.RestorePurchases();
+            };
         }
 
         if (buyClose != null) buyClose.clicked += HideBuyModal;
@@ -660,10 +674,14 @@ public class ShopPanel : MonoBehaviour
         }
 
         currentIapCoins = pack.coins;
-        currentIapIsAds = false;
+        currentIapProductId = pack.productId;
         if (iapTitle != null) iapTitle.text = $"BUY {pack.coins} COINS";
         if (iapPrompt != null) iapPrompt.text = $"Purchase {pack.coins} coins?";
-        if (iapPrice != null) iapPrice.text = pack.price;
+        // 商店就绪时优先用本地化价格；未就绪时退回硬编码占位
+        string priceText = IAPService.Instance != null
+            ? IAPService.Instance.GetLocalizedPrice(pack.productId, pack.price)
+            : pack.price;
+        if (iapPrice != null) iapPrice.text = priceText;
 
         // 切换金币包图标
         if (iapIcon != null)
@@ -690,10 +708,14 @@ public class ShopPanel : MonoBehaviour
         if (IsNoAdsRemoved()) return;
 
         currentIapCoins = 0;
-        currentIapIsAds = true;
+        currentIapProductId = IAPService.PRODUCT_NO_ADS;
         if (iapTitle != null) iapTitle.text = "REMOVE ADS";
         if (iapPrompt != null) iapPrompt.text = "Remove all ads forever?";
-        if (iapPrice != null) iapPrice.text = priceText;
+        // 商店就绪时用真实价格；未就绪退回调用方传入的占位
+        string finalPrice = IAPService.Instance != null
+            ? IAPService.Instance.GetLocalizedPrice(IAPService.PRODUCT_NO_ADS, priceText)
+            : priceText;
+        if (iapPrice != null) iapPrice.text = finalPrice;
 
         // 切到盾牌图标
         if (iapIcon != null)
@@ -712,22 +734,58 @@ public class ShopPanel : MonoBehaviour
 
     private void ConfirmIapPurchase()
     {
-        // TODO: 接入真实 IAP（Google Play / App Store）。
-        // 本地开发模式：默认购买成功，直接发金币 / 标记去广告，方便测试其它流程。
-        if (currentIapIsAds)
+        if (string.IsNullOrEmpty(currentIapProductId))
         {
-            // TODO: 调用广告 SDK 禁用广告。本地记一个 PlayerPrefs flag。
-            SetNoAdsRemoved(true);
-            RefreshNoAdsState();
-            Debug.Log("[Shop] (Dev) Ads removal purchase succeeded");
-        }
-        else if (currentIapCoins > 0 && CoinManager.Instance != null)
-        {
-            CoinManager.Instance.AddCoins(currentIapCoins);
-            Debug.Log($"[Shop] (Dev) IAP succeeded: +{currentIapCoins} coins");
+            Debug.LogWarning("[Shop] ConfirmIapPurchase 无 product id");
+            HideBuyModal();
+            return;
         }
 
-        HideBuyModal();
+        // 防止重复点击：禁用按钮，等 PurchaseCompleted / PurchaseFailed 回来再处理
+        if (iapConfirm != null) iapConfirm.SetEnabled(false);
+
+        if (IAPService.Instance == null)
+        {
+            // 兜底：理论上 RuntimeInitializeOnLoadMethod 一定会创建实例
+            Debug.LogWarning("[Shop] IAPService 缺失");
+            HideBuyModal();
+            return;
+        }
+
+        Debug.Log($"[Shop] Buying product: {currentIapProductId}");
+        IAPService.Instance.BuyProduct(currentIapProductId);
+    }
+
+    private void HandleIapCompleted(string productId)
+    {
+        Debug.Log($"[Shop] IAP completed: {productId}");
+
+        // 商品已发放（金币 / 去广告 entitlement）都在 IAPService 内部完成，UI 只负责反馈
+        RefreshStats();
+        RefreshNoAdsState();
+
+        // 只关心当前弹窗对应的产品；其它产品（例如 RestorePurchases 回放的）静默刷新即可
+        if (productId == currentIapProductId)
+        {
+            if (iapConfirm != null) iapConfirm.SetEnabled(true);
+            HideBuyModal();
+        }
+    }
+
+    private void HandleIapFailed(string productId, string reason)
+    {
+        Debug.LogWarning($"[Shop] IAP failed: {productId}, reason={reason}");
+        if (productId == currentIapProductId)
+        {
+            if (iapConfirm != null) iapConfirm.SetEnabled(true);
+            HideBuyModal();
+        }
+    }
+
+    private void HandleIapInitialized()
+    {
+        // 商店就绪后回填非消耗品 entitlement，刷新 NoAds 卡片
+        RefreshNoAdsState();
     }
 
     // ---------------- No Ads (state toggle) ----------------

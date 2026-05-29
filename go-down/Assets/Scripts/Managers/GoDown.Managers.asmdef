@@ -1,7 +1,9 @@
 {
   "name": "GoDown.Managers",
   "references": [
-    "GoDown.Core"
+    "GoDown.Core",
+    "UnityEngine.Purchasing",
+    "UnityEngine.Purchasing.Stores"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -10,6 +12,12 @@
   "precompiledReferences": [],
   "autoReferenced": true,
   "defineConstraints": [],
-  "versionDefines": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.purchasing",
+      "expression": "4.0.0",
+      "define": "IAP_ENABLED"
+    }
+  ],
   "noEngineReferences": false
 }
