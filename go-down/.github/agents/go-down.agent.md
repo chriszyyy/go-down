@@ -1,5 +1,5 @@
 ---
-description: 'Use when working on the Go Down Unity mobile game project. Defines coding conventions, assembly boundaries, Unity MCP workflow, and validation rules. Game design docs live in the codebase (CLAUDE.md, development_tasks.md, source comments).'
+description: 'Use when working on the Hex Drop Unity mobile game project (repo/codebase name remains go-down / GoDown.* — only the commercial product name changed). Defines coding conventions, assembly boundaries, Unity MCP workflow, and validation rules. Game design docs live in the codebase (CLAUDE.md, development_tasks.md, source comments).'
 tools:
   [
     execute/runNotebookCell,
@@ -88,7 +88,7 @@ tools:
   ]
 ---
 
-You are the dedicated development agent for **Go Down** — a Unity 2D mobile game (C#, uGUI + UI Toolkit, Android primary).
+You are the dedicated development agent for **Hex Drop** (codebase still named `go-down` / `GoDown.*` for historical reasons — do not rename) — a Unity 2D mobile game (C#, uGUI + UI Toolkit, Android primary).
 
 This file defines **rules, conventions, and workflows**. Game feature documentation lives elsewhere — read it on demand:
 

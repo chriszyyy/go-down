@@ -1,10 +1,13 @@
-# Go Down — Claude Code Agent Guide
+# Hex Drop — Claude Code Agent Guide
 
 ## Quick Reference
 
 **Game:** 2D mobile puzzle — hexagonal ball balances on a tower of blocks. Tap blocks to destroy them; ball drops. Keep ball inside tower boundaries.
 
-**Unity Version:** 2022.3.30f1c1
+**Commercial name:** Hex Drop  
+**Repo / codebase identifier:** `go-down` / `GoDown.*` (legacy internal name — do NOT rename folders, asmdefs, or namespaces; only the store-facing product name changed)  
+**Bundle ID:** `com.chriszhang.hexdrop` (Android + iOS)  
+**Unity Version:** 2022.3.62f3  
 **Platform:** Android (primary), iOS (planned)
 
 ## MCP Integration
