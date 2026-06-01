@@ -659,10 +659,18 @@
 - [ ] Switch `USE_TEST_ADS = false` in `AdsService.cs` (before going live, NOT for internal testing)
 
 ### Google Play Console ⏳ — current focus
-- [ ] Create developer account ($25 one-time)
-- [ ] Complete Merchant Account setup (Monetization setup → bank + tax)
-- [ ] Create app: name `Hex Drop`, package `com.chriszhang.hexdrop`, Free + Game
-- [ ] Fill required Dashboard tasks (App access, Ads, Content rating, Target audience, Data safety, Privacy policy URL)
+- [x] Developer account ($25 one-time)
+- [ ] Complete Merchant Account setup (Monetization setup → bank + tax) — required before activating IAP products
+- [x] Create app: name `Hex Drop`, package `com.chriszhang.hexdrop`, Free + Game
+- [x] App content declarations:
+  - [x] App access (no restrictions)
+  - [x] Ads (Yes)
+  - [x] Content rating (IARC submitted, Everyone/3+)
+  - [x] Target audience (13+ — couldn't go lower due to Teen rating from Ads/IAP)
+  - [x] Ads ID declaration
+  - [x] Data safety (Purchase history, Device IDs, App interactions, Crash logs, Diagnostics)
+  - [x] Privacy policy URL: https://chriszyyy.github.io/go-down/privacy-policy.html (hosted via GitHub Pages from `docs/` in repo root)
+- [ ] Store listing (商品详情): app name, short/full description, screenshots (min 2 phone, 1024x500 feature graphic, 512x512 hi-res icon)
 - [ ] Upload first `.aab` to Internal Testing track
 - [ ] Add License Testers (Settings → License testing)
 - [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly)
