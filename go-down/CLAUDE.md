@@ -35,8 +35,8 @@ GoDown.Editor     → Editor-only
 
 ## Key Conventions
 
-- **Language:** Code comments in Chinese (中文) to match existing style
-- **UI Framework:** uGUI (`UnityEngine.UI.Text`) — no TextMeshPro  
+- **Language:** Player-facing strings (UI labels, scene Text components, prefab `blockTypeName`) are **English only**. Code comments and `[Tooltip]` / `[Header]` attributes are in Chinese (中文) — they never reach end users. When adding new UI text, write in English.
+- **UI Framework:** uGUI (`UnityEngine.UI.Text`) + UI Toolkit (`.uxml` / `.uss`) for shop / start menu. No TextMeshPro.
 - **Singletons:** Use `[RuntimeInitializeOnLoadMethod]` bootstrap pattern
 - **Communication:** Static C# events (not UnityEvents) for cross-system messaging
 - **Persistence:** `PlayerPrefs` with static helpers
@@ -78,10 +78,24 @@ Layer-specific visual effects are added as separate particle systems, each with 
 
 ## Current Focus
 
-The BackgroundController is being enhanced with:
-- Parallax star movement (stars drift up as ball descends)
-- Random individual star fade-out/twinkle effects
-- Layer-specific visual effects (nebula dust, clouds, dirt particles, lava embers)
+**Pre-launch (Android, first soft-launch via Google Play Internal Testing):**
+- Unity upgraded to 2022.3.62f3 (was 2022.3.30f1c1 China build)
+- Project renamed `Go Down` → `Hex Drop` (commercial name only; codebase still `GoDown.*`)
+- Bundle ID locked: `com.chriszhang.hexdrop` (Android + iOS)
+- Keystore: `E:\unity-keystores\hexdrop.keystore` alias `hexdrop` (off-repo, see `.gitignore`)
+- Player-facing UI fully translated to English; DEBUG RESET shop button removed
+- AdMob: test ads in code (`USE_TEST_ADS = true` in `AdsService.cs`); App ID `ca-app-pub-9908007989063237~2177382440` in `Assets/Plugins/Android/GoogleMobileAdsPlugin.androidlib/AndroidManifest.xml`. Real ad units (`PROD_*`) wired but not yet linked to a store app.
+- IAP: `IAPService.cs` ready; product IDs (`no_ads_lifetime`, `coin_pack_100/500/1200/2500`) defined but not yet created in Play Console.
+- Builds: Android .aab produced via `File → Build Settings → Build` (IL2CPP, ARMv7 + ARM64, min SDK 24, target SDK 34). Output to `Builds/Android/`.
+
+See `development_tasks.md` § "Release Pipeline" for the live checklist.
+
+## Build & Release Notes
+
+- **versionCode bump:** Every time you upload a new .aab to Play Console, increment `AndroidBundleVersionCode` in Player Settings (currently `1`, untouched until first upload).
+- **versionName:** `1.0` for first release. Bump per semver for updates.
+- **Keystore password / alias password:** stored off-repo (1Password). Unity prompts at every build because passwords are never saved to disk.
+- **EDM4U Gradle backups:** `Assets/Plugins/Android/*.backup*` are gitignored — Unity / Play Services Resolver regenerates them.
 
 ## Don'ts
 

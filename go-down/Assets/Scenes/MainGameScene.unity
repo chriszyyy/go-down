@@ -1583,8 +1583,8 @@ MonoBehaviour:
   coinsFormat: '{0}'
   resetUsesFormat: '{0}'
   rainbowUsesFormat: '{0}'
-  resetPriceFormat: "\u8D2D\u4E70\u91CD\u7F6E\uFF1A{0}"
-  rainbowPriceFormat: "\u8D2D\u4E70\u9B54\u5F69\uFF1A{0}"
+  resetPriceFormat: 'Buy Reset: {0}'
+  rainbowPriceFormat: 'Buy Rainbow: {0}'
   hideOnStart: 1
   forceActivateChildrenOnOpen: 1
 --- !u!1 &362784035
@@ -2115,7 +2115,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "\u6E38\u620F\u7ED3\u675F"
+  m_Text: GAME OVER
 --- !u!222 &541758707
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6136,7 +6136,7 @@ MonoBehaviour:
   settingsButton: {fileID: 1340255644}
   startMenuUI: {fileID: 1459156669}
   scoreValueFormat: '{0}'
-  highScoreFormat: "\u6700\u9AD8\u5206\uFF1A{0}"
+  highScoreFormat: 'BEST: {0}'
   hideOnStart: 1
 --- !u!1 &1519482169
 GameObject:
@@ -7601,34 +7601,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 772960322}
   zones:
-  - name: "\u5916\u592A\u7A7A"
+  - name: Outer Space
     yPosition: 10
     color: {r: 0.02, g: 0.02, b: 0.06, a: 1}
-  - name: "\u6DF1\u7A7A\u661F\u4E91"
+  - name: Deep Nebula
     yPosition: -50
     color: {r: 0.05, g: 0.02, b: 0.12, a: 1}
-  - name: "\u94F6\u6CB3\u7CFB"
+  - name: Galaxy
     yPosition: -150
     color: {r: 0.08, g: 0.06, b: 0.18, a: 1}
-  - name: "\u661F\u7403\u5E26"
+  - name: Planet Belt
     yPosition: -300
     color: {r: 0.04, g: 0.08, b: 0.22, a: 1}
-  - name: "\u8FD1\u5730\u8F68\u9053"
+  - name: Low Orbit
     yPosition: -500
     color: {r: 0.02, g: 0.05, b: 0.25, a: 1}
-  - name: "\u5927\u6C14\u5C42"
+  - name: Atmosphere
     yPosition: -800
     color: {r: 0.35, g: 0.65, b: 0.92, a: 1}
-  - name: "\u5730\u9762"
+  - name: Surface
     yPosition: -1200
     color: {r: 0.45, g: 0.55, b: 0.3, a: 1}
-  - name: "\u5730\u4E0B"
+  - name: Underground
     yPosition: -1800
     color: {r: 0.3, g: 0.18, b: 0.08, a: 1}
-  - name: "\u5730\u58F3"
+  - name: Crust
     yPosition: -2500
     color: {r: 0.4, g: 0.12, b: 0.05, a: 1}
-  - name: "\u5CA9\u6D46"
+  - name: Magma
     yPosition: -4000
     color: {r: 0.6, g: 0.15, b: 0.02, a: 1}
   enableStars: 1

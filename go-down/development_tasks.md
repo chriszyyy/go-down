@@ -623,6 +623,73 @@
 
 ---
 
+## 🚀 Release Pipeline (Hex Drop — Pre-Launch Tracker)
+
+> Live checklist tracking the path from "code complete" to "first .aab uploaded to Google Play Internal Testing".  
+> Updated 2026-06-01.
+
+### Engine & Project Setup ✅
+- [x] Unity 2022.3.30f1c1 (China build) → 2022.3.62f3 (international)
+- [x] Project `productName`: `go-down` → `Hex Drop`
+- [x] `companyName`: `Chris Zhang` → `Chris Zhang Games`
+- [x] Bundle ID locked: `com.chriszhang.hexdrop` (Android + iOS)
+- [x] `Packages/packages-lock.json` regenerated from `packages.unity.com` (was China registry)
+- [x] EditorBuildSettings: `MainGameScene` registered as the only enabled scene
+
+### Android Build Configuration ✅
+- [x] Keystore created: `E:\unity-keystores\hexdrop.keystore` alias `hexdrop` (off-repo)
+- [x] Custom Keystore enabled in Player Settings → Publishing Settings
+- [x] Scripting Backend: IL2CPP
+- [x] Target Architectures: ARMv7 + ARM64
+- [x] Min SDK 24 (Android 7.0), Target SDK 34 (Android 14)
+- [x] `Build App Bundle (Google Play)` enabled — produces `.aab`
+- [x] First signed `.aab` built successfully (~68 MB)
+
+### Player-Facing Content ✅
+- [x] All in-game Chinese text translated to English (scene Text, .uxml labels, prefab block names, BG zone names, format strings)
+- [x] DEBUG RESET shop button removed (`Shop.uxml` + `ShopPanel.cs`)
+- [x] New game logo (`Assets/UI/Sprites/StartMenu_Logo.png`)
+- [x] App icon set in Player Settings (custom Android icon)
+
+### Monetization Code ✅ (code wired; backend setup pending)
+- [x] AdMob SDK integrated (`AdsService.cs`, `ADMOB_ENABLED` define on Android + iPhone)
+- [x] IAP service implemented (`IAPService.cs`, 5 product IDs declared)
+- [ ] AdMob Console: link Android app to Play Store listing once first `.aab` is uploaded
+- [ ] AdMob Console: link iOS app to App Store listing (deferred)
+- [ ] Switch `USE_TEST_ADS = false` in `AdsService.cs` (before going live, NOT for internal testing)
+
+### Google Play Console ⏳ — current focus
+- [ ] Create developer account ($25 one-time)
+- [ ] Complete Merchant Account setup (Monetization setup → bank + tax)
+- [ ] Create app: name `Hex Drop`, package `com.chriszhang.hexdrop`, Free + Game
+- [ ] Fill required Dashboard tasks (App access, Ads, Content rating, Target audience, Data safety, Privacy policy URL)
+- [ ] Upload first `.aab` to Internal Testing track
+- [ ] Add License Testers (Settings → License testing)
+- [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly)
+- [ ] Test install via Internal Testing opt-in URL → verify ads load + IAP sandbox flow works
+
+### iOS / App Store Connect — deferred
+- [ ] Apple Developer Program enrollment ($99/yr)
+- [ ] Create App ID with In-App Purchase capability
+- [ ] App Store Connect: create app, accept Paid Apps Agreement, fill banking/tax
+- [ ] Create matching IAP products (Non-Consumable + Consumable)
+- [ ] Create Sandbox testers, upload TestFlight build, verify IAP flow
+
+### Hardening (before public release)
+- [ ] IAP receipt validation (currently client-trust — vulnerable to local hacks). Either local `CrossPlatformValidator` or server-side receipt check.
+- [ ] Restore Purchases UI button (already wired via `IAPService.RestorePurchases()` — needs UI surface)
+- [ ] Crash reporting (Firebase Crashlytics or Unity Cloud Diagnostics)
+- [ ] Privacy policy hosted on a public URL (required for Play Console submission)
+- [ ] iOS ATT prompt + UMP/GDPR consent flow (only needed for iOS release)
+
+### Build & Version Discipline
+- Current `bundleVersion`: `1.0`
+- Current `AndroidBundleVersionCode`: `1` (not yet uploaded — safe to keep until first Play upload)
+- **Rule:** every `.aab` uploaded to Play Console MUST have a unique, monotonically increasing `AndroidBundleVersionCode`.
+- Keystore + passwords live off-repo (1Password). Unity prompts at every build.
+
+---
+
 ## 📝 开发日志
 
 ### 2025-11-16

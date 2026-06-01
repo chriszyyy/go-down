@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12583fdf85d4d4d41b80a267c2409a86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockTypeName: "\u5355\u683C\u65B9\u5757"
+  blockTypeName: Single
   scoreValue: 10
   scoreMultiplier: 1
   isStatic: 1

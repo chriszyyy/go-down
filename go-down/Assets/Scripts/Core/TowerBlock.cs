@@ -13,7 +13,7 @@ public class TowerBlock : MonoBehaviour
 {
     [Header("方块配置")]
     [Tooltip("方块类型名称")]
-    public string blockTypeName = "方块";
+    public string blockTypeName = "Block";
 
     [Tooltip("方块得分")]
     public int scoreValue = 10;

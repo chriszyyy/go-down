@@ -104,14 +104,6 @@
                             <ui:Label text="35" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
-                    <ui:Button name="item-debug-reset-data" class="item-card item-card--tool item-card--debug">
-                        <ui:Label text="DEBUG RESET" class="item-card__title" style="color: rgb(255, 120, 120);" />
-                        <ui:Label text="Wipe all save data" class="item-card__sub" />
-                        <ui:Label text="DEV ONLY" class="item-card__count" style="color: rgb(255, 120, 120);" />
-                        <ui:VisualElement class="item-card__price" style="background-color: rgba(180, 40, 40, 0.85); border-color: rgba(255, 120, 120, 0.7);">
-                            <ui:Label text="RESET" class="item-card__price-text" />
-                        </ui:VisualElement>
-                    </ui:Button>
                 </ui:VisualElement>
                 <ui:VisualElement class="section-divider">
                     <ui:VisualElement picking-mode="Ignore" class="section-divider__line" />

@@ -173,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3607ab4e9dcf69b4186d4f4e7a3ae9fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockTypeName: "\u65B9\u5F62\u65B9\u5757"
+  blockTypeName: Square
   scoreValue: 40
   scoreMultiplier: 1
   isStatic: 1

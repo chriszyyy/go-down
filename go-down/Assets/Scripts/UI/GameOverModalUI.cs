@@ -33,7 +33,7 @@ public class GameOverModalUI : MonoBehaviour
     public string scoreValueFormat = "{0}";
 
     [Tooltip("highScoreText 的格式，{0}=最高分数字")]
-    public string highScoreFormat = "最高分：{0}";
+    public string highScoreFormat = "BEST: {0}";
 
     [Header("Behaviour")]
     [Tooltip("游戏开始时是否隐藏")]

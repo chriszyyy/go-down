@@ -238,7 +238,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         TowerBlock block = go.AddComponent<TowerBlock>();
-        block.blockTypeName = "单格方块";
+        block.blockTypeName = "Single";
         block.scoreValue = 10;
         block.isStatic = true;
 
@@ -275,7 +275,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         SquareBlock block = go.AddComponent<SquareBlock>();
-        block.blockTypeName = "方形方块";
+        block.blockTypeName = "Square";
         block.scoreValue = 40;
         block.isStatic = true;
 
@@ -311,7 +311,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L3Block block = go.AddComponent<L3Block>();
-        block.blockTypeName = "L3方块";
+        block.blockTypeName = "L3";
         block.scoreValue = 40;
         block.isStatic = true;
 
@@ -347,7 +347,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L4Block block = go.AddComponent<L4Block>();
-        block.blockTypeName = "L4方块";
+        block.blockTypeName = "L4";
         block.scoreValue = 50;
         block.isStatic = true;
 
@@ -383,7 +383,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L5Block block = go.AddComponent<L5Block>();
-        block.blockTypeName = "L5方块";
+        block.blockTypeName = "L5";
         block.scoreValue = 50;
         block.isStatic = true;
 
@@ -420,7 +420,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         LineBlock block = go.AddComponent<LineBlock>();
-        block.blockTypeName = "I型方块";
+        block.blockTypeName = "Line";
         block.scoreValue = 40;
         block.isStatic = true;
 
@@ -457,7 +457,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         Line3Block block = go.AddComponent<Line3Block>();
-        block.blockTypeName = "I3型方块";
+        block.blockTypeName = "Line3";
         block.scoreValue = 30;
         block.isStatic = true;
 
@@ -493,7 +493,7 @@ public class PrefabGenerator : EditorWindow
         rb.angularDrag = DEFAULT_BLOCK_ANGULAR_DRAG;
 
         L2Block block = go.AddComponent<L2Block>();
-        block.blockTypeName = "L2方块";
+        block.blockTypeName = "L2";
         block.scoreValue = 30;
         block.isStatic = true;
 

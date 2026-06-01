@@ -26,3 +26,6 @@ UserSettings/
 
 /Assets/Screenshots/
 
+# Unity External Dependency Manager (EDM4U) auto-generated Gradle backups
+Assets/Plugins/Android/mainTemplate.gradle.backup*
+Assets/Plugins/Android/*.backup*

@@ -179,7 +179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f2cfbd902224bc4fac74b3b0978234d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockTypeName: "L2\u65B9\u5757"
+  blockTypeName: L2
   scoreValue: 30
   scoreMultiplier: 1
   isStatic: 1

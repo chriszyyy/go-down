@@ -309,11 +309,6 @@ public class ShopPanel : MonoBehaviour
                 card.clicked += () => OpenBuyModal("rainbow");
                 continue;
             }
-            if (id == "item-debug-reset-data")
-            {
-                card.clicked += OnDebugResetAllData;
-                continue;
-            }
             if (id.StartsWith("coin-pack-"))
             {
                 string packId = id;
@@ -489,59 +484,6 @@ public class ShopPanel : MonoBehaviour
         if (boughtSummary != null) boughtSummary.text = $"You now have {newCount}";
         if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.RemoveFromClassList("buy-modal__view--hidden");
-    }
-
-    // ---------------- DEBUG: 重置所有持久化数据 ----------------
-
-    /// <summary>
-    /// 调试按钮：清除最高分、金币、广告冷却、去广告状态、工具库存、皮肤解锁。
-    /// </summary>
-    private void OnDebugResetAllData()
-    {
-        // 最高分
-        if (ScoreManager.Instance != null) ScoreManager.Instance.ResetHighScore();
-        else PlayerPrefs.DeleteKey("HighScore");
-
-        // 当前分（仅 UI 显示用）
-        if (ScoreManager.Instance != null) ScoreManager.Instance.ResetScore();
-
-        // 金币
-        if (CoinManager.Instance != null) CoinManager.Instance.SetCoins(0);
-        else PlayerPrefs.DeleteKey("Coins");
-
-        // 去广告状态
-        SetNoAdsRemoved(false);
-
-        // 看广告冷却
-        PlayerPrefs.DeleteKey(KEY_WATCH_AD_LAST);
-
-        // 工具库存
-        if (ToolUsageInventory.Instance != null) ToolUsageInventory.Instance.ClearAllUses();
-        else
-        {
-            PlayerPrefs.DeleteKey("ToolUses_Reset");
-            PlayerPrefs.DeleteKey("ToolUses_Rainbow");
-        }
-
-        // 皮肤解锁与选中
-        if (HexagonSkinManager.Instance != null) HexagonSkinManager.Instance.ResetAllUnlocks();
-        else
-        {
-            foreach (var s in HexagonSkinManager.AllSkinIds)
-                PlayerPrefs.DeleteKey("HexSkin_Unlocked_" + s);
-            PlayerPrefs.DeleteKey("HexSkin_Selected");
-        }
-
-        PlayerPrefs.Save();
-
-        // 立刻刷新当前面板 UI
-        RefreshStats();
-        RefreshToolCounts();
-        RefreshNoAdsState();
-        RefreshWatchAdState();
-        RefreshSkinCards();
-
-        Debug.Log("[Shop] DEBUG: 已清空所有存档（最高分 / 金币 / 广告冷却 / 去广告 / 工具 / 皮肤）");
     }
 
     private static readonly string[] s_iconClasses = new[]
