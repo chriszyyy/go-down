@@ -92,7 +92,7 @@ See `development_tasks.md` § "Release Pipeline" for the live checklist.
 
 ## Build & Release Notes
 
-- **versionCode bump:** Every time you upload a new .aab to Play Console, increment `AndroidBundleVersionCode` in Player Settings (currently `2`, uploaded to Internal Testing 2026-06-02; next upload must use `3`).
+- **versionCode bump:** Every time you upload a new .aab to Play Console, increment `AndroidBundleVersionCode` in Player Settings (currently `3`, built 2026-06-02; versionCode 2 uploaded to Internal Testing; next upload must use `4`).
 - **versionName:** `1.0` for first release. Bump per semver for updates.
 - **Keystore password / alias password:** stored off-repo (1Password). Unity prompts at every build because passwords are never saved to disk.
 - **EDM4U Gradle backups:** `Assets/Plugins/Android/*.backup*` are gitignored — Unity / Play Services Resolver regenerates them.

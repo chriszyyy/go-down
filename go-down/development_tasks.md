@@ -645,6 +645,7 @@
 - [x] `Build App Bundle (Google Play)` enabled — produces `.aab`
 - [x] First signed `.aab` built successfully (~68 MB)
 - [x] Rebuilt as `hexdrop-v1.0-2.aab` (versionCode 2, targetSdk 35, ~66 MB) — accepted by Play Console with no errors
+- [x] Rebuilt as `hexdrop-v1.0-3.aab` (versionCode 3, ~66 MB) — includes long-session interstitial logic
 
 ### Player-Facing Content ✅
 - [x] All in-game Chinese text translated to English (scene Text, .uxml labels, prefab block names, BG zone names, format strings)
@@ -654,6 +655,7 @@
 
 ### Monetization Code ✅ (code wired; backend setup pending)
 - [x] AdMob SDK integrated (`AdsService.cs`, `ADMOB_ENABLED` define on Android + iPhone)
+- [x] Interstitial frequency policy: skip first N games, every N games, min interval 120s; long-session guard (single game > 10 min → forced interstitial at game over, bypassing game-count guards)
 - [x] IAP service implemented (`IAPService.cs`, 5 product IDs declared)
 - [ ] AdMob Console: link Android app to Play Store listing once first `.aab` is uploaded
 - [ ] AdMob Console: link iOS app to App Store listing (deferred)
@@ -674,7 +676,8 @@
 - [x] Store listing (商品详情): app name, short/full description, screenshots (phone), 1024x500 feature graphic, 512x512 hi-res icon, category + contact info
 - [x] Upload first `.aab` to Internal Testing track (`hexdrop-v1.0-2.aab`, versionCode 2) — released, only non-blocking warnings
 - [x] Add internal testers email list + opt-in URL: https://play.google.com/apps/internaltest/4701276858692541675
-- [ ] Test install via opt-in URL on real device → verify new logo, English UI, core gameplay, test ads load, no DEBUG button
+- [x] On-device install verified via opt-in URL (new logo, English UI, core gameplay, test ads, no DEBUG button)
+- [ ] Upload `hexdrop-v1.0-3.aab` (versionCode 3) to Internal Testing — long-session interstitial build
 - [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly) — blocked on Merchant Account
 
 ### iOS / App Store Connect — deferred
@@ -693,7 +696,7 @@
 
 ### Build & Version Discipline
 - Current `bundleVersion`: `1.0`
-- Current `AndroidBundleVersionCode`: `2` (uploaded to Internal Testing 2026-06-02). Next upload must use `3`.
+- Current `AndroidBundleVersionCode`: `3` (built 2026-06-02, long-session ad build). Next upload must use `4`.
 - **Rule:** every `.aab` uploaded to Play Console MUST have a unique, monotonically increasing `AndroidBundleVersionCode`.
 - Keystore + passwords live off-repo (1Password). Unity prompts at every build.
 
