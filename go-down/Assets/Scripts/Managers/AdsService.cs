@@ -67,11 +67,17 @@ public class AdsService : MonoBehaviour
     [Tooltip("两次插屏之间最小时间间隔（秒）")]
     public float interstitialMinIntervalSeconds = 120f;
 
+    [Tooltip("单局连续游戏时长超过该秒数时，在本局游戏结束时强制加播一次插屏（绕过局数门槛，<=0 关闭）。默认 600 = 10 分钟")]
+    public float longSessionInterstitialSeconds = 600f;
+
     // 运行时状态
     private int gameOverCountThisSession;
     private int lastInterstitialGameCount; // 上一次真正播放插屏时的局数，初始 0
     private float lastInterstitialTime = -999f;
     private readonly Queue<Action> mainThreadActions = new Queue<Action>();
+
+    // 单局连续游戏计时（用于 longSessionInterstitialSeconds）
+    private float currentGameActiveSeconds;
 
     // ============================================================
     // AdMob 实例（仅在 ADMOB_ENABLED 时生效）
@@ -108,17 +114,20 @@ public class AdsService : MonoBehaviour
     private void Start()
     {
         GameStateManager.OnGameOver += HandleGameOver;
+        GameStateManager.OnGameReset += HandleGameReset;
         StartCoroutine(InitializeSdkDelayed());
     }
 
     private void OnDestroy()
     {
         GameStateManager.OnGameOver -= HandleGameOver;
+        GameStateManager.OnGameReset -= HandleGameReset;
     }
 
     private void Update()
     {
         FlushMainThreadActions();
+        TrackLongSession();
 
 #if ADMOB_ENABLED
         if (sdkInitializeStarted && !sdkInitialized && !sdkInitializeTimeoutLogged &&
@@ -265,25 +274,34 @@ public class AdsService : MonoBehaviour
     /// </summary>
     public void ShowInterstitial()
     {
+        ShowInterstitialInternal(enforceGameCountGuards: true);
+    }
+
+    private void ShowInterstitialInternal(bool enforceGameCountGuards)
+    {
         if (IsNoAdsPurchased())
         {
             Debug.Log("[Ads] Interstitial skipped: NoAds purchased.");
             return;
         }
 
-        // 频率：跳过前 N 局
-        if (gameOverCountThisSession <= interstitialSkipFirstGames)
+        if (enforceGameCountGuards)
         {
-            Debug.Log($"[Ads] Interstitial skipped: first-games guard ({gameOverCountThisSession}/{interstitialSkipFirstGames}).");
-            return;
+            // 频率：跳过前 N 局
+            if (gameOverCountThisSession <= interstitialSkipFirstGames)
+            {
+                Debug.Log($"[Ads] Interstitial skipped: first-games guard ({gameOverCountThisSession}/{interstitialSkipFirstGames}).");
+                return;
+            }
+            // 频率：跟上次插屏至少间隔 N 局
+            int gamesSinceLast = gameOverCountThisSession - lastInterstitialGameCount;
+            if (gamesSinceLast < interstitialEveryNGames)
+            {
+                Debug.Log($"[Ads] Interstitial skipped: game interval guard. gamesSinceLast={gamesSinceLast}, need={interstitialEveryNGames}.");
+                return;
+            }
         }
-        // 频率：跟上次插屏至少间隔 N 局
-        int gamesSinceLast = gameOverCountThisSession - lastInterstitialGameCount;
-        if (gamesSinceLast < interstitialEveryNGames)
-        {
-            Debug.Log($"[Ads] Interstitial skipped: game interval guard. gamesSinceLast={gamesSinceLast}, need={interstitialEveryNGames}.");
-            return;
-        }
+
         // 频率：最小时间间隔（不满足不更新 lastInterstitialGameCount，下局会继续检查）
         if (Time.realtimeSinceStartup - lastInterstitialTime < interstitialMinIntervalSeconds)
         {
@@ -463,8 +481,40 @@ public class AdsService : MonoBehaviour
     private void HandleGameOver(string reason)
     {
         gameOverCountThisSession++;
-        Debug.Log($"[Ads] GameOver received: reason={reason}, count={gameOverCountThisSession}");
-        ShowInterstitial();
+
+        // 单局连续游戏超过阈值 → 本局结束时强制加播（绕过局数门槛，仍尊重去广告/最小时间间隔）。
+        bool longSession = longSessionInterstitialSeconds > 0f &&
+                           currentGameActiveSeconds >= longSessionInterstitialSeconds;
+        Debug.Log($"[Ads] GameOver received: reason={reason}, count={gameOverCountThisSession}, " +
+                  $"activeSeconds={currentGameActiveSeconds:0}, longSession={longSession}");
+
+        ShowInterstitialInternal(enforceGameCountGuards: !longSession);
+    }
+
+    // 新一局开始：重置单局连续游戏计时。
+    private void HandleGameReset()
+    {
+        currentGameActiveSeconds = 0f;
+    }
+
+    // 累计单局连续游戏时长（广告不在这里播，仅记录时长，由 HandleGameOver 决定是否加播）。
+    private void TrackLongSession()
+    {
+        if (longSessionInterstitialSeconds <= 0f) return;
+        if (!IsActivelyPlaying()) return;
+
+        currentGameActiveSeconds += Time.unscaledDeltaTime;
+    }
+
+    // 只有在真正游玩（非 GameOver、非 UI 暂停、时间正常流逝）时才累计时长。
+    private static bool IsActivelyPlaying()
+    {
+        var gsm = GameStateManager.Instance;
+        if (gsm == null) return false;
+        if (gsm.IsGameOver) return false;
+        if (UIPause.IsPaused) return false;
+        if (Time.timeScale <= 0f) return false;
+        return true;
     }
 
     // ============================================================
