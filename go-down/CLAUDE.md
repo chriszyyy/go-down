@@ -86,13 +86,13 @@ Layer-specific visual effects are added as separate particle systems, each with 
 - Player-facing UI fully translated to English; DEBUG RESET shop button removed
 - AdMob: test ads in code (`USE_TEST_ADS = true` in `AdsService.cs`); App ID `ca-app-pub-9908007989063237~2177382440` in `Assets/Plugins/Android/GoogleMobileAdsPlugin.androidlib/AndroidManifest.xml`. Real ad units (`PROD_*`) wired but not yet linked to a store app.
 - IAP: `IAPService.cs` ready; product IDs (`no_ads_lifetime`, `coin_pack_100/500/1200/2500`) defined but not yet created in Play Console.
-- Builds: Android .aab produced via `File → Build Settings → Build` (IL2CPP, ARMv7 + ARM64, min SDK 24, target SDK 34). Output to `Builds/Android/`.
+- Builds: Android .aab produced via `File → Build Settings → Build` (IL2CPP, ARMv7 + ARM64, min SDK 24, target SDK 35). Output to `Builds/Android/`.
 
 See `development_tasks.md` § "Release Pipeline" for the live checklist.
 
 ## Build & Release Notes
 
-- **versionCode bump:** Every time you upload a new .aab to Play Console, increment `AndroidBundleVersionCode` in Player Settings (currently `1`, untouched until first upload).
+- **versionCode bump:** Every time you upload a new .aab to Play Console, increment `AndroidBundleVersionCode` in Player Settings (currently `2`, uploaded to Internal Testing 2026-06-02; next upload must use `3`).
 - **versionName:** `1.0` for first release. Bump per semver for updates.
 - **Keystore password / alias password:** stored off-repo (1Password). Unity prompts at every build because passwords are never saved to disk.
 - **EDM4U Gradle backups:** `Assets/Plugins/Android/*.backup*` are gitignored — Unity / Play Services Resolver regenerates them.

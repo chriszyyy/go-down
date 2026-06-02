@@ -626,7 +626,7 @@
 ## 🚀 Release Pipeline (Hex Drop — Pre-Launch Tracker)
 
 > Live checklist tracking the path from "code complete" to "first .aab uploaded to Google Play Internal Testing".  
-> Updated 2026-06-01.
+> Updated 2026-06-02.
 
 ### Engine & Project Setup ✅
 - [x] Unity 2022.3.30f1c1 (China build) → 2022.3.62f3 (international)
@@ -641,9 +641,10 @@
 - [x] Custom Keystore enabled in Player Settings → Publishing Settings
 - [x] Scripting Backend: IL2CPP
 - [x] Target Architectures: ARMv7 + ARM64
-- [x] Min SDK 24 (Android 7.0), Target SDK 34 (Android 14)
+- [x] Min SDK 24 (Android 7.0), Target SDK **35** (Android 15) — bumped from 34; Play Console requires targetSdk ≥ 35 for new apps (Aug 2025+)
 - [x] `Build App Bundle (Google Play)` enabled — produces `.aab`
 - [x] First signed `.aab` built successfully (~68 MB)
+- [x] Rebuilt as `hexdrop-v1.0-2.aab` (versionCode 2, targetSdk 35, ~66 MB) — accepted by Play Console with no errors
 
 ### Player-Facing Content ✅
 - [x] All in-game Chinese text translated to English (scene Text, .uxml labels, prefab block names, BG zone names, format strings)
@@ -670,11 +671,11 @@
   - [x] Ads ID declaration
   - [x] Data safety (Purchase history, Device IDs, App interactions, Crash logs, Diagnostics)
   - [x] Privacy policy URL: https://chriszyyy.github.io/go-down/privacy-policy.html (hosted via GitHub Pages from `docs/` in repo root)
-- [ ] Store listing (商品详情): app name, short/full description, screenshots (min 2 phone, 1024x500 feature graphic, 512x512 hi-res icon)
-- [ ] Upload first `.aab` to Internal Testing track
-- [ ] Add License Testers (Settings → License testing)
-- [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly)
-- [ ] Test install via Internal Testing opt-in URL → verify ads load + IAP sandbox flow works
+- [x] Store listing (商品详情): app name, short/full description, screenshots (phone), 1024x500 feature graphic, 512x512 hi-res icon, category + contact info
+- [x] Upload first `.aab` to Internal Testing track (`hexdrop-v1.0-2.aab`, versionCode 2) — released, only non-blocking warnings
+- [x] Add internal testers email list + opt-in URL: https://play.google.com/apps/internaltest/4701276858692541675
+- [ ] Test install via opt-in URL on real device → verify new logo, English UI, core gameplay, test ads load, no DEBUG button
+- [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly) — blocked on Merchant Account
 
 ### iOS / App Store Connect — deferred
 - [ ] Apple Developer Program enrollment ($99/yr)
@@ -692,7 +693,7 @@
 
 ### Build & Version Discipline
 - Current `bundleVersion`: `1.0`
-- Current `AndroidBundleVersionCode`: `1` (not yet uploaded — safe to keep until first Play upload)
+- Current `AndroidBundleVersionCode`: `2` (uploaded to Internal Testing 2026-06-02). Next upload must use `3`.
 - **Rule:** every `.aab` uploaded to Play Console MUST have a unique, monotonically increasing `AndroidBundleVersionCode`.
 - Keystore + passwords live off-repo (1Password). Unity prompts at every build.
 
