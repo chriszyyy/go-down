@@ -157,6 +157,7 @@ public class ShopPanel : MonoBehaviour
         RefreshSkinCards();
         RefreshWatchAdState();
         RefreshNoAdsState();
+        RefreshIapPrices();
     }
 
     private void Update()
@@ -324,7 +325,7 @@ public class ShopPanel : MonoBehaviour
         var noAdsLifetime = root.Q<Button>("noads-lifetime");
         if (noAdsLifetime != null)
         {
-            noAdsLifetime.clicked += () => OpenAdsModal("$2.99");
+            noAdsLifetime.clicked += () => OpenAdsModal(NO_ADS_DEFAULT_PRICE);
         }
         var noAdsRestore = root.Q<Button>("noads-restore");
         if (noAdsRestore != null)
@@ -728,6 +729,38 @@ public class ShopPanel : MonoBehaviour
     {
         // 商店就绪后回填非消耗品 entitlement，刷新 NoAds 卡片
         RefreshNoAdsState();
+        // 商店就绪后用本地化价格覆盖卡片上的占位价（玩家看本地货币）
+        RefreshIapPrices();
+    }
+
+    /// <summary>
+    /// 用商店本地化价格刷新网格卡片上的价格文案（金币包 + 终身去广告）。
+    /// 商店未就绪时退回各自的硬编码占位价。
+    /// </summary>
+    private void RefreshIapPrices()
+    {
+        var doc = GetComponent<UIDocument>();
+        var root = doc != null ? doc.rootVisualElement : null;
+        if (root == null) return;
+
+        foreach (var kvp in s_coinPacks)
+        {
+            var card = root.Q<Button>(kvp.Key);
+            if (card == null) continue;
+            var priceLabel = card.Q<Label>(null, "item-card__price-text");
+            if (priceLabel == null) continue;
+            priceLabel.text = IAPService.Instance != null
+                ? IAPService.Instance.GetLocalizedPrice(kvp.Value.productId, kvp.Value.price)
+                : kvp.Value.price;
+        }
+
+        var noAdsBtn = root.Q<Button>("noads-lifetime");
+        if (noAdsBtn != null)
+        {
+            noAdsBtn.text = IAPService.Instance != null
+                ? IAPService.Instance.GetLocalizedPrice(IAPService.PRODUCT_NO_ADS, NO_ADS_DEFAULT_PRICE)
+                : NO_ADS_DEFAULT_PRICE;
+        }
     }
 
     // ---------------- No Ads (state toggle) ----------------
