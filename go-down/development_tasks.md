@@ -646,6 +646,7 @@
 - [x] First signed `.aab` built successfully (~68 MB)
 - [x] Rebuilt as `hexdrop-v1.0-2.aab` (versionCode 2, targetSdk 35, ~66 MB) — accepted by Play Console with no errors
 - [x] Rebuilt as `hexdrop-v1.0-3.aab` (versionCode 3, ~66 MB) — includes long-session interstitial logic
+- [x] Rebuilt as `hexdrop-v1.0-4.aab` (versionCode 4, 66.3 MB, 2026-06-04) — localized IAP prices + restore button + long-session interstitial
 
 ### Player-Facing Content ✅
 - [x] All in-game Chinese text translated to English (scene Text, .uxml labels, prefab block names, BG zone names, format strings)
@@ -663,7 +664,7 @@
 
 ### Google Play Console ⏳ — current focus
 - [x] Developer account ($25 one-time)
-- [ ] Complete Merchant Account setup (Monetization setup → bank + tax) — required before activating IAP products
+- [x] Complete Merchant Account setup (Monetization setup → bank + tax) — payment profile verified 2026-06-04 (W-8BEN approved, 15% service tier, bank statement verified)
 - [x] Create app: name `Hex Drop`, package `com.chriszhang.hexdrop`, Free + Game
 - [x] App content declarations:
   - [x] App access (no restrictions)
@@ -678,7 +679,7 @@
 - [x] Add internal testers email list + opt-in URL: https://play.google.com/apps/internaltest/4701276858692541675
 - [x] On-device install verified via opt-in URL (new logo, English UI, core gameplay, test ads, no DEBUG button)
 - [ ] Upload `hexdrop-v1.0-3.aab` (versionCode 3) to Internal Testing — long-session interstitial build
-- [ ] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs must match `IAPService.cs` exactly) — blocked on Merchant Account
+- [x] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs match `IAPService.cs` exactly, all activated 2026-06-04) — no_ads $2.99, coins $0.99/$2.99/$5.99/$9.99 USD base
 
 ### iOS / App Store Connect — deferred
 - [ ] Apple Developer Program enrollment ($99/yr)
@@ -696,7 +697,7 @@
 
 ### Build & Version Discipline
 - Current `bundleVersion`: `1.0`
-- Current `AndroidBundleVersionCode`: `3` (built 2026-06-02, long-session ad build). Next upload must use `4`.
+- Current `AndroidBundleVersionCode`: `4` (set 2026-06-04, localized-price + restore + long-session ad build). Next upload must use `5`.
 - **Rule:** every `.aab` uploaded to Play Console MUST have a unique, monotonically increasing `AndroidBundleVersionCode`.
 - Keystore + passwords live off-repo (1Password). Unity prompts at every build.
 
