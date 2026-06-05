@@ -148,6 +148,15 @@ public class AdsService : MonoBehaviour
     {
         yield return null;
         yield return new WaitForSecondsRealtime(SDK_INITIALIZE_DELAY_SECONDS);
+#if UNITY_IOS && !UNITY_EDITOR
+        // iOS：初始化广告前先请求 App Tracking Transparency（Apple 要求，用于 IDFA 个性化广告）。
+        // 原生回调可能在后台线程，故轮询 IsComplete（最多等 30s）后再在主线程初始化 SDK。
+        AppTrackingTransparencyHelper.Request();
+        float attWaitStart = Time.realtimeSinceStartup;
+        while (!AppTrackingTransparencyHelper.IsComplete && Time.realtimeSinceStartup - attWaitStart < 30f)
+            yield return null;
+        Debug.Log($"[Ads] ATT status = {AppTrackingTransparencyHelper.CurrentStatus}");
+#endif
         InitializeSdk();
     }
 

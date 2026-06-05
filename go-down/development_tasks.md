@@ -678,8 +678,9 @@
 - [x] Upload first `.aab` to Internal Testing track (`hexdrop-v1.0-2.aab`, versionCode 2) — released, only non-blocking warnings
 - [x] Add internal testers email list + opt-in URL: https://play.google.com/apps/internaltest/4701276858692541675
 - [x] On-device install verified via opt-in URL (new logo, English UI, core gameplay, test ads, no DEBUG button)
-- [ ] Upload `hexdrop-v1.0-3.aab` (versionCode 3) to Internal Testing — long-session interstitial build
+- [x] Upload `hexdrop-v1.0-4.aab` (versionCode 4) to Internal Testing — localized IAP prices + restore + long-session ad build
 - [x] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs match `IAPService.cs` exactly, all activated 2026-06-04) — no_ads $2.99, coins $0.99/$2.99/$5.99/$9.99 USD base
+- [x] Sandbox IAP self-test on device (2026-06-05): localized prices shown, coin/no-ads purchases granted, Restore works
 
 ### iOS / App Store Connect — deferred
 - [ ] Apple Developer Program enrollment ($99/yr)
@@ -694,6 +695,8 @@
 - [ ] Crash reporting (Firebase Crashlytics or Unity Cloud Diagnostics)
 - [ ] Privacy policy hosted on a public URL (required for Play Console submission)
 - [ ] iOS ATT prompt + UMP/GDPR consent flow (only needed for iOS release)
+  - [x] ATT prompt implemented: native plugin `Assets/Plugins/iOS/HexDropATT.mm` + `AppTrackingTransparencyHelper.cs`; AdsService requests ATT before AdMob init on iOS; `IOSPostProcessBuild.cs` injects `NSUserTrackingUsageDescription` into Info.plist (2026-06-05)
+  - [ ] UMP/GDPR consent flow (EU/UK) — still pending
 
 ### Build & Version Discipline
 - Current `bundleVersion`: `1.0`
