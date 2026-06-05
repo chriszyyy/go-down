@@ -682,12 +682,17 @@
 - [x] Create In-app products: `no_ads_lifetime`, `coin_pack_100/500/1200/2500` (IDs match `IAPService.cs` exactly, all activated 2026-06-04) — no_ads $2.99, coins $0.99/$2.99/$5.99/$9.99 USD base
 - [x] Sandbox IAP self-test on device (2026-06-05): localized prices shown, coin/no-ads purchases granted, Restore works
 
-### iOS / App Store Connect — deferred
-- [ ] Apple Developer Program enrollment ($99/yr)
-- [ ] Create App ID with In-App Purchase capability
-- [ ] App Store Connect: create app, accept Paid Apps Agreement, fill banking/tax
-- [ ] Create matching IAP products (Non-Consumable + Consumable)
-- [ ] Create Sandbox testers, upload TestFlight build, verify IAP flow
+### iOS / App Store Connect
+- [x] Apple Developer Program enrollment ($99/yr) — paid + approved
+- [x] Create App ID `com.chriszhang.hexdrop` with In-App Purchase capability
+- [x] App Store Connect: create app "Hex Drop - Tower Puzzle" (display name Hex Drop), SKU `hexdrop`, primary lang English
+- [x] Paid Apps Agreement active (2026-06-05); bank (CMB 2202, CNY), W-8BEN treaty (App sales income), 国务院令810 compliant
+- [x] Create 5 IAP products (2026-06-05): `no_ads_lifetime` (Non-Consumable, $2.99), `coin_pack_100/500/1200/2500` (Consumable, $0.99/$2.99/$5.99/$9.99) — IDs match Android + code; sold in 174 regions (China mainland excluded)
+- [ ] DSA trader status verification (EU) — “正在审核”, needed for EU availability
+- [ ] Set IAP prices / app price tier where still pending; finalize price schedule
+- [ ] Mac: Unity iOS build → Xcode archive → TestFlight
+- [ ] Sandbox testers, verify IAP flow + ATT prompt on device
+- [ ] Fill version 1.0 store page (screenshots, description, keywords) → submit for review
 
 ### Hardening (before public release)
 - [ ] IAP receipt validation (currently client-trust — vulnerable to local hacks). Either local `CrossPlatformValidator` or server-side receipt check.
