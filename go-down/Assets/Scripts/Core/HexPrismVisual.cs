@@ -33,6 +33,10 @@ public class HexPrismVisual : MonoBehaviour
     public Vector3 lightDir = new Vector3(0.35f, 0.65f, -0.7f);
     public Color lightColor = Color.white;
     [Range(0f, 1f)] public float ambient = 0.45f;
+    [Range(0f, 1f)] public float halfLambert = 1f;
+    [Range(0f, 1f)] public float edgeLight = 0.2f;
+    [Range(0f, 1f)] public float edgeWhiten = 0.6f;
+    [Range(0f, 1f)] public float faceDarken = 0.12f;
     [Range(1f, 128f)] public float specPower = 24f;
     [Range(0f, 2f)] public float specStrength = 0.5f;
     public Color rimColor = Color.white;
@@ -121,6 +125,10 @@ public class HexPrismVisual : MonoBehaviour
         materialInstance.SetVector("_LightDir", new Vector4(d.x, d.y, d.z, 0f));
         materialInstance.SetColor("_LightColor", lightColor);
         materialInstance.SetFloat("_Ambient", ambient);
+        materialInstance.SetFloat("_HalfLambert", halfLambert);
+        materialInstance.SetFloat("_EdgeLight", edgeLight);
+        materialInstance.SetFloat("_EdgeWhiten", edgeWhiten);
+        materialInstance.SetFloat("_FaceDarken", faceDarken);
         materialInstance.SetFloat("_SpecPower", specPower);
         materialInstance.SetFloat("_SpecStrength", specStrength);
         materialInstance.SetColor("_RimColor", rimColor);

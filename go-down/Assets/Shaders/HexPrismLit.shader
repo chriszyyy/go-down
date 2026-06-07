@@ -9,12 +9,16 @@ Shader "GoDown/HexPrismLit"
         _BaseColor   ("Base Color", Color)      = (1, 0.78, 0.2, 1)
         _LightDir    ("Light Dir (World)", Vector) = (0.35, 0.65, -0.7, 0)
         _LightColor  ("Light Color", Color)     = (1, 1, 1, 1)
-        _Ambient     ("Ambient", Range(0,1))    = 0.45
+        _Ambient     ("Ambient", Range(0,1))    = 0.62
+        _HalfLambert ("Half Lambert (soften)", Range(0,1)) = 1
+        _EdgeLight   ("Edge Light (bevel frame)", Range(0,1)) = 0.28
+        _EdgeWhiten  ("Edge Whiten (bevel toward white)", Range(0,1)) = 0.6
+        _FaceDarken  ("Face Darken (flat center)", Range(0,1)) = 0.18
         _SpecPower   ("Spec Power", Range(1,128))   = 24
-        _SpecStrength("Spec Strength", Range(0,2))  = 0.5
+        _SpecStrength("Spec Strength", Range(0,2))  = 0.35
         _RimColor    ("Rim Color", Color)       = (1, 1, 1, 1)
         _RimPower    ("Rim Power", Range(0.5,8))    = 3
-        _RimStrength ("Rim Strength", Range(0,2))   = 0.25
+        _RimStrength ("Rim Strength", Range(0,2))   = 0.18
     }
 
     SubShader
@@ -53,6 +57,10 @@ Shader "GoDown/HexPrismLit"
             float4 _LightDir;
             float4 _LightColor;
             float  _Ambient;
+            float  _HalfLambert;
+            float  _EdgeLight;
+            float  _EdgeWhiten;
+            float  _FaceDarken;
             float  _SpecPower;
             float  _SpecStrength;
             float4 _RimColor;
@@ -79,11 +87,23 @@ Shader "GoDown/HexPrismLit"
                 float3 V = float3(0, 0, -1);
                 float3 H = normalize(L + V);
 
-                float diffuse = saturate(dot(N, L));
+                // 半 Lambert 包裹光照：背光面不再全黑，整体更亮、不“浓”
+                float ndl = dot(N, L);
+                float diffuse = lerp(saturate(ndl), ndl * 0.5 + 0.5, _HalfLambert);
+
                 float spec = pow(saturate(dot(N, H)), _SpecPower) * _SpecStrength;
                 float rim = pow(1.0 - saturate(dot(N, V)), _RimPower) * _RimStrength;
 
                 float3 col = _BaseColor.rgb * (_Ambient + diffuse * _LightColor.rgb);
+
+                // edge: 正面 N.xy≈0 -> edge≈0；斜面 N.xy 较大 -> edge≈1
+                float edge = saturate(length(N.xy) * 1.4142);
+                // 中间平面压暗（edge≈0 处乘 1-_FaceDarken，斜边保持）
+                col *= lerp(1.0 - _FaceDarken, 1.0, edge);
+                // 斜切边亮边框：边框颜色朝白色提亮，让暗色（红/蓝/紫）也有明显亮边
+                float3 edgeCol = lerp(_BaseColor.rgb, float3(1, 1, 1), _EdgeWhiten);
+                col += edgeCol * edge * _EdgeLight;
+
                 col += spec * _LightColor.rgb;
                 col += rim * _RimColor.rgb;
 

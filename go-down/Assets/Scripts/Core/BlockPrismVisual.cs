@@ -18,20 +18,27 @@ public class BlockPrismVisual : MonoBehaviour
     public float thickness = 0.45f;
 
     [Tooltip("外轮廓斜切在平面方向的宽度（格子单位）")]
-    public float bevelWidth = 0.14f;
+    public float bevelWidth = 0.08f;
 
     [Tooltip("斜切沿 Z 方向的深度")]
     public float bevelDepth = 0.12f;
 
+    [Tooltip("外凸角圆角半径（格子单位，0=直角）")]
+    public float cornerRadius = 0.12f;
+
     [Header("光照（世界空间，固定方向）")]
     public Vector3 lightDir = new Vector3(0.35f, 0.65f, -0.7f);
     public Color lightColor = Color.white;
-    [Range(0f, 1f)] public float ambient = 0.55f;
+    [Range(0f, 1f)] public float ambient = 0.45f;
+    [Range(0f, 1f)] public float halfLambert = 1f;
+    [Range(0f, 1f)] public float edgeLight = 0.5f;
+    [Range(0f, 1f)] public float edgeWhiten = 0.35f;
+    [Range(0f, 1f)] public float faceDarken = 0.22f;
     [Range(1f, 128f)] public float specPower = 18f;
-    [Range(0f, 2f)] public float specStrength = 0.35f;
+    [Range(0f, 2f)] public float specStrength = 0.22f;
     public Color rimColor = Color.white;
     [Range(0.5f, 8f)] public float rimPower = 3.5f;
-    [Range(0f, 2f)] public float rimStrength = 0.18f;
+    [Range(0f, 2f)] public float rimStrength = 0.14f;
 
     private TowerBlock block;
     private SpriteRenderer spriteRenderer;
@@ -123,6 +130,10 @@ public class BlockPrismVisual : MonoBehaviour
         materialInstance.SetVector("_LightDir", new Vector4(d.x, d.y, d.z, 0f));
         materialInstance.SetColor("_LightColor", lightColor);
         materialInstance.SetFloat("_Ambient", ambient);
+        materialInstance.SetFloat("_HalfLambert", halfLambert);
+        materialInstance.SetFloat("_EdgeLight", edgeLight);
+        materialInstance.SetFloat("_EdgeWhiten", edgeWhiten);
+        materialInstance.SetFloat("_FaceDarken", faceDarken);
         materialInstance.SetFloat("_SpecPower", specPower);
         materialInstance.SetFloat("_SpecStrength", specStrength);
         materialInstance.SetColor("_RimColor", rimColor);
@@ -154,8 +165,10 @@ public class BlockPrismVisual : MonoBehaviour
 
         // 追踪所有外轮廓闭环（CCW，内部在左侧）
         var loops = TraceOutlineLoops(cells);
-        foreach (var loop in loops)
+        foreach (var rawLoop in loops)
         {
+            // 外凸角做圆角处理（凹角保持直角）
+            var loop = RoundCorners(rawLoop, cornerRadius);
             int n = loop.Count;
             if (n < 3) continue;
 
@@ -171,7 +184,10 @@ public class BlockPrismVisual : MonoBehaviour
                 // 内法线 = 方向左侧（内部在左）
                 Vector2 nIn = new Vector2(-dIn.y, dIn.x);
                 Vector2 nOut = new Vector2(-dOut.y, dOut.x);
-                inset[i] = cur + w * (nIn + nOut);
+                // 归一化 miter：偏移量沿平分线、垂直距离恒为 w（对圆弧上近共线点也正确）
+                float denom = 1f + Vector2.Dot(nIn, nOut);
+                if (denom < 0.0001f) denom = 0.0001f;
+                inset[i] = cur + w * (nIn + nOut) / denom;
             }
 
             // 正面（内缩多边形）三角化，法线 -Z
@@ -284,6 +300,56 @@ public class BlockPrismVisual : MonoBehaviour
     private static void AddEdge(Dictionary<(int, int), (int, int)> edges, (int, int) s, (int, int) e)
     {
         edges[s] = e;
+    }
+
+    /// <summary>
+    /// 对外轮廓的“外凸角”（CCW 左转角）做圆角处理；凹角（右转）保持直角不变。
+    /// 通过在凸角处插入一小段圆弧顶点实现，圆弧半径受相邻边长一半约束。
+    /// </summary>
+    private static List<Vector2> RoundCorners(List<Vector2> loop, float radius)
+    {
+        if (radius <= 0.0001f) return loop;
+        int n = loop.Count;
+        if (n < 3) return loop;
+
+        const int SEG = 3; // 每个圆角分段数
+        var result = new List<Vector2>(n * (SEG + 1));
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 prev = loop[(i - 1 + n) % n];
+            Vector2 cur = loop[i];
+            Vector2 next = loop[(i + 1) % n];
+            Vector2 din = (cur - prev).normalized;
+            Vector2 dout = (next - cur).normalized;
+            float cross = din.x * dout.y - din.y * dout.x; // CCW 凸角 > 0
+
+            float lenIn = (cur - prev).magnitude;
+            float lenOut = (next - cur).magnitude;
+            float r = Mathf.Min(radius, lenIn * 0.5f, lenOut * 0.5f);
+
+            if (cross > 0.5f && r > 0.0001f)
+            {
+                Vector2 a = cur - din * r;                         // 入边切点
+                Vector2 b = cur + dout * r;                        // 出边切点
+                Vector2 c = a + new Vector2(-din.y, din.x) * r;    // 圆心（内侧）
+                float angA = Mathf.Atan2(a.y - c.y, a.x - c.x);
+                float angB = Mathf.Atan2(b.y - c.y, b.x - c.x);
+                float delta = angB - angA;
+                while (delta <= 0f) delta += 2f * Mathf.PI;
+                while (delta > Mathf.PI) delta -= 2f * Mathf.PI;   // 取短弧
+                for (int s = 0; s <= SEG; s++)
+                {
+                    float t = (float)s / SEG;
+                    float ang = angA + delta * t;
+                    result.Add(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * r);
+                }
+            }
+            else
+            {
+                result.Add(cur); // 凹角 / 直线：保留
+            }
+        }
+        return result;
     }
 
     /// <summary>
