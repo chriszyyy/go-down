@@ -9,6 +9,11 @@ public class TowerBuilder : MonoBehaviour
     [Range(0f, 1f)]
     [Tooltip("生成彩色特殊方块的概率（每生成一个方块抽一次）。例如 0.02 = 2%")]
     [SerializeField] private float specialBlockChance = 0.02f;
+
+    [Header("陷阱方块")]
+    [Range(0f, 1f)]
+    [Tooltip("每生成一批塔时，生成一个陷阱方块的概率。命中后在该批的单格方块中随机选一个设为陷阱（黑色，点击会连带消除相邻方块）")]
+    [SerializeField] private float trapBlockChance = 2f;
     [Header("塔配置")]
     [Tooltip("塔的层数")]
     public int towerLayers = 8;
@@ -319,6 +324,9 @@ public class TowerBuilder : MonoBehaviour
             FillLayerWithGrid(layer, startHeight, gridOccupied, towerLayers);
         }
 
+        // 本批塔按概率植入一个陷阱方块
+        TrySpawnTrapInBatch(startHeight, startHeight + towerLayers);
+
         currentGeneratedMinY = startHeight;
         lastGeneratedMinY = currentGeneratedMinY;
 
@@ -560,6 +568,72 @@ public class TowerBuilder : MonoBehaviour
         coinReward.hexagonBallTag = "HexagonBall";
     }
 
+    /// <summary>
+    /// 在刚生成的一批塔中按概率植入一个陷阱方块：
+    /// 命中后，在该批 [batchMinY, batchMaxY] 范围内的所有方块中（彩虹特殊方块除外）随机选一个设为陷阱。
+    /// </summary>
+    void TrySpawnTrapInBatch(float batchMinY, float batchMaxY)
+    {
+        if (UnityEngine.Random.value >= trapBlockChance) return;
+
+        var candidates = new System.Collections.Generic.List<TowerBlock>();
+        foreach (Transform child in transform)
+        {
+            if (child == null) continue;
+            if (child.gameObject == hexagonBall) continue;
+
+            float y = child.position.y;
+            if (y < batchMinY - 0.5f || y > batchMaxY + 0.5f) continue;
+
+            TowerBlock tb = child.GetComponent<TowerBlock>();
+            if (tb == null) continue;
+
+            // 排除彩虹特殊方块（带 RainbowGlowVisual 的不做陷阱）
+            if (child.GetComponent("RainbowGlowVisual") != null) continue;
+
+            // 已是陷阱则跳过
+            if (tb.GetComponent<TrapBlock>() != null) continue;
+
+            candidates.Add(tb);
+        }
+
+        if (candidates.Count == 0) return;
+
+        TowerBlock chosen = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+        ApplyTrapBlock(chosen);
+    }
+
+    /// <summary>
+    /// 把指定方块设为陷阱：剥离可能的彩色特殊效果、外观锁定为黑色、附加 TrapBlock 行为。
+    /// </summary>
+    void ApplyTrapBlock(TowerBlock tb)
+    {
+        if (tb == null) return;
+        GameObject block = tb.gameObject;
+
+        // 若该格恰好被选为彩色特殊块，剥离其特殊效果，避免与陷阱叠加
+        var rainbow = block.GetComponent("RainbowGlowVisual");
+        if (rainbow != null) Destroy(rainbow);
+        var coinReward = block.GetComponent<RainbowCoinReward>();
+        if (coinReward != null) Destroy(coinReward);
+        tb.scoreMultiplier = 1;
+
+        // 外观锁定为黑色（BlockVisualStyle 在 GoDown.Visuals，用 SendMessage 调用避免编译期依赖）
+        Component style = block.GetComponent("BlockVisualStyle");
+        if (style != null)
+        {
+            style.SendMessage("ApplyStyleAndLock", Color.black, SendMessageOptions.DontRequireReceiver);
+        }
+        // 兜底：直接把根 SpriteRenderer 设为黑，并让消除动画从黑色淡出
+        tb.OverrideOriginalColor(Color.black);
+
+        // 附加陷阱行为
+        if (block.GetComponent<TrapBlock>() == null)
+        {
+            block.AddComponent<TrapBlock>();
+        }
+    }
+
     // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束
     bool[,] BuildSeamConstraintForNewSegment(float newSegmentStartY, int seamLayers, int newSegmentHeightLayers)
     {
@@ -693,6 +767,9 @@ public class TowerBuilder : MonoBehaviour
             int after = transform.childCount;
             if (after > before) placedBlocks += (after - before);
         }
+
+        // 本批塔按概率植入一个陷阱方块
+        TrySpawnTrapInBatch(segmentStartY, segmentStartY + heightLayers);
 
         // Debug.Log($"段生成统计: startY={segmentStartY:F2}, layers={heightLayers}, placedApprox={placedBlocks}, seamLayers={seamLayers}");
 

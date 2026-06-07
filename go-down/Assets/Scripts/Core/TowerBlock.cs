@@ -43,6 +43,9 @@ public class TowerBlock : MonoBehaviour
     protected Vector3 originalScale;
     protected Color originalColor;
 
+    /// <summary>是否正在消除中（已被点击/触发消除）。</summary>
+    public bool IsDestroying => isDestroying;
+
     // 静态事件
     public static event Action<TowerBlock> OnBlockDestroyed;
     public static event Action<TowerBlock, int> OnBlockScored; // 方块，得分

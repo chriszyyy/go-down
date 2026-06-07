@@ -140,7 +140,9 @@ public class RightToolbarUI : MonoBehaviour
 
         int need = Mathf.Max(1, rainbowConvertCount);
 
-        List<TowerBlock> candidates = new List<TowerBlock>(256);
+        // 可视范围内的候选：优先陷阱方块（trapCandidates），其次普通方块（normalCandidates）
+        List<TowerBlock> trapCandidates = new List<TowerBlock>(64);
+        List<TowerBlock> normalCandidates = new List<TowerBlock>(256);
         TowerBlock[] blocks = FindObjectsByType<TowerBlock>(FindObjectsSortMode.None);
 
         for (int i = 0; i < blocks.Length; i++)
@@ -158,25 +160,21 @@ public class RightToolbarUI : MonoBehaviour
             if (vp.z < 0f) continue;
             if (vp.x < 0f || vp.x > 1f || vp.y < 0f || vp.y > 1f) continue;
 
-            candidates.Add(b);
+            if (b.GetComponent<TrapBlock>() != null)
+                trapCandidates.Add(b);
+            else
+                normalCandidates.Add(b);
         }
 
-        if (candidates.Count == 0) return;
+        if (trapCandidates.Count == 0 && normalCandidates.Count == 0) return;
 
-        int convert = Mathf.Min(need, candidates.Count);
         bool convertedAny = false;
-        for (int i = 0; i < convert; i++)
-        {
-            int idx = Random.Range(0, candidates.Count);
-            TowerBlock picked = candidates[idx];
-            candidates.RemoveAt(idx);
+        int remaining = need;
 
-            if (picked != null)
-            {
-                ApplySpecialBlock(picked.gameObject);
-                convertedAny = true;
-            }
-        }
+        // 先把陷阱方块变成彩色方块（优先），再用剩余配额转换普通方块
+        remaining -= ConvertRandomFromList(trapCandidates, remaining, ref convertedAny);
+        if (remaining > 0)
+            ConvertRandomFromList(normalCandidates, remaining, ref convertedAny);
 
         if (convertedAny && GameAudioController.Instance != null)
         {
@@ -184,9 +182,34 @@ public class RightToolbarUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 从 list 中随机抽取最多 count 个方块转换为彩色特殊方块，返回实际转换数量。
+    /// </summary>
+    private static int ConvertRandomFromList(List<TowerBlock> list, int count, ref bool convertedAny)
+    {
+        int convert = Mathf.Min(count, list.Count);
+        for (int i = 0; i < convert; i++)
+        {
+            int idx = Random.Range(0, list.Count);
+            TowerBlock picked = list[idx];
+            list.RemoveAt(idx);
+
+            if (picked != null)
+            {
+                ApplySpecialBlock(picked.gameObject);
+                convertedAny = true;
+            }
+        }
+        return convert;
+    }
+
     private static void ApplySpecialBlock(GameObject block)
     {
         if (block == null) return;
+
+        // 若该方块是陷阱方块，转换前先移除陷阱行为（不再连带消除相邻方块）
+        TrapBlock trap = block.GetComponent<TrapBlock>();
+        if (trap != null) Destroy(trap);
 
         // Attach animated rainbow gradient + glow (without a compile-time dependency on Visuals asmdef).
         if (block.GetComponent("RainbowGlowVisual") == null)
