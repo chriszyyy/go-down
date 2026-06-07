@@ -211,6 +211,11 @@ public class RightToolbarUI : MonoBehaviour
         TrapBlock trap = block.GetComponent<TrapBlock>();
         if (trap != null) Destroy(trap);
 
+        // 若该方块是 3D 立体方块，转换前先移除立体视觉（其 OnDestroy 会还原 flat sprite），
+        // 让彩虹流动效果（方案 A：彩虹仍用 flat sprite）正常显示
+        BlockPrismVisual prism = block.GetComponent<BlockPrismVisual>();
+        if (prism != null) DestroyImmediate(prism);
+
         // Attach animated rainbow gradient + glow (without a compile-time dependency on Visuals asmdef).
         if (block.GetComponent("RainbowGlowVisual") == null)
         {

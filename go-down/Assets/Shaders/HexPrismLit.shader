@@ -20,7 +20,7 @@ Shader "GoDown/HexPrismLit"
     SubShader
     {
         Tags { "Queue"="Geometry" "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
-        Cull Back
+        Cull Off
         ZWrite On
         ZTest LEqual
 

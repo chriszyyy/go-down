@@ -14,6 +14,9 @@ public class TowerBuilder : MonoBehaviour
     [Range(0f, 1f)]
     [Tooltip("每生成一批塔时，生成一个陷阱方块的概率。命中后在该批的单格方块中随机选一个设为陷阱（黑色，点击会连带消除相邻方块）")]
     [SerializeField] private float trapBlockChance = 2f;
+    [Header("3D 立体方块")]
+    [Tooltip("是否给方块附加 3D 立体视觉（BlockPrismVisual）。彩虹特殊方块除外，仍保持流动效果")]
+    [SerializeField] private bool enable3DBlockVisual = true;
     [Header("塔配置")]
     [Tooltip("塔的层数")]
     public int towerLayers = 8;
@@ -492,6 +495,7 @@ public class TowerBuilder : MonoBehaviour
         block.name = $"Block_L{layer}_C{col}_{blockComponent.blockTypeName}_R{rotation}";
 
         TryApplySpecialBlockVisual(block);
+        TryApply3DBlockVisual(block);
 
         // 标记段内占用
         if (occupied != null)
@@ -566,6 +570,22 @@ public class TowerBuilder : MonoBehaviour
 
         coinReward.coinsPerActivation = 5;
         coinReward.hexagonBallTag = "HexagonBall";
+    }
+
+    /// <summary>
+    /// 给方块附加 3D 立体视觉。彩虹特殊方块（已带 RainbowGlowVisual）跳过，保持流动效果（方案 A）。
+    /// </summary>
+    void TryApply3DBlockVisual(GameObject block)
+    {
+        if (!enable3DBlockVisual || block == null) return;
+
+        // 彩虹方块保持原 flat 流动效果，不做 3D
+        if (block.GetComponent("RainbowGlowVisual") != null) return;
+
+        if (block.GetComponent<BlockPrismVisual>() == null)
+        {
+            block.AddComponent<BlockPrismVisual>();
+        }
     }
 
     /// <summary>
