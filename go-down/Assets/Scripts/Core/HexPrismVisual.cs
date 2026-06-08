@@ -32,8 +32,8 @@ public class HexPrismVisual : MonoBehaviour
     [Tooltip("世界空间光照方向（指向光源）。固定不随球旋转，故旋转时光影正确")]
     public Vector3 lightDir = new Vector3(0.35f, 0.65f, -0.7f);
     public Color lightColor = Color.white;
-    [Range(0f, 1f)] public float ambient = 0.45f;
-    [Range(0f, 1f)] public float halfLambert = 1f;
+    [Range(0f, 1f)] public float ambient = 0.32f;
+    [Range(0f, 1f)] public float halfLambert = 0.7f;
     [Range(0f, 1f)] public float edgeLight = 0.2f;
     [Range(0f, 1f)] public float edgeWhiten = 0.6f;
     [Range(0f, 1f)] public float faceDarken = 0.12f;
@@ -42,6 +42,15 @@ public class HexPrismVisual : MonoBehaviour
     public Color rimColor = Color.white;
     [Range(0.5f, 8f)] public float rimPower = 3f;
     [Range(0f, 2f)] public float rimStrength = 0.25f;
+
+    [Header("钻石/宝石质感")]
+    [Tooltip("启用宝石质感（菲涅尔透亮边 + 多面闪光 + 色散火彩）")]
+    public bool gem = true;
+    [Range(0f, 3f)] public float gemFresnel = 1.8f;
+    [Range(0f, 3f)] public float gemSparkle = 1.6f;
+    [Range(1f, 256f)] public float gemSparklePower = 140f;
+    [Range(0f, 1f)] public float gemDispersion = 0.18f;
+    [Range(0f, 1f)] public float gemTint = 0.2f;
 
     [Header("皮肤颜色 (与 HexagonSkinManager 的 skinId 对应)")]
     public Color goldColor = new Color(1.00f, 0.78f, 0.20f);
@@ -134,6 +143,12 @@ public class HexPrismVisual : MonoBehaviour
         materialInstance.SetColor("_RimColor", rimColor);
         materialInstance.SetFloat("_RimPower", rimPower);
         materialInstance.SetFloat("_RimStrength", rimStrength);
+        materialInstance.SetFloat("_Gem", gem ? 1f : 0f);
+        materialInstance.SetFloat("_GemFresnel", gemFresnel);
+        materialInstance.SetFloat("_GemSparkle", gemSparkle);
+        materialInstance.SetFloat("_GemSparklePower", gemSparklePower);
+        materialInstance.SetFloat("_GemDispersion", gemDispersion);
+        materialInstance.SetFloat("_GemTint", gemTint);
     }
 
     private void ApplySkinColor()

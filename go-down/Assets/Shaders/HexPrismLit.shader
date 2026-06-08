@@ -19,7 +19,13 @@ Shader "GoDown/HexPrismLit"
         _RimColor    ("Rim Color", Color)       = (1, 1, 1, 1)
         _RimPower    ("Rim Power", Range(0.5,8))    = 3
         _RimStrength ("Rim Strength", Range(0,2))   = 0.18
-    }
+        [Header(Gem)]
+        _Gem         ("Gem Enable (0/1)", Range(0,1)) = 0
+        _GemFresnel  ("Gem Fresnel (crystal rim)", Range(0,3)) = 1.2
+        _GemSparkle  ("Gem Sparkle Strength", Range(0,3)) = 1.4
+        _GemSparklePower ("Gem Sparkle Tightness", Range(1,256)) = 90
+        _GemDispersion ("Gem Dispersion (rainbow)", Range(0,1)) = 0.35
+        _GemTint     ("Gem Inner Brightness", Range(0,1)) = 0.5    }
 
     SubShader
     {
@@ -66,6 +72,12 @@ Shader "GoDown/HexPrismLit"
             float4 _RimColor;
             float  _RimPower;
             float  _RimStrength;
+            float  _Gem;
+            float  _GemFresnel;
+            float  _GemSparkle;
+            float  _GemSparklePower;
+            float  _GemDispersion;
+            float  _GemTint;
 
             Varyings HexVertex(Attributes IN)
             {
@@ -106,6 +118,34 @@ Shader "GoDown/HexPrismLit"
 
                 col += spec * _LightColor.rgb;
                 col += rim * _RimColor.rgb;
+
+                // ---------------- 宝石/钻石质感 ----------------
+                if (_Gem > 0.5)
+                {
+                    float ndv = saturate(dot(N, V));
+                    // 菲涅尔：边缘透亮、中间略透，水晶质感
+                    float fres = pow(1.0 - ndv, _GemFresnel);
+
+                    // 多面闪光：用世界法线生成高频闪烁，随旋转在棱面上走
+                    float facet = pow(saturate(dot(N, H)), _GemSparklePower);
+                    // 叠加一层偏移高光，制造多个闪点
+                    float3 H2 = normalize(L + V + float3(0.35, -0.2, 0.0));
+                    facet += pow(saturate(dot(N, H2)), _GemSparklePower) * 0.7;
+                    float sparkle = facet * _GemSparkle;
+
+                    // 色散：边缘按朝向分出彩虹（钻石火彩）
+                    float hue = frac(N.x * 0.5 + N.y * 0.5 + 0.5);
+                    float3 disp = float3(
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.00)),
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.33)),
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.66)));
+                    float3 dispCol = lerp(float3(1,1,1), disp, _GemDispersion) * fres;
+
+                    // 菲涅尔透亮边（仅边缘，不冲淡中间底色）+ 尖锐闪光
+                    // 不再全局提亮内部，保留深色高饱和
+                    col += dispCol * (0.25 + 0.25 * _GemTint) * fres;
+                    col += sparkle * _LightColor.rgb;
+                }
 
                 return half4(col, _BaseColor.a);
             }

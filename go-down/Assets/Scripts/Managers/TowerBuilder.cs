@@ -12,8 +12,11 @@ public class TowerBuilder : MonoBehaviour
 
     [Header("陷阱方块")]
     [Range(0f, 1f)]
-    [Tooltip("每生成一批塔时，生成一个陷阱方块的概率。命中后在该批的单格方块中随机选一个设为陷阱（黑色，点击会连带消除相邻方块）")]
-    [SerializeField] private float trapBlockChance = 0.33f;
+    [Tooltip("每生成一批塔时，生成陷阱方块的概率。命中后随机选取 trapBlockCount 个方块设为陷阱")]
+    [SerializeField] private float trapBlockChance = 0.5f;
+
+    [Tooltip("概率命中时，本批随机生成的陷阱方块数量")]
+    [SerializeField] private int trapBlockCount = 2;
     [Header("3D 立体方块")]
     [Tooltip("是否给方块附加 3D 立体视觉（BlockPrismVisual）。彩虹特殊方块除外，仍保持流动效果")]
     [SerializeField] private bool enable3DBlockVisual = true;
@@ -619,8 +622,15 @@ public class TowerBuilder : MonoBehaviour
 
         if (candidates.Count == 0) return;
 
-        TowerBlock chosen = candidates[UnityEngine.Random.Range(0, candidates.Count)];
-        ApplyTrapBlock(chosen);
+        // 随机选取 trapBlockCount 个不重复的方块设为陷阱
+        int want = Mathf.Clamp(trapBlockCount, 1, candidates.Count);
+        for (int i = 0; i < want; i++)
+        {
+            int idx = UnityEngine.Random.Range(0, candidates.Count);
+            TowerBlock chosen = candidates[idx];
+            candidates.RemoveAt(idx);
+            ApplyTrapBlock(chosen);
+        }
     }
 
     /// <summary>
