@@ -33,8 +33,21 @@ public class CoinFloatingPopupSpawner : MonoBehaviour
     [Tooltip("Optional override font. If null, tries built-in fonts then OS fallback.")]
     public Font fontOverride;
 
+    [Header("Coin Icon")]
+    [Tooltip("Show an animated coin sprite next to the +N text.")]
+    public bool showCoinIcon = true;
+
+    [Tooltip("Coin icon size in UI pixels.")]
+    public float coinIconSize = 96f;
+
+    [Tooltip("Resources path of the coin sprite (loaded at runtime).")]
+    public string coinSpriteResource = "coin100";
+
     [Tooltip("If null, uses Camera.main.")]
     public Camera worldCamera;
+
+    private static Sprite s_coinSprite;
+    private static bool s_coinSpriteTried;
 
     private Canvas canvas;
     private RectTransform popupRoot;
@@ -130,6 +143,44 @@ public class CoinFloatingPopupSpawner : MonoBehaviour
             rainbowStartHue: 0f,
             rainbowCyclesOverLifetime: 0f
         );
+
+        SpawnCoinIcon(localPoint);
+    }
+
+    private void SpawnCoinIcon(Vector2 textLocalPoint)
+    {
+        if (!showCoinIcon) return;
+        Sprite coin = GetCoinSprite();
+        if (coin == null) return;
+
+        GameObject go = new GameObject("CoinIcon", typeof(RectTransform), typeof(Image), typeof(CoinIconPopup));
+        go.transform.SetParent(popupRoot, false);
+        go.transform.SetAsLastSibling();
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(coinIconSize, coinIconSize);
+        // 金币图标放在文字左侧
+        rt.anchoredPosition = textLocalPoint + new Vector2(-coinIconSize * 0.75f, 0f);
+
+        Image img = go.GetComponent<Image>();
+        img.sprite = coin;
+        img.raycastTarget = false;
+        img.preserveAspect = true;
+
+        go.GetComponent<CoinIconPopup>().Initialize(
+            rt, img, Now(), Mathf.Max(0.05f, lifetimeSeconds), driftUpPixels, useUnscaledTime, 1f);
+    }
+
+    private Sprite GetCoinSprite()
+    {
+        if (s_coinSpriteTried) return s_coinSprite;
+        s_coinSpriteTried = true;
+        s_coinSprite = Resources.Load<Sprite>(coinSpriteResource);
+        if (s_coinSprite == null)
+            Debug.LogWarning($"CoinFloatingPopupSpawner: coin sprite '{coinSpriteResource}' not found in Resources. Coin icon disabled.");
+        return s_coinSprite;
     }
 
     private void EnsureUI()

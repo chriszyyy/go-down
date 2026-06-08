@@ -624,7 +624,7 @@ public class TowerBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// 把指定方块设为陷阱：剥离可能的彩色特殊效果、外观锁定为黑色、附加 TrapBlock 行为。
+    /// 把指定方块设为陷阱：剥离可能的彩色特殊效果、附加 TrapBlock（陷阱外观 + 连带消除 + 隐身）。
     /// </summary>
     void ApplyTrapBlock(TowerBlock tb)
     {
@@ -638,21 +638,32 @@ public class TowerBuilder : MonoBehaviour
         if (coinReward != null) Destroy(coinReward);
         tb.scoreMultiplier = 1;
 
-        // 外观锁定为黑色（BlockVisualStyle 在 GoDown.Visuals，用 SendMessage 调用避免编译期依赖）
+        // 陷阱深色 + 隐身后要伪装成的“正常方块”颜色（从普通调色板随机取）
+        Color trapColor = new Color(0.07f, 0.07f, 0.11f, 1f);
+        Color normalTarget = s_normalBlockPalette[UnityEngine.Random.Range(0, s_normalBlockPalette.Length)];
+
+        // 锁定 BlockVisualStyle，避免它在 Start 时再随机上色覆盖陷阱色
         Component style = block.GetComponent("BlockVisualStyle");
         if (style != null)
         {
-            style.SendMessage("ApplyStyleAndLock", Color.black, SendMessageOptions.DontRequireReceiver);
+            style.SendMessage("ApplyStyleAndLock", trapColor, SendMessageOptions.DontRequireReceiver);
         }
-        // 兜底：直接把根 SpriteRenderer 设为黑，并让消除动画从黑色淡出
-        tb.OverrideOriginalColor(Color.black);
+        tb.OverrideOriginalColor(trapColor);
 
-        // 附加陷阱行为
-        if (block.GetComponent<TrapBlock>() == null)
-        {
-            block.AddComponent<TrapBlock>();
-        }
+        var trap = block.GetComponent<TrapBlock>();
+        if (trap == null) trap = block.AddComponent<TrapBlock>();
+        trap.Configure(trapColor, normalTarget);
     }
+
+    // 普通方块调色板（与 BlockVisualStyle 默认 5 色一致），陷阱隐身时随机伪装成其中之一
+    private static readonly Color[] s_normalBlockPalette = new[]
+    {
+        new Color(0.012f, 0.388f, 0.941f, 1f),
+        new Color(0.063f, 0.698f, 0.349f, 1f),
+        new Color(0.498f, 0.169f, 0.945f, 1f),
+        new Color(0.992f, 0.706f, 0.051f, 1f),
+        new Color(0.933f, 0.169f, 0.396f, 1f),
+    };
 
     // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束
     bool[,] BuildSeamConstraintForNewSegment(float newSegmentStartY, int seamLayers, int newSegmentHeightLayers)

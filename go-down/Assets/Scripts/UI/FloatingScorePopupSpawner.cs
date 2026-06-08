@@ -30,6 +30,9 @@ public class FloatingScorePopupSpawner : MonoBehaviour
     [Tooltip("Font size for popups during reward mode.")]
     public int rewardFontSize = 34;
 
+    [Tooltip("Overall size multiplier applied to score popups (1.3 = +30%).")]
+    public float fontSizeMultiplier = 1.3f;
+
     [Tooltip("Normal popup color when not using rainbow.")]
     public Color normalColor = Color.white;
 
@@ -124,7 +127,9 @@ public class FloatingScorePopupSpawner : MonoBehaviour
         // Priority: special/rainbow block > reward mode > normal.
         int size = isSpecialBlock ? specialFontSize : (isRewardMode ? rewardFontSize : normalFontSize);
         size += extraFontSize;
+        size = Mathf.RoundToInt(size * Mathf.Max(0.1f, fontSizeMultiplier));
         t.fontSize = Mathf.Max(8, size);
+        t.fontStyle = FontStyle.Bold;
         t.font = fontOverride != null ? fontOverride : (TryGetBuiltinFont() ?? GetFallbackFont());
         bool useRainbow = (isRewardMode && rewardUseRainbow) || (isSpecialBlock && specialUseRainbow);
         t.color = useRainbow ? Color.white : (isSpecialBlock ? specialColor : normalColor);

@@ -51,6 +51,10 @@ public class StartMenuPanel : MonoBehaviour
         // 这样起始菜单期间 tower 不会被构建、物理也不会跑）
         if (gameRoot != null) gameRoot.SetActive(true);
 
+        // 首次进入：显示新手教程（在隐藏菜单之前调用，教程会 Acquire 暂停，
+        // 保证 UIPause 引用计数不出现一帧归零的间隙）
+        TutorialOverlay.TryShowFirstTime();
+
         // 隐藏菜单 → 进入游戏
         gameObject.SetActive(false);
     }
