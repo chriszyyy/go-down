@@ -28,6 +28,9 @@ public class HexPrismVisual : MonoBehaviour
     [Tooltip("斜切边沿 Z 方向的深度（越大立体感越强）")]
     public float bevelDepth = 0.16f;
 
+    [Tooltip("正面中心凸起高度（朝相机方向，形成六个三角切面）。0=平面")]
+    public float crownHeight = 0.06f;
+
     [Header("光照")]
     [Tooltip("世界空间光照方向（指向光源）。固定不随球旋转，故旋转时光影正确")]
     public Vector3 lightDir = new Vector3(0.3f, 0.65f, -0.6f);
@@ -63,6 +66,12 @@ public class HexPrismVisual : MonoBehaviour
     private MeshRenderer meshRenderer;
     private Material materialInstance;
     private GameObject meshObject;
+    private MeshFilter meshFilter;
+    private float lastRadius;
+    private float lastThickness;
+    private float lastBevelWidth;
+    private float lastBevelDepth;
+    private float lastCrownHeight;
 
     [Header("调试")]
     [Tooltip("勾选后，Play 模式下每帧重新推送参数到材质，可在 Inspector 实时调整外观（确定数值后取消以省性能）")]
@@ -80,6 +89,7 @@ public class HexPrismVisual : MonoBehaviour
         // 实时调参：勾选 liveTweak 时每帧重推材质参数，方便在 Play 中拖滑块看效果
         if (liveTweak && materialInstance != null)
         {
+            RebuildMeshIfGeometryChanged();
             ApplyLightParams();
             ApplySkinColor();
         }
@@ -125,8 +135,9 @@ public class HexPrismVisual : MonoBehaviour
         meshObject.transform.localRotation = Quaternion.identity;
         meshObject.transform.localScale = Vector3.one;
 
-        var mf = meshObject.AddComponent<MeshFilter>();
-        mf.sharedMesh = BuildHexPrismMesh();
+        meshFilter = meshObject.AddComponent<MeshFilter>();
+        meshFilter.sharedMesh = BuildHexPrismMesh();
+        CacheGeometryParams();
 
         meshRenderer = meshObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = materialInstance;
@@ -139,6 +150,31 @@ public class HexPrismVisual : MonoBehaviour
             meshRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
             meshRenderer.sortingOrder = spriteRenderer.sortingOrder;
         }
+    }
+
+    private void RebuildMeshIfGeometryChanged()
+    {
+        if (meshFilter == null) return;
+        if (Mathf.Approximately(lastRadius, radius) &&
+            Mathf.Approximately(lastThickness, thickness) &&
+            Mathf.Approximately(lastBevelWidth, bevelWidth) &&
+            Mathf.Approximately(lastBevelDepth, bevelDepth) &&
+            Mathf.Approximately(lastCrownHeight, crownHeight))
+            return;
+
+        Mesh old = meshFilter.sharedMesh;
+        meshFilter.sharedMesh = BuildHexPrismMesh();
+        CacheGeometryParams();
+        if (old != null) Destroy(old);
+    }
+
+    private void CacheGeometryParams()
+    {
+        lastRadius = radius;
+        lastThickness = thickness;
+        lastBevelWidth = bevelWidth;
+        lastBevelDepth = bevelDepth;
+        lastCrownHeight = crownHeight;
     }
 
     private void ApplyLightParams()
@@ -226,22 +262,22 @@ public class HexPrismVisual : MonoBehaviour
         var norms = new System.Collections.Generic.List<Vector3>(64);
         var tris = new System.Collections.Generic.List<int>(128);
 
-        // ---- 正面（内六边形，法线 -Z，扇形三角化）----
-        int centerIdx = verts.Count;
-        verts.Add(new Vector3(0, 0, frontZ));
-        norms.Add(new Vector3(0, 0, -1));
-        int frontRingStart = verts.Count;
+        // ---- 正面宝石冠面：中心向相机方向凸起，形成 6 个三角切面 ----
+        // 相机沿 +Z 看，越小的 Z 越靠近相机，所以 crownZ = frontZ - crownHeight。
+        float crownZ = frontZ - Mathf.Max(0f, crownHeight);
+        Vector3 crown = new Vector3(0f, 0f, crownZ);
         for (int i = 0; i < 6; i++)
         {
-            verts.Add(new Vector3(dir[i].x * rInner, dir[i].y * rInner, frontZ));
-            norms.Add(new Vector3(0, 0, -1));
-        }
-        for (int i = 0; i < 6; i++)
-        {
-            int a = frontRingStart + i;
-            int b = frontRingStart + (i + 1) % 6;
-            // 朝 -Z 的面：保证从 -Z 方向看是正面（顺时针）
-            tris.Add(centerIdx); tris.Add(b); tris.Add(a);
+            int j = (i + 1) % 6;
+            Vector3 a = new Vector3(dir[i].x * rInner, dir[i].y * rInner, frontZ);
+            Vector3 b = new Vector3(dir[j].x * rInner, dir[j].y * rInner, frontZ);
+            Vector3 n = Vector3.Cross(b - crown, a - crown).normalized;
+            if (n.z > 0f) n = -n; // 始终朝向相机方向(-Z)
+
+            int idx = verts.Count;
+            verts.Add(crown); verts.Add(b); verts.Add(a);
+            norms.Add(n); norms.Add(n); norms.Add(n);
+            tris.Add(idx); tris.Add(idx + 1); tris.Add(idx + 2);
         }
 
         // ---- 斜切边（每个面独立顶点，平面着色，法线朝外 + 朝相机）----

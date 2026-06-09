@@ -23,10 +23,10 @@ public class TrapBlock : MonoBehaviour
 
     [Header("隐身")]
     [Tooltip("进入可视范围后，多少秒开始隐身蜕变")]
-    public float stealthDelay = 3f;
+    public float stealthDelay = 2.5f;
 
     [Tooltip("隐身蜕变（陷阱外观 -> 正常方块）持续时长")]
-    public float stealthFadeDuration = 2f;
+    public float stealthFadeDuration = 1f;
 
     private TowerBlock self;
     private SpriteRenderer rootSprite;

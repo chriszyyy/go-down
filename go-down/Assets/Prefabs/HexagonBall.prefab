@@ -203,6 +203,7 @@ MonoBehaviour:
   thickness: 0.5
   bevelWidth: 0.22
   bevelDepth: 0.16
+  crownHeight: 0.06
   lightDir: {x: 0.3, y: 0.65, z: -0.6}
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   ambient: 0.4
