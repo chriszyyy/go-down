@@ -66,7 +66,7 @@ public class HexPrismVisual : MonoBehaviour
 
     [Header("调试")]
     [Tooltip("勾选后，Play 模式下每帧重新推送参数到材质，可在 Inspector 实时调整外观（确定数值后取消以省性能）")]
-    public bool liveTweak = true;
+    public bool liveTweak = false;
 
     private void Awake()
     {
