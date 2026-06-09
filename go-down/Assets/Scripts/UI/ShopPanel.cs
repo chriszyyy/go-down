@@ -530,11 +530,12 @@ public class ShopPanel : MonoBehaviour
         currentSkinId = skinId;
 
         SwapHexIconClass(skinIcon, skinId);
+        int price = HexagonSkinManager.GetUnlockPrice(skinId);
         if (skinPrompt != null)
-            skinPrompt.text = $"Unlock this hexagon skin for {HexagonSkinManager.UNLOCK_PRICE} coins?";
+            skinPrompt.text = $"Unlock this hexagon skin for {price} coins?";
 
         int coins = CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0;
-        if (skinConfirm != null) skinConfirm.SetEnabled(coins >= HexagonSkinManager.UNLOCK_PRICE);
+        if (skinConfirm != null) skinConfirm.SetEnabled(coins >= price);
 
         if (buyView != null) buyView.AddToClassList("buy-modal__view--hidden");
         if (boughtView != null) boughtView.AddToClassList("buy-modal__view--hidden");
@@ -547,7 +548,8 @@ public class ShopPanel : MonoBehaviour
     private void ConfirmSkinPurchase()
     {
         if (string.IsNullOrEmpty(currentSkinId)) return;
-        if (CoinManager.Instance == null || !CoinManager.Instance.TrySpendCoins(HexagonSkinManager.UNLOCK_PRICE))
+        int price = HexagonSkinManager.GetUnlockPrice(currentSkinId);
+        if (CoinManager.Instance == null || !CoinManager.Instance.TrySpendCoins(price))
         {
             Debug.Log("[Shop] 金币不足，皮肤解锁失败");
             return;

@@ -284,6 +284,20 @@
 .item-thumb--coin-pack-1200 { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin1200.png"); }
 .item-thumb--coin-pack-2500 { background-image: url("project://database/Assets/UI/Sprites/CoinPacks/coin2500.png"); }
 
+/* 六边形球皮肤缩略图（BALLS 标签） */
+.item-thumb--hex {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-gold.png"); }
+.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-blue.png"); }
+.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-green.png"); }
+.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-purple.png"); }
+.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-red.png"); }
+.item-thumb--hex-rainbow { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-rainbow.png"); }
+
 .noads-hero {
     align-items: center;
     justify-content: flex-start;
@@ -780,11 +794,12 @@
     height: 170px;
     -unity-background-scale-mode: scale-to-fit;
 }
-.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/gold-hexagone.png?fileID=-1684458480&guid=4ce32de3a576b7643a3c86a3376391ea&type=3#gold-hexagone_0"); }
-.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/Hexagons/blue-hexagone.png?fileID=-841337993&guid=cee9848c9a954c34bb21ae251fb633e4&type=3#blue-hexagone_0"); }
-.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/Hexagons/green-hexagone.png?fileID=1616045908&guid=2894a84d219f8324f9374be44dc643ff&type=3#green-hexagone_0"); }
-.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/Hexagons/purple-hexagone.png?fileID=-988968859&guid=2928729c6bac41c4ea287fc78ad51901&type=3#purple-hexagone_0"); }
-.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/Hexagons/red-hexagone.png?fileID=-1688721910&guid=e17661c0cd3c7fa4daac1f5cbe923888&type=3#red-hexagone_0"); }
+.item-thumb--hex-gold   { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-gold.png"); }
+.item-thumb--hex-blue   { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-blue.png"); }
+.item-thumb--hex-green  { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-green.png"); }
+.item-thumb--hex-purple { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-purple.png"); }
+.item-thumb--hex-red    { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-red.png"); }
+.item-thumb--hex-rainbow { background-image: url("project://database/Assets/UI/Sprites/HexPreviews/hex-rainbow.png"); }
 
 /* skin-view 内的 confirm + cancel 并排按钮 */
 .buy-modal__skin-actions {

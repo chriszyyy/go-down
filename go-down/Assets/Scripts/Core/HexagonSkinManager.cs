@@ -17,8 +17,22 @@ public class HexagonSkinManager : MonoBehaviour
     public const int UNLOCK_PRICE = 500;
 
     /// <summary>支持的皮肤 ID（与 UXML 中卡片 name 后缀对应：item-hex-gold 等）。</summary>
-    public static readonly string[] AllSkinIds = new[] { "gold", "blue", "green", "purple", "red" };
+    public static readonly string[] AllSkinIds = new[] { "gold", "blue", "purple", "green", "red", "rainbow" };
     public const string DefaultSkinId = "gold";
+
+    public static int GetUnlockPrice(string skinId)
+    {
+        switch (skinId)
+        {
+            case "blue": return 500;
+            case "purple": return 800;
+            case "green": return 1000;
+            case "red": return 1200;
+            case "rainbow": return 1500;
+            case "gold":
+            default: return UNLOCK_PRICE;
+        }
+    }
 
     public string SelectedSkinId { get; private set; } = DefaultSkinId;
 

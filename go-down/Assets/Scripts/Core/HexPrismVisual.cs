@@ -172,6 +172,19 @@ public class HexPrismVisual : MonoBehaviour
             ? HexagonSkinManager.Instance.SelectedSkinId
             : HexagonSkinManager.DefaultSkinId;
         materialInstance.SetColor("_BaseColor", GetColorForSkin(skin));
+
+        if (skin == "rainbow")
+        {
+            materialInstance.SetFloat("_GemDispersion", 1f);
+            materialInstance.SetFloat("_GemTint", 0.45f);
+            materialInstance.SetFloat("_GemSparkle", Mathf.Max(gemSparkle, 1.8f));
+        }
+        else
+        {
+            materialInstance.SetFloat("_GemDispersion", gemDispersion);
+            materialInstance.SetFloat("_GemTint", gemTint);
+            materialInstance.SetFloat("_GemSparkle", gemSparkle);
+        }
     }
 
     private Color GetColorForSkin(string skinId)
@@ -182,6 +195,7 @@ public class HexPrismVisual : MonoBehaviour
             case "green": return greenColor;
             case "purple": return purpleColor;
             case "red": return redColor;
+            case "rainbow": return new Color(1f, 0.78f, 0.25f, 1f);
             case "gold":
             default: return goldColor;
         }
