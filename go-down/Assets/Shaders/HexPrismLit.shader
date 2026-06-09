@@ -25,7 +25,10 @@ Shader "GoDown/HexPrismLit"
         _GemSparkle  ("Gem Sparkle Strength", Range(0,3)) = 1.4
         _GemSparklePower ("Gem Sparkle Tightness", Range(1,256)) = 90
         _GemDispersion ("Gem Dispersion (rainbow)", Range(0,1)) = 0.35
-        _GemTint     ("Gem Inner Brightness", Range(0,1)) = 0.5    }
+        _GemTint     ("Gem Inner Brightness", Range(0,1)) = 0.5
+        _TrimLight   ("Trim Light (highlight strips)", Range(0,2)) = 0.55
+        _TrimWhiten  ("Trim Whiten", Range(0,1)) = 0.38
+    }
 
     SubShader
     {
@@ -49,6 +52,7 @@ Shader "GoDown/HexPrismLit"
             {
                 float3 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
+                float4 color      : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -56,6 +60,7 @@ Shader "GoDown/HexPrismLit"
             {
                 float4 positionCS : SV_POSITION;
                 float3 normalWS   : TEXCOORD0;
+                float  trim       : TEXCOORD1;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -78,6 +83,8 @@ Shader "GoDown/HexPrismLit"
             float  _GemSparklePower;
             float  _GemDispersion;
             float  _GemTint;
+            float  _TrimLight;
+            float  _TrimWhiten;
 
             Varyings HexVertex(Attributes IN)
             {
@@ -88,6 +95,7 @@ Shader "GoDown/HexPrismLit"
                 VertexPositionInputs pos = GetVertexPositionInputs(IN.positionOS);
                 OUT.positionCS = pos.positionCS;
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
+                OUT.trim = IN.color.r;
                 return OUT;
             }
 
@@ -145,6 +153,11 @@ Shader "GoDown/HexPrismLit"
                     // 不再全局提亮内部，保留深色高饱和
                     col += dispCol * (0.25 + 0.25 * _GemTint) * fres;
                     col += sparkle * _LightColor.rgb;
+
+                    // 高光专用窄面：内环/外环/连接线都是实际小面，用顶点色 r 标记。
+                    // 高光偏浅本色而不是纯白，避免生硬。
+                    float3 trimCol = lerp(_BaseColor.rgb, float3(1, 1, 1), _TrimWhiten);
+                    col += trimCol * saturate(IN.trim) * _TrimLight;
                 }
 
                 return half4(col, _BaseColor.a);
