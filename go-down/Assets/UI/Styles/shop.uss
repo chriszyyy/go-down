@@ -111,7 +111,17 @@
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     letter-spacing: 1px;
-    margin-top: 4px;
+    margin-top: 6px;
+    height: 56px;
+    width: 90%;
+    background-color: rgba(80, 50, 160, 0.85);
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: rgba(150, 110, 240, 0.6);
+    align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .item-card__price {
@@ -133,7 +143,9 @@
     width: 36px;
     height: 36px;
     border-radius: 999px;
-    background-color: var(--color-coin);
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("project://database/Assets/UI/Sprites/game-top-bar-icon.png?fileID=542907808&guid=937f9d3437a150a4b831fb186a9ebc04&type=3#coin");
+    -unity-background-scale-mode: scale-to-fit;
     margin-right: 8px;
 }
 
@@ -156,14 +168,15 @@
 
 .item-card__check {
     position: absolute;
-    bottom: 80px;
-    right: 14px;
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    background-color: rgb(70, 200, 90);
-    border-width: 3px;
-    border-color: rgb(255, 255, 255);
+    bottom: 84px;
+    right: 30px;
+    width: 46px;
+    height: 46px;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("project://database/Assets/UI/Sprites/NoAds/green-check-mark.png");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(150, 255, 120);
 }
 
 /* ============================================================
