@@ -26,6 +26,7 @@ Shader "GoDown/HexPrismLit"
         _GemSparklePower ("Gem Sparkle Tightness", Range(1,256)) = 90
         _GemDispersion ("Gem Dispersion (rainbow)", Range(0,1)) = 0.35
         _GemTint     ("Gem Inner Brightness", Range(0,1)) = 0.5
+        _RainbowSkin ("Rainbow Skin", Range(0,1)) = 0
         _TrimLight   ("Trim Light (highlight strips)", Range(0,2)) = 0.55
         _TrimWhiten  ("Trim Whiten", Range(0,1)) = 0.38
     }
@@ -61,6 +62,7 @@ Shader "GoDown/HexPrismLit"
                 float4 positionCS : SV_POSITION;
                 float3 normalWS   : TEXCOORD0;
                 float  trim       : TEXCOORD1;
+                float2 posOS      : TEXCOORD2;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -83,6 +85,7 @@ Shader "GoDown/HexPrismLit"
             float  _GemSparklePower;
             float  _GemDispersion;
             float  _GemTint;
+            float  _RainbowSkin;
             float  _TrimLight;
             float  _TrimWhiten;
 
@@ -96,6 +99,7 @@ Shader "GoDown/HexPrismLit"
                 OUT.positionCS = pos.positionCS;
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
                 OUT.trim = IN.color.r;
+                OUT.posOS = IN.positionOS.xy;
                 return OUT;
             }
 
@@ -114,14 +118,25 @@ Shader "GoDown/HexPrismLit"
                 float spec = pow(saturate(dot(N, H)), _SpecPower) * _SpecStrength;
                 float rim = pow(1.0 - saturate(dot(N, V)), _RimPower) * _RimStrength;
 
-                float3 col = _BaseColor.rgb * (_Ambient + diffuse * _LightColor.rgb);
+                float3 baseCol = _BaseColor.rgb;
+                if (_RainbowSkin > 0.5)
+                {
+                    float hue = frac(IN.posOS.x * 0.35 + IN.posOS.y * 0.62 + 0.62);
+                    float3 rainbowCol = float3(
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.00)),
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.33)),
+                        0.5 + 0.5 * cos(6.2831 * (hue + 0.66)));
+                    baseCol = lerp(baseCol, rainbowCol, 0.88);
+                }
+
+                float3 col = baseCol * (_Ambient + diffuse * _LightColor.rgb);
 
                 // edge: 正面 N.xy≈0 -> edge≈0；斜面 N.xy 较大 -> edge≈1
                 float edge = saturate(length(N.xy) * 1.4142);
                 // 中间平面压暗（edge≈0 处乘 1-_FaceDarken，斜边保持）
                 col *= lerp(1.0 - _FaceDarken, 1.0, edge);
                 // 斜切边亮边框：边框颜色朝白色提亮，让暗色（红/蓝/紫）也有明显亮边
-                float3 edgeCol = lerp(_BaseColor.rgb, float3(1, 1, 1), _EdgeWhiten);
+                float3 edgeCol = lerp(baseCol, float3(1, 1, 1), _EdgeWhiten);
                 col += edgeCol * edge * _EdgeLight;
 
                 col += spec * _LightColor.rgb;
@@ -142,7 +157,7 @@ Shader "GoDown/HexPrismLit"
                     float sparkle = facet * _GemSparkle;
 
                     // 色散：边缘按朝向分出彩虹（钻石火彩）
-                    float hue = frac(N.x * 0.5 + N.y * 0.5 + 0.5);
+                        float hue = frac(N.x * 0.5 + N.y * 0.5 + 0.5);
                     float3 disp = float3(
                         0.5 + 0.5 * cos(6.2831 * (hue + 0.00)),
                         0.5 + 0.5 * cos(6.2831 * (hue + 0.33)),
@@ -156,7 +171,7 @@ Shader "GoDown/HexPrismLit"
 
                     // 高光专用窄面：内环/外环/连接线都是实际小面，用顶点色 r 标记。
                     // 高光偏浅本色而不是纯白，避免生硬。
-                    float3 trimCol = lerp(_BaseColor.rgb, float3(1, 1, 1), _TrimWhiten);
+                    float3 trimCol = lerp(baseCol, float3(1, 1, 1), _TrimWhiten);
                     col += trimCol * saturate(IN.trim) * _TrimLight;
                 }
 

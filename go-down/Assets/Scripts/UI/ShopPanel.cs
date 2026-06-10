@@ -64,6 +64,7 @@ public class ShopPanel : MonoBehaviour
     private VisualElement skinView;
     private VisualElement skinIcon;
     private Label skinPrompt;
+    private Label skinTotal;
     private Button skinClose;
     private Button skinCancel;
     private Button skinConfirm;
@@ -252,6 +253,7 @@ public class ShopPanel : MonoBehaviour
         skinView = root.Q<VisualElement>("skin-view");
         skinIcon = root.Q<VisualElement>("skin-icon");
         skinPrompt = root.Q<Label>("skin-prompt");
+        skinTotal = root.Q<Label>("skin-total");
         skinClose = root.Q<Button>("skin-close");
         skinCancel = root.Q<Button>("skin-cancel");
         skinConfirm = root.Q<Button>("skin-confirm");
@@ -533,6 +535,8 @@ public class ShopPanel : MonoBehaviour
         int price = HexagonSkinManager.GetUnlockPrice(skinId);
         if (skinPrompt != null)
             skinPrompt.text = $"Unlock this hexagon skin for {price} coins?";
+        if (skinTotal != null)
+            skinTotal.text = price.ToString();
 
         int coins = CoinManager.Instance != null ? CoinManager.Instance.CurrentCoins : 0;
         if (skinConfirm != null) skinConfirm.SetEnabled(coins >= price);

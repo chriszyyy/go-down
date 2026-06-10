@@ -64,13 +64,14 @@ public static class HexSkinPreviewGenerator
         {
             if (rainbow)
             {
-                // 预览用简单彩虹：采样几个颜色叠加到材质基色偏白，真实游戏后续可做 3D 彩虹材质
                 mat.SetColor("_BaseColor", new Color(1f, 0.85f, 0.35f, 1f));
+                mat.SetFloat("_RainbowSkin", 1f);
                 mat.SetFloat("_GemDispersion", 0.9f);
                 mat.SetFloat("_GemTint", 0.6f);
             }
             else
             {
+                mat.SetFloat("_RainbowSkin", 0f);
                 mat.SetColor("_BaseColor", color);
             }
         }

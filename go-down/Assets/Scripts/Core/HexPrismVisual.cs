@@ -225,12 +225,14 @@ public class HexPrismVisual : MonoBehaviour
 
         if (skin == "rainbow")
         {
+            materialInstance.SetFloat("_RainbowSkin", 1f);
             materialInstance.SetFloat("_GemDispersion", 1f);
             materialInstance.SetFloat("_GemTint", 0.45f);
             materialInstance.SetFloat("_GemSparkle", Mathf.Max(gemSparkle, 1.8f));
         }
         else
         {
+            materialInstance.SetFloat("_RainbowSkin", 0f);
             materialInstance.SetFloat("_GemDispersion", gemDispersion);
             materialInstance.SetFloat("_GemTint", gemTint);
             materialInstance.SetFloat("_GemSparkle", gemSparkle);

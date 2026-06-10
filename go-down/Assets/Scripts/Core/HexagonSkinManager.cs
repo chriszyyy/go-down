@@ -25,10 +25,10 @@ public class HexagonSkinManager : MonoBehaviour
         switch (skinId)
         {
             case "blue": return 500;
-            case "purple": return 800;
-            case "green": return 1000;
-            case "red": return 1200;
-            case "rainbow": return 1500;
+            case "purple": return 500;
+            case "green": return 500;
+            case "red": return 500;
+            case "rainbow": return 1000;
             case "gold":
             default: return UNLOCK_PRICE;
         }

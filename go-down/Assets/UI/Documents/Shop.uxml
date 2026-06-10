@@ -56,7 +56,7 @@
                         <ui:Label text="PURPLE" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="800" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="item-hex-green" class="item-card">
@@ -65,7 +65,7 @@
                         <ui:Label text="GREEN" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1000" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="item-hex-red" class="item-card">
@@ -74,7 +74,7 @@
                         <ui:Label text="RED" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1200" class="item-card__price-text" />
+                            <ui:Label text="500" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                     <ui:Button name="item-hex-rainbow" class="item-card">
@@ -83,7 +83,7 @@
                         <ui:Label text="RAINBOW" class="item-card__name" />
                         <ui:VisualElement class="item-card__price">
                             <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                            <ui:Label text="1500" class="item-card__price-text" />
+                            <ui:Label text="1000" class="item-card__price-text" />
                         </ui:VisualElement>
                     </ui:Button>
                 </ui:VisualElement>
@@ -245,7 +245,7 @@
                     <ui:Label name="skin-prompt" text="Unlock this hexagon skin for 500 coins?" class="buy-modal__prompt" />
                     <ui:VisualElement class="buy-modal__total">
                         <ui:VisualElement picking-mode="Ignore" class="item-card__price-coin" />
-                        <ui:Label text="500" class="buy-modal__total-text" />
+                        <ui:Label name="skin-total" text="500" class="buy-modal__total-text" />
                     </ui:VisualElement>
                     <ui:VisualElement class="buy-modal__skin-actions">
                         <ui:Button name="skin-cancel" text="CANCEL" class="buy-modal__cancel" />
