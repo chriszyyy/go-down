@@ -603,6 +603,7 @@ public class ShopPanel : MonoBehaviour
         "item-thumb--hex-green",
         "item-thumb--hex-purple",
         "item-thumb--hex-red",
+        "item-thumb--hex-rainbow",
     };
 
     private static void SwapHexIconClass(VisualElement icon, string skinId)
