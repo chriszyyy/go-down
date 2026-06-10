@@ -36,7 +36,7 @@ public class HexPrismVisual : MonoBehaviour
 
     [Header("光照")]
     [Tooltip("世界空间光照方向（指向光源）。固定不随球旋转，故旋转时光影正确")]
-    public Vector3 lightDir = new Vector3(0.3f, 0.65f, -0.6f);
+    public Vector3 lightDir = new Vector3(0.3f, 0.5f, -0.6f);
     public Color lightColor = Color.white;
     [Range(0f, 1f)] public float ambient = 0.4f;
     [Range(0f, 1f)] public float halfLambert = 0.28f;
@@ -62,7 +62,7 @@ public class HexPrismVisual : MonoBehaviour
     [Tooltip("内环、外环、连接线这些窄面的高光强度")]
     [Range(0f, 2f)] public float trimLight = 0.55f;
     [Tooltip("高光窄面朝白色偏移的程度。越低越保留本色，越高越像白描边")]
-    [Range(0f, 1f)] public float trimWhiten = 0.38f;
+    [Range(0f, 1f)] public float trimWhiten = 0.1f;
 
     [Header("皮肤颜色 (与 HexagonSkinManager 的 skinId 对应)")]
     public Color goldColor = new Color(1.00f, 0.78f, 0.20f);
