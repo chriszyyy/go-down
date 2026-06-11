@@ -30,6 +30,7 @@ public class TrapBlock : MonoBehaviour
 
     private TowerBlock self;
     private SpriteRenderer rootSprite;
+    private SpriteRenderer highlightSprite;
     private Collider2D selfCollider;
     private bool triggered;
 
@@ -52,6 +53,8 @@ public class TrapBlock : MonoBehaviour
     {
         self = GetComponent<TowerBlock>();
         rootSprite = GetComponent<SpriteRenderer>();
+        Transform hl = transform.Find("Highlight");
+        if (hl != null) highlightSprite = hl.GetComponent<SpriteRenderer>();
         selfCollider = GetComponent<Collider2D>();
     }
 
@@ -62,6 +65,7 @@ public class TrapBlock : MonoBehaviour
         normalTarget = normal;
         configured = true;
         if (rootSprite != null) rootSprite.color = trapColor;
+        SetHighlightColor(trapColor);
         EnsureSkull();
     }
 
@@ -113,6 +117,7 @@ public class TrapBlock : MonoBehaviour
         float t = stealthFadeDuration <= 0f ? 1f : Mathf.Clamp01((elapsed - stealthDelay) / stealthFadeDuration);
         Color c = Color.Lerp(trapColor, normalTarget, t);
         if (rootSprite != null) rootSprite.color = c;
+        SetHighlightColor(c);
         if (self != null) self.OverrideOriginalColor(c);
 
         if (skull != null)
@@ -127,6 +132,14 @@ public class TrapBlock : MonoBehaviour
             stealthDone = true;
             if (skull != null) skull.enabled = false;
         }
+    }
+
+    private void SetHighlightColor(Color baseColor)
+    {
+        if (highlightSprite == null) return;
+        Color h = Color.Lerp(baseColor, Color.white, 0.35f);
+        h.a = highlightSprite.color.a;
+        highlightSprite.color = h;
     }
 
     private bool IsInView(Camera cam)

@@ -89,9 +89,16 @@ public class BlockVisualStyle : MonoBehaviour
         Color[] p = (palette != null && palette.Length > 0) ? palette : DefaultPalette;
         Color[] hp = DefaultHighlightPalette;
 
-        int seed = seedOverride != 0 ? seedOverride : GetInstanceID();
-        var rng = new System.Random(seed);
-        int idx = rng.Next(0, p.Length);
+        int idx;
+        if (seedOverride != 0)
+        {
+            var rng = new System.Random(seedOverride);
+            idx = rng.Next(0, p.Length);
+        }
+        else
+        {
+            idx = Random.Range(0, p.Length);
+        }
         Color baseColor = p[idx];
         // 配对的 highlight：仅当索引在 highlight 调色板范围内时使用，否则回退到 lerp-to-white
         Color? highlight = idx < hp.Length ? hp[idx] : (Color?)null;
