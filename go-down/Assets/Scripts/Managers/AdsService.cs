@@ -52,7 +52,7 @@ public class AdsService : MonoBehaviour
     private const string PROD_IOS_INTERSTITIAL = "ca-app-pub-9908007989063237/6047206620";
 
     // 是否始终使用测试 ID（开发期保持 true；上线前改 false 走 PROD_*）
-    private const bool USE_TEST_ADS = true;
+    private const bool USE_TEST_ADS = false;
     private const float SDK_INITIALIZE_DELAY_SECONDS = 1.5f;
 
     // ============================================================
