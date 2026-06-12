@@ -93,6 +93,7 @@ public class AdsService : MonoBehaviour
     private bool rewardedLoading;
     private bool interstitialLoading;
     private bool consentFlowCompleted;
+    private bool consentFlowUnavailable;
 #endif
 
     private const string KEY_NO_ADS = "NoAds_Removed";
@@ -163,9 +164,16 @@ public class AdsService : MonoBehaviour
         yield return StartCoroutine(RunConsentFlow());
         if (!ConsentInformation.CanRequestAds())
         {
-            Debug.LogWarning("[Ads] UMP consent flow completed but ads cannot be requested. AdMob initialization skipped.");
-            NotifyRewardedStateChanged();
-            yield break;
+            if (consentFlowUnavailable)
+            {
+                Debug.LogWarning("[Ads] UMP unavailable/timeout and CanRequestAds=false. Continuing AdMob initialization as network-failure fallback.");
+            }
+            else
+            {
+                Debug.LogWarning("[Ads] UMP consent flow completed but ads cannot be requested. AdMob initialization skipped.");
+                NotifyRewardedStateChanged();
+                yield break;
+            }
         }
 #endif
         InitializeSdk();
@@ -175,6 +183,7 @@ public class AdsService : MonoBehaviour
     private IEnumerator RunConsentFlow()
     {
         consentFlowCompleted = false;
+        consentFlowUnavailable = false;
 
         var request = new ConsentRequestParameters
         {
@@ -187,6 +196,7 @@ public class AdsService : MonoBehaviour
             if (updateError != null)
             {
                 Debug.LogWarning($"[Ads] UMP consent info update failed: code={updateError.ErrorCode}, message={updateError.Message}");
+                consentFlowUnavailable = true;
                 consentFlowCompleted = true;
                 return;
             }
@@ -213,7 +223,8 @@ public class AdsService : MonoBehaviour
 
         if (!consentFlowCompleted)
         {
-            Debug.LogWarning("[Ads] UMP consent flow timed out after 30s. AdMob initialization will wait for a later app session.");
+            Debug.LogWarning("[Ads] UMP consent flow timed out after 30s.");
+            consentFlowUnavailable = true;
             consentFlowCompleted = true;
         }
     }
@@ -327,7 +338,7 @@ public class AdsService : MonoBehaviour
             });
             return;
         }
-        Debug.LogWarning("[Ads] Rewarded not ready. On Huawei devices without Google Play Services, AdMob ads usually cannot load.");
+        Debug.LogWarning("[Ads] Rewarded not ready. Ad may be unavailable due to no fill, network conditions, pending ad review, or platform services.");
         RunOnMainThread(() => onFail?.Invoke());
         LoadRewarded();
 #else
@@ -394,7 +405,7 @@ public class AdsService : MonoBehaviour
             interstitialAd.Show();
             return;
         }
-        Debug.LogWarning("[Ads] Interstitial not ready. On Huawei devices without Google Play Services, AdMob ads usually cannot load.");
+        Debug.LogWarning("[Ads] Interstitial not ready. Ad may be unavailable due to no fill, network conditions, pending ad review, or platform services.");
         LoadInterstitial();
 #else
         Debug.Log("[Ads] (Dev) Interstitial would show now (skipped — AdMob not enabled)");
