@@ -659,8 +659,9 @@
 - [x] Interstitial frequency policy: skip first N games, every N games, min interval 120s; long-session guard (single game > 10 min → forced interstitial at game over, bypassing game-count guards)
 - [x] IAP service implemented (`IAPService.cs`, 5 product IDs declared)
 - [ ] AdMob Console: link Android app to Play Store listing once first `.aab` is uploaded
-- [ ] AdMob Console: link iOS app to App Store listing (deferred)
-- [ ] Switch `USE_TEST_ADS = false` in `AdsService.cs` (before going live, NOT for internal testing)
+- [ ] AdMob Console: link iOS app to App Store listing (after App Store listing is live / searchable)
+- [x] Switch `USE_TEST_ADS = false` in `AdsService.cs` (2026-06-12, iOS release submission build uses PROD_* ad units)
+- [x] UMP/GDPR consent flow wired before AdMob initialization (2026-06-12)
 
 ### Google Play Console ⏳ — current focus
 - [x] Developer account ($25 one-time)
@@ -688,10 +689,10 @@
 - [x] App Store Connect: create app "Hex Drop - Tower Puzzle" (display name Hex Drop), SKU `hexdrop`, primary lang English
 - [x] Paid Apps Agreement active (2026-06-05); bank (CMB 2202, CNY), W-8BEN treaty (App sales income), 国务院令810 compliant
 - [x] Create 5 IAP products (2026-06-05): `no_ads_lifetime` (Non-Consumable, $2.99), `coin_pack_100/500/1200/2500` (Consumable, $0.99/$2.99/$5.99/$9.99) — IDs match Android + code; sold in 174 regions (China mainland excluded)
-- [ ] DSA trader status verification (EU) — “正在审核”, needed for EU availability
-- [ ] Set IAP prices / app price tier where still pending; finalize price schedule
-- [ ] Mac: Unity iOS build → Xcode archive → TestFlight
-- [ ] Sandbox testers, verify IAP flow + ATT prompt on device
+- [x] DSA trader status verification (EU) — valid (2026-06-12)
+- [x] IAP prices / app price schedule finalized; China mainland excluded
+- [ ] Mac: Unity iOS build → Xcode archive → TestFlight (new build after production ads + UMP)
+- [ ] Final TestFlight pass: UMP form (EU/UK if applicable), ATT prompt, IAP sandbox/Restore, real ad load, NoAds removes interstitial, 3D shader/traps/skins
 - [ ] Fill version 1.0 store page (screenshots, description, keywords) → submit for review
 
 ### Hardening (before public release)
@@ -699,9 +700,9 @@
 - [ ] Restore Purchases UI button (already wired via `IAPService.RestorePurchases()` — needs UI surface)
 - [ ] Crash reporting (Firebase Crashlytics or Unity Cloud Diagnostics)
 - [ ] Privacy policy hosted on a public URL (required for Play Console submission)
-- [ ] iOS ATT prompt + UMP/GDPR consent flow (only needed for iOS release)
-  - [x] ATT prompt implemented: native plugin `Assets/Plugins/iOS/HexDropATT.mm` + `AppTrackingTransparencyHelper.cs`; AdsService requests ATT before AdMob init on iOS; `IOSPostProcessBuild.cs` injects `NSUserTrackingUsageDescription` into Info.plist (2026-06-05)
-  - [ ] UMP/GDPR consent flow (EU/UK) — still pending
+- [x] iOS ATT prompt + UMP/GDPR consent flow (needed for iOS release)
+  - [x] ATT prompt implemented: native plugin `Assets/Plugins/iOS/HexDropATT.mm` + `AppTrackingTransparencyHelper.cs`; AdsService requests ATT before AdMob init on iOS; AdMob plugin writes `NSUserTrackingUsageDescription` from `GoogleMobileAdsSettings.asset` (2026-06-05)
+  - [x] UMP/GDPR consent flow (EU/UK) wired via `GoogleMobileAds.Ump.Api` before `MobileAds.Initialize` (2026-06-12)
 
 ### Build & Version Discipline
 - Current `bundleVersion`: `1.0`

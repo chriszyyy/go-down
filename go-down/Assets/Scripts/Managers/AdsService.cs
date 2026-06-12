@@ -5,6 +5,7 @@ using UnityEngine;
 
 #if ADMOB_ENABLED
 using GoogleMobileAds.Api;
+using GoogleMobileAds.Ump.Api;
 #endif
 
 /// <summary>
@@ -91,6 +92,7 @@ public class AdsService : MonoBehaviour
     private float sdkInitializeStartedAt;
     private bool rewardedLoading;
     private bool interstitialLoading;
+    private bool consentFlowCompleted;
 #endif
 
     private const string KEY_NO_ADS = "NoAds_Removed";
@@ -157,8 +159,65 @@ public class AdsService : MonoBehaviour
             yield return null;
         Debug.Log($"[Ads] ATT status = {AppTrackingTransparencyHelper.CurrentStatus}");
 #endif
+#if ADMOB_ENABLED && (UNITY_ANDROID || UNITY_IOS)
+        yield return StartCoroutine(RunConsentFlow());
+        if (!ConsentInformation.CanRequestAds())
+        {
+            Debug.LogWarning("[Ads] UMP consent flow completed but ads cannot be requested. AdMob initialization skipped.");
+            NotifyRewardedStateChanged();
+            yield break;
+        }
+#endif
         InitializeSdk();
     }
+
+#if ADMOB_ENABLED && (UNITY_ANDROID || UNITY_IOS)
+    private IEnumerator RunConsentFlow()
+    {
+        consentFlowCompleted = false;
+
+        var request = new ConsentRequestParameters
+        {
+            TagForUnderAgeOfConsent = false
+        };
+
+        Debug.Log("[Ads] Updating UMP consent information...");
+        ConsentInformation.Update(request, updateError =>
+        {
+            if (updateError != null)
+            {
+                Debug.LogWarning($"[Ads] UMP consent info update failed: code={updateError.ErrorCode}, message={updateError.Message}");
+                consentFlowCompleted = true;
+                return;
+            }
+
+            Debug.Log($"[Ads] UMP consent info updated. canRequestAds={ConsentInformation.CanRequestAds()}, status={ConsentInformation.ConsentStatus}");
+
+            ConsentForm.LoadAndShowConsentFormIfRequired(formError =>
+            {
+                if (formError != null)
+                {
+                    Debug.LogWarning($"[Ads] UMP consent form failed: code={formError.ErrorCode}, message={formError.Message}");
+                }
+
+                Debug.Log($"[Ads] UMP consent flow done. canRequestAds={ConsentInformation.CanRequestAds()}, status={ConsentInformation.ConsentStatus}");
+                consentFlowCompleted = true;
+            });
+        });
+
+        float start = Time.realtimeSinceStartup;
+        while (!consentFlowCompleted && Time.realtimeSinceStartup - start < 30f)
+        {
+            yield return null;
+        }
+
+        if (!consentFlowCompleted)
+        {
+            Debug.LogWarning("[Ads] UMP consent flow timed out after 30s. AdMob initialization will wait for a later app session.");
+            consentFlowCompleted = true;
+        }
+    }
+#endif
 
     private void InitializeSdk()
     {
