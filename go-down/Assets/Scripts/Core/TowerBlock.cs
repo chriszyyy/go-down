@@ -25,6 +25,9 @@ public class TowerBlock : MonoBehaviour
     [Tooltip("是否为静态（不受重力影响）")]
     public bool isStatic = true;
 
+    [Tooltip("是否为可破坏的结构支撑；常规激活不会将其转为动态刚体")]
+    [SerializeField] private bool isStructuralSupport;
+
     [Header("动画配置")]
     [Tooltip("消失动画持续时间")]
     public float disappearDuration = 0.15f;
@@ -45,6 +48,9 @@ public class TowerBlock : MonoBehaviour
 
     /// <summary>是否正在消除中（已被点击/触发消除）。</summary>
     public bool IsDestroying => isDestroying;
+
+    /// <summary>是否为保持 Kinematic、但仍可点击消除的结构支撑。</summary>
+    public bool IsStructuralSupport => isStructuralSupport;
 
     // 静态事件
     public static event Action<TowerBlock> OnBlockDestroyed;
@@ -186,11 +192,20 @@ public class TowerBlock : MonoBehaviour
     }
 
     /// <summary>
-    /// 将方块转为动态（受重力影响）
+    /// 标记为可破坏的固定结构支撑。
+    /// </summary>
+    public void ConfigureStructuralSupport()
+    {
+        isStructuralSupport = true;
+        Freeze();
+    }
+
+    /// <summary>
+    /// 将普通方块转为动态（受重力影响）。结构支撑保持 Kinematic。
     /// </summary>
     public virtual void MakeDynamic()
     {
-        if (isDestroying) return;
+        if (isDestroying || isStructuralSupport) return;
 
         isStatic = false;
 

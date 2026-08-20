@@ -32,9 +32,18 @@ public class CameraFollower : MonoBehaviour
     [Tooltip("相机最大跟随速度（单位/秒），防止瞬移")]
     public float maxCameraSpeed = 50f;
 
+    [Tooltip("塔段横向换道时的平滑时间（秒）。越大，镜头横向移动越柔和")]
+    [Min(0.01f)]
+    public float horizontalSmoothTime = 0.45f;
+
+    [Tooltip("相机横向最大跟随速度（单位/秒）")]
+    [Min(0.1f)]
+    public float maxHorizontalCameraSpeed = 4f;
+
     private float targetY;
     private float lastTargetY;
     private float currentYVelocity;
+    private float currentXVelocity;
 
     private Vector3 initialCameraPosition;
     private bool initialCameraPositionCaptured;
@@ -83,7 +92,6 @@ public class CameraFollower : MonoBehaviour
     {
         if (towerBuilder == null) return;
 
-        // 处理重生/重开导致的 target 失效
         if (target == null)
         {
             GameObject ball = GameObject.Find("HexagonBall");
@@ -92,9 +100,7 @@ public class CameraFollower : MonoBehaviour
 
         UpdateTargetPosition();
 
-        // 计算塔的中心X坐标
-        float towerCenterX = towerBuilder.layerWidth / 2f;
-
+        float towerCenterX = towerBuilder.GetTowerCenterXAtY(targetY);
         Vector3 desiredPosition = new Vector3(
             towerCenterX + offset.x,
             targetY + offset.y,
@@ -106,17 +112,23 @@ public class CameraFollower : MonoBehaviour
         lastTargetY = targetY;
 
         float distanceToTarget = Mathf.Abs(desiredPosition.y - transform.position.y);
+        float newX = Mathf.SmoothDamp(
+            transform.position.x,
+            desiredPosition.x,
+            ref currentXVelocity,
+            Mathf.Max(0.01f, horizontalSmoothTime),
+            Mathf.Max(0.1f, maxHorizontalCameraSpeed),
+            Time.deltaTime
+        );
+
         if (distanceToTarget < deadZone)
         {
-            // still: only lock X/Z
-            transform.position = new Vector3(desiredPosition.x, transform.position.y, desiredPosition.z);
+            transform.position = new Vector3(newX, transform.position.y, desiredPosition.z);
             return;
         }
 
         float t = Mathf.InverseLerp(0f, fastSpeedThreshold, targetSpeed);
-        float smoothTime = Mathf.Lerp(slowSmoothTime, fastSmoothTime, t);
-        smoothTime = Mathf.Max(0.0001f, smoothTime);
-
+        float smoothTime = Mathf.Max(0.0001f, Mathf.Lerp(slowSmoothTime, fastSmoothTime, t));
         float newY = Mathf.SmoothDamp(
             transform.position.y,
             desiredPosition.y,
@@ -126,7 +138,7 @@ public class CameraFollower : MonoBehaviour
             Time.deltaTime
         );
 
-        transform.position = new Vector3(desiredPosition.x, newY, desiredPosition.z);
+        transform.position = new Vector3(newX, newY, desiredPosition.z);
     }
 
     void UpdateTargetPosition()
@@ -154,6 +166,7 @@ public class CameraFollower : MonoBehaviour
         // Clear smoothing state and align internal target tracking to current camera position
         // so the next LateUpdate won't think the target "teleported" a huge distance.
         currentYVelocity = 0f;
+        currentXVelocity = 0f;
         targetY = transform.position.y - offset.y;
         lastTargetY = targetY;
     }
@@ -167,30 +180,21 @@ public class CameraFollower : MonoBehaviour
     {
         if (towerBuilder == null) return true;
 
-        // Refresh target if needed.
         if (target == null)
         {
             GameObject ball = GameObject.Find("HexagonBall");
             if (ball != null) target = ball.transform;
         }
 
-        float desiredTargetY;
-        if (target != null)
-        {
-            desiredTargetY = target.position.y;
-        }
-        else
-        {
-            desiredTargetY = towerBuilder.GetTowerTopY();
-        }
-
-        float towerCenterX = towerBuilder.layerWidth / 2f;
+        float desiredTargetY = target != null
+            ? target.position.y
+            : towerBuilder.GetTowerTopY();
+        float towerCenterX = towerBuilder.GetTowerCenterXAtY(desiredTargetY);
         float desiredY = desiredTargetY + offset.y;
         float desiredX = towerCenterX + offset.x;
 
         float dy = Mathf.Abs(transform.position.y - desiredY);
         float dx = Mathf.Abs(transform.position.x - desiredX);
-
         return dy <= Mathf.Max(0.01f, toleranceY) && dx <= 0.25f;
     }
 }

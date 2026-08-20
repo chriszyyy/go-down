@@ -1,6 +1,81 @@
 using UnityEngine;
 
 /// <summary>
+/// 无尽塔区块横向随机游走的纯计算逻辑。
+/// </summary>
+public static class TowerSegmentShiftMath
+{
+    public static int CalculateAllowedMaxOffset(
+        int shiftedSegmentCount,
+        int initialMaxOffset,
+        int segmentsPerOffsetIncrease,
+        int maxAbsoluteOffset)
+    {
+        int maximum = Mathf.Max(1, maxAbsoluteOffset);
+        int initial = Mathf.Clamp(initialMaxOffset, 1, maximum);
+        int increase = Mathf.Max(0, shiftedSegmentCount) / Mathf.Max(1, segmentsPerOffsetIncrease);
+        return Mathf.Min(maximum, initial + increase);
+    }
+
+    public static int ResolveDirectionAtLimit(int currentOffset, int direction, int allowedMaxOffset)
+    {
+        int normalizedDirection = direction < 0 ? -1 : 1;
+        int limit = Mathf.Max(1, allowedMaxOffset);
+        if (currentOffset >= limit && normalizedDirection > 0) return -1;
+        if (currentOffset <= -limit && normalizedDirection < 0) return 1;
+        return normalizedDirection;
+    }
+
+    public static int GetNextOffset(int currentOffset, int direction, int allowedMaxOffset)
+    {
+        int resolvedDirection = ResolveDirectionAtLimit(currentOffset, direction, allowedMaxOffset);
+        return Mathf.Clamp(currentOffset + resolvedDirection, -Mathf.Max(1, allowedMaxOffset), Mathf.Max(1, allowedMaxOffset));
+    }
+
+    public static int[] GetBridgeColumns(int previousOffset, int nextOffset, int layerWidth)
+    {
+        if (previousOffset == nextOffset) return new int[0];
+
+        int width = Mathf.Max(1, layerWidth);
+        int minColumn = Mathf.Min(previousOffset, nextOffset);
+        int maxColumn = Mathf.Max(previousOffset + width - 1, nextOffset + width - 1);
+        int[] columns = new int[maxColumn - minColumn + 1];
+        for (int i = 0; i < columns.Length; i++)
+            columns[i] = minColumn + i;
+
+        return columns;
+    }
+
+    public static int[] GetBridgeChunkWidths(int totalWidth, bool hasLine4, bool hasLine3)
+    {
+        var widths = new System.Collections.Generic.List<int>();
+        int remaining = Mathf.Max(0, totalWidth);
+
+        while (remaining > 0)
+        {
+            if (hasLine4 && remaining >= 4 && !(remaining == 6 && hasLine3))
+            {
+                widths.Add(4);
+                remaining -= 4;
+            }
+            else if (hasLine3 && remaining >= 3)
+            {
+                widths.Add(3);
+                remaining -= 3;
+            }
+            else
+            {
+                widths.Add(1);
+                remaining--;
+            }
+        }
+
+        return widths.ToArray();
+    }
+}
+
+
+/// <summary>
 /// 塔构建器 - 使用预制体拼装塔（基于网格的随机填充算法）
 /// </summary>
 public class TowerBuilder : MonoBehaviour
@@ -42,6 +117,39 @@ public class TowerBuilder : MonoBehaviour
 
     [Tooltip("当方块高于摄像机太多时销毁（单位：层/单位），用于控制对象数量")]
     public int destroyAboveCameraLayers = 80;
+
+    [Header("塔段横向随机游走")]
+    [Tooltip("是否让续接塔段以单格步长左右随机游走。缺少单格预制体时自动保持原位")]
+    [SerializeField] private bool enableSegmentHorizontalWalk = true;
+
+    [Tooltip("开局后保持居中的续接段数量，给玩家留出适应期")]
+    [Min(0)]
+    [SerializeField] private int segmentsBeforeHorizontalWalk = 1;
+
+    [Tooltip("每轮连续朝同一方向移动的最少塔段数")]
+    [Min(1)]
+    [SerializeField] private int minSegmentsPerDirectionRun = 2;
+
+    [Tooltip("每轮连续朝同一方向移动的最多塔段数；每轮会在最少与最多之间随机取值")]
+    [Min(1)]
+    [SerializeField] private int maxSegmentsPerDirectionRun = 4;
+
+    [Tooltip("随机游走初期允许的最大绝对横向偏移（格）")]
+    [Min(1)]
+    [SerializeField] private int initialMaxAbsoluteOffset = 2;
+
+    [Tooltip("每生成多少个游走塔段，将允许的最大绝对偏移增加一格")]
+    [Min(1)]
+    [SerializeField] private int segmentsPerOffsetIncrease = 4;
+
+    [Tooltip("塔段相对初始中心允许达到的最大绝对横向偏移（格）；到达后强制反向")]
+    [Min(1)]
+    [SerializeField] private int maxAbsoluteHorizontalOffset = 3;
+
+    [Tooltip("新区段顶部沿用上一区段位置的连接层数，用于承托单格错位接缝")]
+    [Min(1)]
+    [SerializeField] private int segmentConnectionLayers = 2;
+
 
     [Header("新段稳定化")]
     [Tooltip("生成新段后，先冻结一小段时间以让接缝稳定，再按相机窗口激活")]
@@ -101,6 +209,14 @@ public class TowerBuilder : MonoBehaviour
     [Tooltip("边界跟随摄像机时的Y偏移")]
     public float boundaryFollowYOffset = 0f;
 
+    [Tooltip("塔段换道时左右边界横向跟随的平滑时间（秒）")]
+    [Min(0.01f)]
+    public float boundaryHorizontalSmoothTime = 0.35f;
+
+    [Tooltip("左右边界横向跟随的最大速度（单位/秒）")]
+    [Min(0.1f)]
+    public float maxBoundaryHorizontalSpeed = 5f;
+
     [Header("六边形球配置")]
     [Tooltip("六边形球预制体")]
     public GameObject hexagonBallPrefab;
@@ -132,6 +248,8 @@ public class TowerBuilder : MonoBehaviour
     private GameObject hexagonBall;
     private GameObject leftBoundary;
     private GameObject rightBoundary;
+    private float leftBoundaryXVelocity;
+    private float rightBoundaryXVelocity;
 
     // 网格占用矩阵（仅用于初始段的放置计算）[层][列] = 是否被占用
     private bool[,] gridOccupied;
@@ -159,6 +277,22 @@ public class TowerBuilder : MonoBehaviour
     private bool initialActivationPending;
 
     private bool activationEnabled;
+
+    private int generatedSegmentCount;
+    private int shiftedSegmentCount;
+    private int currentSegmentXOffset;
+    private int currentWalkDirection;
+    private int segmentsRemainingInDirectionRun;
+
+    private struct SegmentOffsetZone
+    {
+        public float minY;
+        public float maxY;
+        public int offset;
+    }
+
+    private readonly System.Collections.Generic.List<SegmentOffsetZone> segmentOffsetZones =
+        new System.Collections.Generic.List<SegmentOffsetZone>();
 
     void Start()
     {
@@ -307,6 +441,39 @@ public class TowerBuilder : MonoBehaviour
         return currentGeneratedMinY;
     }
 
+    public int GetCurrentSegmentXOffset()
+    {
+        return currentSegmentXOffset;
+    }
+
+    private void RegisterSegmentOffsetZone(float minY, float maxY, int offset)
+    {
+        segmentOffsetZones.Add(new SegmentOffsetZone
+        {
+            minY = minY,
+            maxY = maxY,
+            offset = offset
+        });
+    }
+
+    public int GetSegmentXOffsetAtY(float worldY)
+    {
+        for (int i = segmentOffsetZones.Count - 1; i >= 0; i--)
+        {
+            SegmentOffsetZone zone = segmentOffsetZones[i];
+            if (worldY >= zone.minY && worldY < zone.maxY)
+                return zone.offset;
+        }
+
+        return worldY < currentGeneratedMinY ? currentSegmentXOffset : 0;
+    }
+
+    public float GetTowerCenterXAtY(float worldY)
+    {
+        return layerWidth / 2f + GetSegmentXOffsetAtY(worldY);
+    }
+
+
     void OnDestroy()
     {
         TowerBlock.OnBlockDestroyed -= HandleBlockDestroyed;
@@ -319,6 +486,14 @@ public class TowerBuilder : MonoBehaviour
     {
         ClearTower();
 
+        generatedSegmentCount = 0;
+        shiftedSegmentCount = 0;
+        currentSegmentXOffset = 0;
+        currentWalkDirection = 0;
+        segmentsRemainingInDirectionRun = 0;
+        segmentOffsetZones.Clear();
+        RegisterSegmentOffsetZone(startHeight, float.PositiveInfinity, 0);
+
         EnsureBoundaries();
 
         // 初始化网格占用矩阵（仅用于初始段的放置计算）
@@ -330,20 +505,17 @@ public class TowerBuilder : MonoBehaviour
             FillLayerWithGrid(layer, startHeight, gridOccupied, towerLayers);
         }
 
-        // 本批塔按概率植入一个陷阱方块
         TrySpawnTrapInBatch(startHeight, startHeight + towerLayers);
 
         currentGeneratedMinY = startHeight;
         lastGeneratedMinY = currentGeneratedMinY;
-
-        // 更新塔尖高度
         UpdateTowerTopY();
     }
 
     /// <summary>
     /// 基于网格填充一层（随机放置算法）
     /// </summary>
-    void FillLayerWithGrid(int layerIndex, float baseY, bool[,] occupied, int layerLimit)
+    void FillLayerWithGrid(int layerIndex, float baseY, bool[,] occupied, int layerLimit, int worldXOffset = 0)
     {
         // Debug.Log($"=== 第 {layerIndex} 层开始填充 ===");
 
@@ -357,7 +529,8 @@ public class TowerBuilder : MonoBehaviour
             attempts++;
 
             // 尝试在当前列放置方块
-            GameObject placedBlock = TryPlaceBlockAt(layerIndex, currentCol, baseY, occupied, layerLimit);
+            GameObject placedBlock = TryPlaceBlockAt(
+                layerIndex, currentCol, baseY, occupied, layerLimit, worldXOffset);
 
             if (placedBlock != null)
             {
@@ -401,7 +574,13 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 尝试在指定位置放置方块
     /// </summary>
-    GameObject TryPlaceBlockAt(int layer, int col, float baseY, bool[,] occupied, int layerLimit)
+    GameObject TryPlaceBlockAt(
+        int layer,
+        int col,
+        float baseY,
+        bool[,] occupied,
+        int layerLimit,
+        int worldXOffset)
     {
         // 获取所有可用的prefab
         var availablePrefabs = GetAllAvailablePrefabs();
@@ -424,7 +603,8 @@ public class TowerBuilder : MonoBehaviour
                 if (CanPlaceBlock(prefab, rotation, layer, col, occupied, layerLimit))
                 {
                     // 放置方块
-                    GameObject block = PlaceBlock(prefab, rotation, layer, col, baseY, occupied, layerLimit);
+                    GameObject block = PlaceBlock(
+                        prefab, rotation, layer, col, baseY, occupied, layerLimit, worldXOffset);
                     return block;
                 }
             }
@@ -475,13 +655,21 @@ public class TowerBuilder : MonoBehaviour
     /// <summary>
     /// 放置方块（pivot点直接使用col,layer坐标，并标记占用）
     /// </summary>
-    GameObject PlaceBlock(GameObject prefab, float rotation, int layer, int col, float baseY, bool[,] occupied, int layerLimit)
+    GameObject PlaceBlock(
+        GameObject prefab,
+        float rotation,
+        int layer,
+        int col,
+        float baseY,
+        bool[,] occupied,
+        int layerLimit,
+        int worldXOffset)
     {
         TowerBlock blockComponent = prefab.GetComponent<TowerBlock>();
 
         // 取出对应pivot点，放置在网格位置(col, layer)
         Vector2Int bottomLeftCorner = blockComponent.GetBottomLeftCorner(rotation);
-        float worldX = col - bottomLeftCorner.x;
+        float worldX = worldXOffset + col - bottomLeftCorner.x;
         float worldY = baseY + layer - bottomLeftCorner.y;
 
         Vector3 position = new Vector3(worldX, worldY, 0);
@@ -609,7 +797,7 @@ public class TowerBuilder : MonoBehaviour
             if (y < batchMinY - 0.5f || y > batchMaxY + 0.5f) continue;
 
             TowerBlock tb = child.GetComponent<TowerBlock>();
-            if (tb == null) continue;
+            if (tb == null || tb.IsStructuralSupport) continue;
 
             // 排除彩虹特殊方块（带 RainbowGlowVisual 的不做陷阱）
             if (child.GetComponent("RainbowGlowVisual") != null) continue;
@@ -675,59 +863,6 @@ public class TowerBuilder : MonoBehaviour
         new Color(0.933f, 0.169f, 0.396f, 1f),
     };
 
-    // 从世界中的现有方块采样“最底部若干层”的格子占用，用于新段顶部的无缝接合约束
-    bool[,] BuildSeamConstraintForNewSegment(float newSegmentStartY, int seamLayers, int newSegmentHeightLayers)
-    {
-        // seam约束矩阵尺寸与新段一致：true=该格子禁止放置（已被上一段的最底部占用）
-        bool[,] seamOccupied = new bool[newSegmentHeightLayers, layerWidth];
-        if (seamLayers <= 0) return seamOccupied;
-
-        // 新段的“顶部 seam 区域”在 newSegment 内对应的层区间： [newH - seamLayers, newH)
-        int seamStartLayerInNew = Mathf.Max(0, newSegmentHeightLayers - seamLayers);
-
-        foreach (Transform child in transform)
-        {
-            if (child == null) continue;
-            if (child.gameObject == hexagonBall) continue;
-
-            TowerBlock block = child.GetComponent<TowerBlock>();
-            if (block == null) continue;
-
-            // 只采样“当前已生成内容最底部附近”的方块，避免把很远的上方也计入
-            // 这里用 worldY 与 newSegmentStartY 的关系做过滤：只关心即将接合的那一带
-            float worldY = child.position.y;
-            if (worldY < newSegmentStartY + newSegmentHeightLayers - seamLayers - 2f) continue;
-            if (worldY > newSegmentStartY + newSegmentHeightLayers + 2f) continue;
-
-            // 将方块pivot对齐到格子：col = round(x), layer = round(y - newSegmentStartY)
-            int approxCol = Mathf.RoundToInt(child.position.x);
-            int approxLayer = Mathf.RoundToInt(child.position.y - newSegmentStartY);
-
-            // 用方块自身占用格子来标记 seam（近似：使用transform当前旋转）
-            float rotZ = child.eulerAngles.z;
-            var occupiedCells = block.GetOccupiedCells(rotZ);
-            var bottomLeft = block.GetBottomLeftCorner(rotZ);
-
-            // 我们的 PlaceBlock 使用 col - bottomLeftCorner.x 作为 worldX
-            // 反推 pivot col：col = round(worldX) + bottomLeftCorner.x
-            int pivotCol = Mathf.RoundToInt(child.position.x) + bottomLeft.x;
-            int pivotLayer = Mathf.RoundToInt(child.position.y - newSegmentStartY) + bottomLeft.y;
-
-            foreach (var (dx, dy) in occupiedCells)
-            {
-                int c = pivotCol + dx;
-                int l = pivotLayer + dy;
-
-                if (c < 0 || c >= layerWidth) continue;
-                if (l < seamStartLayerInNew || l >= newSegmentHeightLayers) continue;
-
-                seamOccupied[l, c] = true;
-            }
-        }
-
-        return seamOccupied;
-    }
-
     void TryGenerateNextSegment()
     {
         if (mainCamera == null) return;
@@ -735,40 +870,83 @@ public class TowerBuilder : MonoBehaviour
         float cameraY = mainCamera.transform.position.y;
         float triggerY = currentGeneratedMinY + generateAheadLayers;
 
-        // 低频日志：仅在接近触发阈值时输出，避免刷屏
         if (Time.time - lastSegmentCheckLogTime >= 1.0f)
         {
             float distanceToTrigger = cameraY - triggerY;
             if (distanceToTrigger <= Mathf.Max(2f, segmentHeightLayers * 0.25f))
-            {
                 lastSegmentCheckLogTime = Time.time;
-                // Debug.Log($"段检查: cameraY={cameraY:F2}, currentGeneratedMinY={currentGeneratedMinY:F2}, triggerY={triggerY:F2}");
-            }
         }
 
-        // 摄像机接近当前已生成底部时，在更下面续接生成一段
-        if (cameraY <= triggerY)
+        if (cameraY > triggerY) return;
+        if (!Mathf.Approximately(lastGeneratedMinY, currentGeneratedMinY)) return;
+
+        int previousOffset = currentSegmentXOffset;
+        int nextOffset = previousOffset;
+        bool canWalk = enableSegmentHorizontalWalk
+            && singleBlockPrefab != null
+            && generatedSegmentCount >= Mathf.Max(0, segmentsBeforeHorizontalWalk);
+
+        if (canWalk)
         {
-            // 防止重复触发：只有当 currentGeneratedMinY 发生变化后才能再次生成
-            if (!Mathf.Approximately(lastGeneratedMinY, currentGeneratedMinY))
-                return;
+            int allowedMaxOffset = TowerSegmentShiftMath.CalculateAllowedMaxOffset(
+                shiftedSegmentCount,
+                initialMaxAbsoluteOffset,
+                segmentsPerOffsetIncrease,
+                maxAbsoluteHorizontalOffset);
 
-            float newSegmentStartY = currentGeneratedMinY - segmentHeightLayers;
-            // Debug.Log($"准备生成新段: fromMinY={currentGeneratedMinY:F2} -> newStartY={newSegmentStartY:F2}, cameraY={cameraY:F2}, triggerY={triggerY:F2}");
-            BuildTowerSegment(newSegmentStartY, segmentHeightLayers);
-            currentGeneratedMinY = newSegmentStartY;
-            lastGeneratedMinY = currentGeneratedMinY;
-            UpdateFoundationY();
-
-            if (stabilizeNewSegment)
+            if (currentWalkDirection == 0)
             {
-                FreezeBlocksInYRange(newSegmentStartY - 1f, newSegmentStartY + segmentHeightLayers + 2f);
-                stabilizeUntilTime = Time.time + Mathf.Max(0.01f, stabilizeDuration);
+                currentWalkDirection = UnityEngine.Random.value < 0.5f ? -1 : 1;
+                StartNewDirectionRun();
             }
 
-            // Debug.Log($"生成新段完成: currentGeneratedMinY={currentGeneratedMinY:F2}, foundationY={foundationY:F2}");
+            int resolvedDirection = TowerSegmentShiftMath.ResolveDirectionAtLimit(
+                previousOffset, currentWalkDirection, allowedMaxOffset);
+            bool reachedLimit = resolvedDirection != currentWalkDirection;
+            if (reachedLimit)
+            {
+                currentWalkDirection = resolvedDirection;
+                StartNewDirectionRun();
+            }
+            else if (segmentsRemainingInDirectionRun <= 0)
+            {
+                currentWalkDirection = -currentWalkDirection;
+                currentWalkDirection = TowerSegmentShiftMath.ResolveDirectionAtLimit(
+                    previousOffset, currentWalkDirection, allowedMaxOffset);
+                StartNewDirectionRun();
+            }
+
+            nextOffset = TowerSegmentShiftMath.GetNextOffset(
+                previousOffset, currentWalkDirection, allowedMaxOffset);
+            segmentsRemainingInDirectionRun--;
+            shiftedSegmentCount++;
+        }
+
+        float newSegmentStartY = currentGeneratedMinY - segmentHeightLayers;
+        BuildTowerSegment(newSegmentStartY, segmentHeightLayers, previousOffset, nextOffset);
+
+        currentSegmentXOffset = nextOffset;
+        generatedSegmentCount++;
+        currentGeneratedMinY = newSegmentStartY;
+        lastGeneratedMinY = currentGeneratedMinY;
+        UpdateFoundationY();
+
+        Debug.Log($"[TowerShift] segment={generatedSegmentCount} offset={previousOffset}->{nextOffset} direction={currentWalkDirection} remaining={segmentsRemainingInDirectionRun}");
+
+        if (stabilizeNewSegment)
+        {
+            FreezeBlocksInYRange(newSegmentStartY - 1f, newSegmentStartY + segmentHeightLayers + 2f);
+            stabilizeUntilTime = Time.time + Mathf.Max(0.01f, stabilizeDuration);
         }
     }
+
+    private void StartNewDirectionRun()
+    {
+        int minimum = Mathf.Max(1, minSegmentsPerDirectionRun);
+        int maximum = Mathf.Max(minimum, maxSegmentsPerDirectionRun);
+        segmentsRemainingInDirectionRun = UnityEngine.Random.Range(minimum, maximum + 1);
+    }
+
 
     void FreezeBlocksInYRange(float minY, float maxY)
     {
@@ -783,39 +961,106 @@ public class TowerBuilder : MonoBehaviour
         }
     }
 
-    void BuildTowerSegment(float segmentStartY, int heightLayers)
+    void BuildTowerSegment(
+        float segmentStartY,
+        int heightLayers,
+        int previousOffset,
+        int nextOffset)
     {
-        // 续接段：独立 occupancy + 顶部 seam 约束，保证与上一段无缝贴合
-        // seamLayers 选 2 层通常足够覆盖复杂形状的接触边界
-        int seamLayers = 2;
-        bool[,] segmentOccupied = new bool[heightLayers, layerWidth];
+        if (heightLayers <= 0) return;
 
-        // 用上一段最底部的占用，预占新段顶部的 seam 区域，避免交界重叠
-        bool[,] seamOccupied = BuildSeamConstraintForNewSegment(segmentStartY, seamLayers, heightLayers);
-        for (int r = heightLayers - seamLayers; r < heightLayers; r++)
+        bool needsBridge = previousOffset != nextOffset
+            && singleBlockPrefab != null
+            && heightLayers >= 3;
+        int bridgeLayers = needsBridge ? 1 : 0;
+        int maxConnectionLayers = heightLayers - bridgeLayers - 1;
+        int connectionLayers = maxConnectionLayers > 0
+            ? Mathf.Clamp(segmentConnectionLayers, 1, maxConnectionLayers)
+            : 0;
+        int bodyLayers = heightLayers - connectionLayers - bridgeLayers;
+
+        if (bodyLayers > 0)
         {
-            if (r < 0) continue;
-            for (int c = 0; c < layerWidth; c++)
-                segmentOccupied[r, c] = seamOccupied[r, c];
+            bool[,] bodyOccupied = new bool[bodyLayers, layerWidth];
+            for (int layer = 0; layer < bodyLayers; layer++)
+                FillLayerWithGrid(layer, segmentStartY, bodyOccupied, bodyLayers, nextOffset);
+
+            RegisterSegmentOffsetZone(segmentStartY, segmentStartY + bodyLayers, nextOffset);
         }
 
-        int placedBlocks = 0;
-
-        for (int layer = 0; layer < heightLayers; layer++)
+        float bridgeStartY = segmentStartY + bodyLayers;
+        if (needsBridge)
         {
-            int before = transform.childCount;
-            FillLayerWithGrid(layer, segmentStartY, segmentOccupied, heightLayers);
-            int after = transform.childCount;
-            if (after > before) placedBlocks += (after - before);
+            CreateSegmentBridge(previousOffset, nextOffset, bridgeStartY);
+            RegisterSegmentOffsetZone(bridgeStartY, bridgeStartY + 1f, nextOffset);
         }
 
-        // 本批塔按概率植入一个陷阱方块
+        if (connectionLayers > 0)
+        {
+            float connectionStartY = bridgeStartY + bridgeLayers;
+            bool[,] connectionOccupied = new bool[connectionLayers, layerWidth];
+            for (int layer = 0; layer < connectionLayers; layer++)
+            {
+                FillLayerWithGrid(
+                    layer,
+                    connectionStartY,
+                    connectionOccupied,
+                    connectionLayers,
+                    previousOffset);
+            }
+
+            RegisterSegmentOffsetZone(connectionStartY, segmentStartY + heightLayers, previousOffset);
+        }
+
         TrySpawnTrapInBatch(segmentStartY, segmentStartY + heightLayers);
-
-        // Debug.Log($"段生成统计: startY={segmentStartY:F2}, layers={heightLayers}, placedApprox={placedBlocks}, seamLayers={seamLayers}");
-
         UpdateTowerTopY();
     }
+
+    void CreateSegmentBridge(int previousOffset, int nextOffset, float bridgeY)
+    {
+        int[] bridgeColumns = TowerSegmentShiftMath.GetBridgeColumns(
+            previousOffset, nextOffset, layerWidth);
+        int[] chunkWidths = TowerSegmentShiftMath.GetBridgeChunkWidths(
+            bridgeColumns.Length,
+            lineBlockPrefab != null,
+            line3BlockPrefab != null);
+        int bridgeX = bridgeColumns[0];
+
+        for (int i = 0; i < chunkWidths.Length; i++)
+        {
+            int chunkWidth = chunkWidths[i];
+            GameObject prefab = chunkWidth == 4
+                ? lineBlockPrefab
+                : chunkWidth == 3 ? line3BlockPrefab : singleBlockPrefab;
+            GameObject bridgeObject = Instantiate(
+                prefab,
+                new Vector3(bridgeX, bridgeY, 0f),
+                Quaternion.identity,
+                transform);
+            bridgeObject.name = $"StructuralBridge_X{bridgeX}_W{chunkWidth}_Y{bridgeY:F0}";
+
+            TowerBlock bridgeBlock = bridgeObject.GetComponent<TowerBlock>();
+            if (bridgeBlock != null)
+            {
+                bridgeBlock.blockTypeName = "Structural Bridge";
+                bridgeBlock.ConfigureStructuralSupport();
+                ApplyStructuralBridgeVisual(bridgeBlock);
+            }
+
+            TryApply3DBlockVisual(bridgeObject);
+            bridgeX += chunkWidth;
+        }
+    }
+
+    private static void ApplyStructuralBridgeVisual(TowerBlock bridgeBlock)
+    {
+        Color bridgeColor = new Color(0.08f, 0.72f, 0.82f, 1f);
+        Component style = bridgeBlock.GetComponent("BlockVisualStyle");
+        if (style != null)
+            style.SendMessage("ApplyStyleAndLock", bridgeColor, SendMessageOptions.DontRequireReceiver);
+        bridgeBlock.OverrideOriginalColor(bridgeColor);
+    }
+
 
     void UpdateGeneratedMinY()
     {
@@ -901,7 +1146,6 @@ public class TowerBuilder : MonoBehaviour
     /// </summary>
     void HandleBlockDestroyed(TowerBlock block)
     {
-        // 重新计算塔尖高度
         UpdateTowerTopY();
     }
 
@@ -971,6 +1215,13 @@ public class TowerBuilder : MonoBehaviour
             if (block == null) continue;
 
             float blockY = block.transform.position.y;
+
+            // 结构梁是可点击消除的固定承重层，不能被常规激活或远距回收逻辑解冻。
+            if (block.IsStructuralSupport)
+            {
+                if (!block.isStatic) block.Freeze();
+                continue;
+            }
 
             // 地基层：永远冻结，不允许变成 Dynamic（防止底部抖动/挤出）
             if (blockY <= foundationY)
@@ -1059,9 +1310,10 @@ public class TowerBuilder : MonoBehaviour
 
     private void EnsureBoundaries()
     {
-        // 先清理旧边界
         if (leftBoundary != null) Destroy(leftBoundary);
         if (rightBoundary != null) Destroy(rightBoundary);
+        leftBoundaryXVelocity = 0f;
+        rightBoundaryXVelocity = 0f;
 
         float xMin = -boundaryExtraCellsEachSide;
         float xMax = layerWidth + boundaryExtraCellsEachSide;
@@ -1070,36 +1322,79 @@ public class TowerBuilder : MonoBehaviour
         {
             leftBoundary = Instantiate(leftBoundaryPrefab, new Vector3(xMin, 0f, 0f), Quaternion.identity);
             leftBoundary.name = "LeftBoundary";
+            ConfigureBoundaryForHorizontalWalk(leftBoundary);
         }
 
         if (rightBoundaryPrefab != null)
         {
             rightBoundary = Instantiate(rightBoundaryPrefab, new Vector3(xMax, 0f, 0f), Quaternion.identity);
             rightBoundary.name = "RightBoundary";
+            ConfigureBoundaryForHorizontalWalk(rightBoundary);
         }
 
         UpdateBoundariesFollow(force: true);
     }
 
+    private void ConfigureBoundaryForHorizontalWalk(GameObject boundary)
+    {
+        if (boundary == null || !enableSegmentHorizontalWalk) return;
+
+        // 边界预制体是跨越多个塔段的长触发器。横移后若继续清理普通方块，
+        // 会把相邻旧区段误判为越界；这里只保留球的失败判定。
+        Component boundaryLogic = boundary.GetComponent("GameOverBoundary");
+        if (boundaryLogic == null) return;
+
+        System.Reflection.FieldInfo cleanupField = boundaryLogic.GetType().GetField("autoCleanupNonBallBlocks");
+        if (cleanupField != null) cleanupField.SetValue(boundaryLogic, false);
+    }
+
+
     private void UpdateBoundariesFollow(bool force = false)
     {
-        if (!boundaryFollowCameraY) return;
         if (mainCamera == null) return;
 
-        float targetY = mainCamera.transform.position.y + boundaryFollowYOffset;
+        float regionY = hexagonBall != null
+            ? hexagonBall.transform.position.y
+            : mainCamera.transform.position.y;
+        int regionOffset = GetSegmentXOffsetAtY(regionY);
+        float targetY = boundaryFollowCameraY
+            ? mainCamera.transform.position.y + boundaryFollowYOffset
+            : 0f;
+        float leftX = regionOffset - boundaryExtraCellsEachSide;
+        float rightX = regionOffset + layerWidth + boundaryExtraCellsEachSide;
 
         if (leftBoundary != null)
         {
             Vector3 p = leftBoundary.transform.position;
-            if (force || !Mathf.Approximately(p.y, targetY))
-                leftBoundary.transform.position = new Vector3(p.x, targetY, p.z);
+            float y = boundaryFollowCameraY ? targetY : p.y;
+            float x = force
+                ? leftX
+                : Mathf.SmoothDamp(
+                    p.x,
+                    leftX,
+                    ref leftBoundaryXVelocity,
+                    Mathf.Max(0.01f, boundaryHorizontalSmoothTime),
+                    Mathf.Max(0.1f, maxBoundaryHorizontalSpeed),
+                    Time.deltaTime);
+            if (force || !Mathf.Approximately(p.x, x) || !Mathf.Approximately(p.y, y))
+                leftBoundary.transform.position = new Vector3(x, y, p.z);
         }
 
         if (rightBoundary != null)
         {
             Vector3 p = rightBoundary.transform.position;
-            if (force || !Mathf.Approximately(p.y, targetY))
-                rightBoundary.transform.position = new Vector3(p.x, targetY, p.z);
+            float y = boundaryFollowCameraY ? targetY : p.y;
+            float x = force
+                ? rightX
+                : Mathf.SmoothDamp(
+                    p.x,
+                    rightX,
+                    ref rightBoundaryXVelocity,
+                    Mathf.Max(0.01f, boundaryHorizontalSmoothTime),
+                    Mathf.Max(0.1f, maxBoundaryHorizontalSpeed),
+                    Time.deltaTime);
+            if (force || !Mathf.Approximately(p.x, x) || !Mathf.Approximately(p.y, y))
+                rightBoundary.transform.position = new Vector3(x, y, p.z);
         }
     }
 

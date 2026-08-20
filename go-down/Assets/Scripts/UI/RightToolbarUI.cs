@@ -106,10 +106,10 @@ public class RightToolbarUI : MonoBehaviour
         HexagonBall ball = FindFirstObjectByType<HexagonBall>();
         if (ball == null) return;
 
-        float centerX = builder != null ? (builder.layerWidth / 2f) : 0f;
-
         Vector3 p = ball.transform.position;
-        p.x = centerX;
+        p.x = builder != null
+            ? builder.GetTowerCenterXAtY(p.y)
+            : 0f;
         ball.transform.position = p;
 
         Rigidbody2D rb = ball.GetComponent<Rigidbody2D>();
