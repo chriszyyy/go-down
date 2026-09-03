@@ -17,6 +17,41 @@ public static class TowerSegmentShiftMath
         return Mathf.Min(maximum, initial + increase);
     }
 
+    public static float CalculateProgressiveChance(
+        int segmentIndex,
+        int startSegment,
+        int fullChanceSegment,
+        float maximumChance)
+    {
+        if (segmentIndex < Mathf.Max(0, startSegment)) return 0f;
+
+        int start = Mathf.Max(0, startSegment);
+        int full = Mathf.Max(start + 1, fullChanceSegment);
+        float progress = Mathf.InverseLerp(start, full, segmentIndex);
+        return Mathf.Clamp01(maximumChance) * progress;
+    }
+
+    public static void CalculateDirectionRunBounds(
+        int shiftedSegmentCount,
+        int minimum,
+        int maximum,
+        int growthStartSegment,
+        int segmentsPerIncrease,
+        int maxAdditionalLength,
+        out int resolvedMinimum,
+        out int resolvedMaximum)
+    {
+        int baseMinimum = Mathf.Max(1, minimum);
+        int baseMaximum = Mathf.Max(baseMinimum, maximum);
+        int depthPastStart = Mathf.Max(0, shiftedSegmentCount - Mathf.Max(0, growthStartSegment));
+        int growth = shiftedSegmentCount < Mathf.Max(0, growthStartSegment)
+            ? 0
+            : 1 + depthPastStart / Mathf.Max(1, segmentsPerIncrease);
+        growth = Mathf.Min(Mathf.Max(0, maxAdditionalLength), growth);
+        resolvedMinimum = baseMinimum + growth;
+        resolvedMaximum = baseMaximum + growth;
+    }
+
     public static int ResolveDirectionAtLimit(int currentOffset, int direction, int allowedMaxOffset)
     {
         int normalizedDirection = direction < 0 ? -1 : 1;
@@ -28,8 +63,31 @@ public static class TowerSegmentShiftMath
 
     public static int GetNextOffset(int currentOffset, int direction, int allowedMaxOffset)
     {
-        int resolvedDirection = ResolveDirectionAtLimit(currentOffset, direction, allowedMaxOffset);
-        return Mathf.Clamp(currentOffset + resolvedDirection, -Mathf.Max(1, allowedMaxOffset), Mathf.Max(1, allowedMaxOffset));
+        int resolvedDirection;
+        int appliedStep;
+        return GetNextOffset(currentOffset, direction, 1, allowedMaxOffset, out resolvedDirection, out appliedStep);
+    }
+
+    public static int GetNextOffset(
+        int currentOffset,
+        int direction,
+        int requestedStep,
+        int allowedMaxOffset,
+        out int resolvedDirection,
+        out int appliedStep)
+    {
+        int limit = Mathf.Max(1, allowedMaxOffset);
+        resolvedDirection = ResolveDirectionAtLimit(currentOffset, direction, limit);
+        int room = resolvedDirection > 0 ? limit - currentOffset : currentOffset + limit;
+
+        if (room <= 0)
+        {
+            resolvedDirection = -resolvedDirection;
+            room = resolvedDirection > 0 ? limit - currentOffset : currentOffset + limit;
+        }
+
+        appliedStep = Mathf.Min(Mathf.Clamp(requestedStep, 1, 2), Mathf.Max(1, room));
+        return currentOffset + resolvedDirection * appliedStep;
     }
 
     public static int[] GetBridgeColumns(int previousOffset, int nextOffset, int layerWidth)
@@ -71,6 +129,77 @@ public static class TowerSegmentShiftMath
         }
 
         return widths.ToArray();
+    }
+}
+
+
+/// <summary>
+/// 成批反弹块的深度概率、数量、排除规则与空间聚集选择。
+/// </summary>
+public static class TowerBouncyBlockRules
+{
+    public static float CalculateChance(
+        int segmentIndex,
+        int startSegment,
+        int fullChanceSegment,
+        float maximumChance)
+    {
+        return TowerSegmentShiftMath.CalculateProgressiveChance(
+            segmentIndex, startSegment, fullChanceSegment, maximumChance);
+    }
+
+    public static int CalculateBatchSize(
+        int eligibleCount,
+        int minimumBatchSize,
+        int maximumBatchSize,
+        float randomValue)
+    {
+        int eligible = Mathf.Max(0, eligibleCount);
+        if (eligible == 0) return 0;
+
+        int minimum = Mathf.Clamp(minimumBatchSize, 1, eligible);
+        int maximum = Mathf.Clamp(maximumBatchSize, minimum, eligible);
+        int range = maximum - minimum + 1;
+        int offset = Mathf.Min(range - 1, Mathf.FloorToInt(Mathf.Clamp01(randomValue) * range));
+        return minimum + offset;
+    }
+
+    public static bool IsEligible(bool isStructuralSupport, bool isTrap, bool isRainbow)
+    {
+        return !isStructuralSupport && !isTrap && !isRainbow;
+    }
+
+    public static int[] SelectClusterIndices(int[] layerKeys, int requestedCount, int tieBreaker)
+    {
+        if (layerKeys == null || layerKeys.Length == 0 || requestedCount <= 0)
+            return new int[0];
+
+        int count = Mathf.Min(requestedCount, layerKeys.Length);
+        int[] sorted = new int[layerKeys.Length];
+        for (int i = 0; i < sorted.Length; i++) sorted[i] = i;
+        System.Array.Sort(sorted, (a, b) =>
+        {
+            int layerComparison = layerKeys[a].CompareTo(layerKeys[b]);
+            return layerComparison != 0 ? layerComparison : a.CompareTo(b);
+        });
+
+        int minimumSpan = int.MaxValue;
+        var bestStarts = new System.Collections.Generic.List<int>();
+        for (int start = 0; start <= sorted.Length - count; start++)
+        {
+            int span = layerKeys[sorted[start + count - 1]] - layerKeys[sorted[start]];
+            if (span < minimumSpan)
+            {
+                minimumSpan = span;
+                bestStarts.Clear();
+            }
+            if (span == minimumSpan) bestStarts.Add(start);
+        }
+
+        int selectedStart = bestStarts[Mathf.Abs(tieBreaker) % bestStarts.Count];
+        int[] result = new int[count];
+        System.Array.Copy(sorted, selectedStart, result, 0, count);
+        return result;
     }
 }
 
@@ -150,6 +279,54 @@ public class TowerBuilder : MonoBehaviour
     [Min(1)]
     [SerializeField] private int segmentConnectionLayers = 2;
 
+
+    [Tooltip("从第几个续接区段开始允许出现单次 2 格横移；此前始终为 1 格")]
+    [Min(0)]
+    [SerializeField] private int doubleStepStartSegment = 4;
+
+    [Tooltip("到达该续接区段时，2 格横移概率增长到上限")]
+    [Min(1)]
+    [SerializeField] private int doubleStepFullChanceSegment = 14;
+
+    [Tooltip("中后期单次 2 格横移的最高概率")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxDoubleStepChance = 0.18f;
+
+    [Tooltip("从第几个游走区段开始增长同方向轮次长度")]
+    [Min(0)]
+    [SerializeField] private int directionRunGrowthStartSegment = 4;
+
+    [Tooltip("轮次增长开始后，每经过多少个游走区段增加 1 段同向长度")]
+    [Min(1)]
+    [SerializeField] private int segmentsPerDirectionRunIncrease = 4;
+
+    [Tooltip("同方向轮次相对初始范围最多额外增加的段数")]
+    [Min(0)]
+    [SerializeField] private int maxAdditionalDirectionRunLength = 3;
+
+    [Header("成批反弹块")]
+    [Tooltip("用于反弹块 Collider2D 的专用弹性物理材质")]
+    [SerializeField] private PhysicsMaterial2D bouncyBlockPhysicsMaterial;
+
+    [Tooltip("从第几个续接区段开始允许出现反弹批次；此前概率为 0")]
+    [Min(0)]
+    [SerializeField] private int bouncyBatchStartSegment = 3;
+
+    [Tooltip("到达该续接区段时，反弹批次概率增长到上限")]
+    [Min(1)]
+    [SerializeField] private int bouncyBatchFullChanceSegment = 14;
+
+    [Tooltip("后期每个区段出现一个反弹批次的最高概率")]
+    [Range(0f, 1f)]
+    [SerializeField] private float maxBouncyBatchChance = 0.28f;
+
+    [Tooltip("概率命中时，一个反弹批次的最少方块数；候选不足时使用全部候选")]
+    [Min(1)]
+    [SerializeField] private int minBouncyBlocksPerBatch = 4;
+
+    [Tooltip("概率命中时，一个反弹批次的最多方块数")]
+    [Min(1)]
+    [SerializeField] private int maxBouncyBlocksPerBatch = 7;
 
     [Header("新段稳定化")]
     [Tooltip("生成新段后，先冻结一小段时间以让接缝稳定，再按相机窗口激活")]
@@ -293,6 +470,8 @@ public class TowerBuilder : MonoBehaviour
 
     private readonly System.Collections.Generic.List<SegmentOffsetZone> segmentOffsetZones =
         new System.Collections.Generic.List<SegmentOffsetZone>();
+    private readonly System.Collections.Generic.HashSet<int> bouncyBatchGeneratedSegments =
+        new System.Collections.Generic.HashSet<int>();
 
     void Start()
     {
@@ -492,6 +671,7 @@ public class TowerBuilder : MonoBehaviour
         currentWalkDirection = 0;
         segmentsRemainingInDirectionRun = 0;
         segmentOffsetZones.Clear();
+        bouncyBatchGeneratedSegments.Clear();
         RegisterSegmentOffsetZone(startHeight, float.PositiveInfinity, 0);
 
         EnsureBoundaries();
@@ -506,6 +686,8 @@ public class TowerBuilder : MonoBehaviour
         }
 
         TrySpawnTrapInBatch(startHeight, startHeight + towerLayers);
+        TrySpawnBouncyBatch(startHeight, startHeight + towerLayers, 0);
+
 
         currentGeneratedMinY = startHeight;
         lastGeneratedMinY = currentGeneratedMinY;
@@ -853,6 +1035,91 @@ public class TowerBuilder : MonoBehaviour
         trap.Configure(trapColor, normalTarget);
     }
 
+    /// <summary>
+    /// 每个区段只抽取一次批次概率；命中后将 Y 层跨度最小的一组普通方块配置为反弹块。
+    /// 陷阱先配置，反弹块再筛选，确保两种属性最终不重叠。
+    /// </summary>
+    void TrySpawnBouncyBatch(float batchMinY, float batchMaxY, int segmentIndex)
+    {
+        if (bouncyBlockPhysicsMaterial == null || bouncyBatchGeneratedSegments.Contains(segmentIndex)) return;
+
+        float chance = TowerBouncyBlockRules.CalculateChance(
+            segmentIndex,
+            bouncyBatchStartSegment,
+            bouncyBatchFullChanceSegment,
+            maxBouncyBatchChance);
+        if (chance <= 0f || UnityEngine.Random.value >= chance) return;
+        bouncyBatchGeneratedSegments.Add(segmentIndex);
+
+        var candidates = new System.Collections.Generic.List<TowerBlock>();
+        var layerKeys = new System.Collections.Generic.List<int>();
+        foreach (Transform child in transform)
+        {
+            if (child == null || child.gameObject == hexagonBall) continue;
+
+            float y = child.position.y;
+            if (y < batchMinY - 0.5f || y > batchMaxY + 0.5f) continue;
+
+            TowerBlock block = child.GetComponent<TowerBlock>();
+            if (block == null || !IsBouncyEligible(block)) continue;
+
+            candidates.Add(block);
+            layerKeys.Add(Mathf.RoundToInt(y));
+        }
+
+        int batchSize = TowerBouncyBlockRules.CalculateBatchSize(
+            candidates.Count,
+            minBouncyBlocksPerBatch,
+            maxBouncyBlocksPerBatch,
+            UnityEngine.Random.value);
+        if (batchSize <= 0) return;
+
+        int[] selected = TowerBouncyBlockRules.SelectClusterIndices(
+            layerKeys.ToArray(),
+            batchSize,
+            UnityEngine.Random.Range(0, int.MaxValue));
+        int minLayer = int.MaxValue;
+        int maxLayer = int.MinValue;
+        int invalidOverlapCount = 0;
+        for (int i = 0; i < selected.Length; i++)
+        {
+            TowerBlock block = candidates[selected[i]];
+            ApplyBouncyBlock(block);
+            int layer = layerKeys[selected[i]];
+            minLayer = Mathf.Min(minLayer, layer);
+            maxLayer = Mathf.Max(maxLayer, layer);
+            if (!IsBouncyEligible(block)) invalidOverlapCount++;
+        }
+
+        Debug.Log($"[BouncyBatch] segment={segmentIndex} count={selected.Length} ySpan={maxLayer - minLayer} invalidOverlap={invalidOverlapCount}");
+    }
+
+    private static bool IsBouncyEligible(TowerBlock block)
+    {
+        if (block == null) return false;
+        bool isTrap = block.GetComponent<TrapBlock>() != null;
+        bool isRainbow = block.gameObject.GetComponent("RainbowGlowVisual") != null;
+        return TowerBouncyBlockRules.IsEligible(block.IsStructuralSupport, isTrap, isRainbow);
+    }
+
+    void ApplyBouncyBlock(TowerBlock block)
+    {
+        if (bouncyBlockPhysicsMaterial == null || !IsBouncyEligible(block)) return;
+
+        Collider2D blockCollider = block.GetComponent<Collider2D>();
+        if (blockCollider == null) return;
+
+        blockCollider.sharedMaterial = bouncyBlockPhysicsMaterial;
+        block.blockTypeName = "Bouncy Block";
+        block.gameObject.name = "Bouncy_" + block.gameObject.name;
+
+        Color bouncyColor = new Color(0.45f, 1f, 0.08f, 1f);
+        Component style = block.GetComponent("BlockVisualStyle");
+        if (style != null)
+            style.SendMessage("ApplyStyleAndLock", bouncyColor, SendMessageOptions.DontRequireReceiver);
+        block.OverrideOriginalColor(bouncyColor);
+    }
+
     // 普通方块调色板（与 BlockVisualStyle 默认 5 色一致），陷阱隐身时随机伪装成其中之一
     private static readonly Color[] s_normalBlockPalette = new[]
     {
@@ -916,14 +1183,31 @@ public class TowerBuilder : MonoBehaviour
                 StartNewDirectionRun();
             }
 
+            float doubleStepChance = TowerSegmentShiftMath.CalculateProgressiveChance(
+                shiftedSegmentCount,
+                doubleStepStartSegment,
+                doubleStepFullChanceSegment,
+                maxDoubleStepChance);
+            int requestedStep = UnityEngine.Random.value < doubleStepChance ? 2 : 1;
+            int appliedStep;
             nextOffset = TowerSegmentShiftMath.GetNextOffset(
-                previousOffset, currentWalkDirection, allowedMaxOffset);
+                previousOffset,
+                currentWalkDirection,
+                requestedStep,
+                allowedMaxOffset,
+                out currentWalkDirection,
+                out appliedStep);
             segmentsRemainingInDirectionRun--;
             shiftedSegmentCount++;
         }
 
         float newSegmentStartY = currentGeneratedMinY - segmentHeightLayers;
-        BuildTowerSegment(newSegmentStartY, segmentHeightLayers, previousOffset, nextOffset);
+        BuildTowerSegment(
+            newSegmentStartY,
+            segmentHeightLayers,
+            previousOffset,
+            nextOffset,
+            generatedSegmentCount + 1);
 
         currentSegmentXOffset = nextOffset;
         generatedSegmentCount++;
@@ -931,7 +1215,7 @@ public class TowerBuilder : MonoBehaviour
         lastGeneratedMinY = currentGeneratedMinY;
         UpdateFoundationY();
 
-        Debug.Log($"[TowerShift] segment={generatedSegmentCount} offset={previousOffset}->{nextOffset} direction={currentWalkDirection} remaining={segmentsRemainingInDirectionRun}");
+        Debug.Log($"[TowerShift] segment={generatedSegmentCount} offset={previousOffset}->{nextOffset} step={Mathf.Abs(nextOffset - previousOffset)} direction={currentWalkDirection} remaining={segmentsRemainingInDirectionRun}");
 
         if (stabilizeNewSegment)
         {
@@ -942,8 +1226,17 @@ public class TowerBuilder : MonoBehaviour
 
     private void StartNewDirectionRun()
     {
-        int minimum = Mathf.Max(1, minSegmentsPerDirectionRun);
-        int maximum = Mathf.Max(minimum, maxSegmentsPerDirectionRun);
+        int minimum;
+        int maximum;
+        TowerSegmentShiftMath.CalculateDirectionRunBounds(
+            shiftedSegmentCount,
+            minSegmentsPerDirectionRun,
+            maxSegmentsPerDirectionRun,
+            directionRunGrowthStartSegment,
+            segmentsPerDirectionRunIncrease,
+            maxAdditionalDirectionRunLength,
+            out minimum,
+            out maximum);
         segmentsRemainingInDirectionRun = UnityEngine.Random.Range(minimum, maximum + 1);
     }
 
@@ -965,7 +1258,8 @@ public class TowerBuilder : MonoBehaviour
         float segmentStartY,
         int heightLayers,
         int previousOffset,
-        int nextOffset)
+        int nextOffset,
+        int segmentIndex)
     {
         if (heightLayers <= 0) return;
 
@@ -1013,6 +1307,8 @@ public class TowerBuilder : MonoBehaviour
         }
 
         TrySpawnTrapInBatch(segmentStartY, segmentStartY + heightLayers);
+        TrySpawnBouncyBatch(segmentStartY, segmentStartY + heightLayers, segmentIndex);
+
         UpdateTowerTopY();
     }
 

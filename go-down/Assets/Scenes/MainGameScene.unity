@@ -3219,6 +3219,8 @@ MonoBehaviour:
   fastSpeedThreshold: 6
   deadZone: 0.05
   maxCameraSpeed: 50
+  horizontalSmoothTime: 0.45
+  maxHorizontalCameraSpeed: 4
 --- !u!1 &776303398
 GameObject:
   m_ObjectHideFlags: 0
@@ -5790,6 +5792,26 @@ MonoBehaviour:
   generateAheadLayers: 20
   foundationThicknessLayers: 5
   destroyAboveCameraLayers: 20
+  enableSegmentHorizontalWalk: 1
+  segmentsBeforeHorizontalWalk: 1
+  minSegmentsPerDirectionRun: 2
+  maxSegmentsPerDirectionRun: 4
+  initialMaxAbsoluteOffset: 2
+  segmentsPerOffsetIncrease: 4
+  maxAbsoluteHorizontalOffset: 3
+  segmentConnectionLayers: 2
+  doubleStepStartSegment: 4
+  doubleStepFullChanceSegment: 14
+  maxDoubleStepChance: 0.18
+  directionRunGrowthStartSegment: 4
+  segmentsPerDirectionRunIncrease: 4
+  maxAdditionalDirectionRunLength: 3
+  bouncyBlockPhysicsMaterial: {fileID: 6200000, guid: fca7957d59100704993c86cd108d3ad2, type: 2}
+  bouncyBatchStartSegment: 3
+  bouncyBatchFullChanceSegment: 14
+  maxBouncyBatchChance: 0.28
+  minBouncyBlocksPerBatch: 4
+  maxBouncyBlocksPerBatch: 7
   stabilizeNewSegment: 1
   stabilizeDuration: 0.25
   requireManualStartActivation: 0
@@ -5808,6 +5830,8 @@ MonoBehaviour:
   boundaryExtraCellsEachSide: 2.5
   boundaryFollowCameraY: 1
   boundaryFollowYOffset: 0
+  boundaryHorizontalSmoothTime: 0.35
+  maxBoundaryHorizontalSpeed: 5
   hexagonBallPrefab: {fileID: 5149992263456304526, guid: 0c9f9e0c1028a7740b511984ea843433, type: 3}
   spawnHexagonBall: 1
   ballHeightOffset: 1.5
